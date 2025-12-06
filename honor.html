@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>兰星少年俱乐部 · 荣誉室</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --lanxing-blue: #1f5fff;
+      --lanxing-dark: #020617;
+      --lanxing-light: #f5f7ff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-soft: #e5e7eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background: radial-gradient(circle at top,#e0e7ff,#f9fafb);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 14px 0;
+      backdrop-filter: blur(14px);
+      background: rgba(255,255,255,0.9);
+      border-bottom: 1px solid rgba(229,231,235,0.8);
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+    .nav {
+      display:flex;align-items:center;justify-content:space-between;
+      font-size:14px;
+    }
+    .nav-left{display:flex;align-items:center;gap:8px;font-weight:700;}
+    .nav-logo{
+      width:28px;height:28px;border-radius:999px;
+      background:radial-gradient(circle at 30% 20%,#a5b4fc,#1d4ed8);
+      display:inline-flex;align-items:center;justify-content:center;
+      color:#f9fafb;font-size:16px;font-weight:800;
+    }
+    .nav a{color:#4b5563;text-decoration:none;}
+    .nav a:hover{color:#111827;}
+    main{flex:1;padding:32px 0;}
+    .card{
+      background:#fff;
+      border-radius:18px;
+      border:1px solid var(--border-soft);
+      padding:24px 22px;
+      box-shadow:0 18px 40px rgba(15,23,42,0.12);
+    }
+    h1{
+      font-size:24px;
+      margin-bottom:6px;
+    }
+    .subtitle{
+      font-size:14px;
+      color:var(--text-muted);
+      margin-bottom:18px;
+    }
+    .placeholder{
+      border-radius:14px;
+      border:1px dashed #cbd5f5;
+      background:var(--lanxing-light);
+      padding:16px 14px;
+      font-size:14px;
+      color:var(--text-muted);
+      margin-bottom:18px;
+    }
+    .section-title{
+      font-size:16px;
+      font-weight:600;
+      margin:18px 0 8px;
+    }
+    ul{padding-left:18px;font-size:14px;color:var(--text-muted);}
+    footer{
+      padding:16px 0 20px;
+      font-size:12px;
+      color:#9ca3af;
+      text-align:center;
+    }
+/* bottom navigation */
+.footer-nav {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(229,231,235,0.8);
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  font-size: 14px;
+}
+
+.footer-nav a {
+  color: #4b5563;
+  text-decoration: none;
+}
+
+.footer-nav a:hover {
+  color: #111827;
+  text-decoration: underline;
+}
+
+  </style>
+</head>
+<body>
+<header>
+  <div class="container nav">
+    <div class="nav-left">
+      <div class="nav-logo">L</div>
+      <div>兰星少年俱乐部 · 荣誉室</div>
+    </div>
+    <a href="index.html">返回首页</a>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <div class="card">
+      <h1>俱乐部荣誉室（Honor Room）</h1>
+      <p class="subtitle">
+        这里将集中展示兰星少年俱乐部成员在国内外赛事中的成绩与奖杯。目前页面仍在施工阶段，功能与内容会分批上线。
+      </p>
+
+      <div class="placeholder">
+        荣誉室正在施工中。<br/>
+        下一阶段计划：按年份和赛事类型整理俱乐部成员在各类 HADO 赛事中的奖项、
+        团队合照、个人 MVP 记录等，让每一位兰星少年都能在这里找到属于自己的“高光时刻”。
+      </div>
+
+      <div class="section-title">规划中的模块（草案）</div>
+      <ul>
+        <li>国际赛事荣誉（如：中日韩 U15 邀请赛、世界系列赛等）</li>
+        <li>全国 / 区域赛事荣誉（城市赛、校园赛、公开赛）</li>
+        <li>俱乐部内部特别奖项（最佳队友、最顽强战士、最佳新人等）</li>
+        <li>年度荣誉墙：每年年底对俱乐部整体成绩做一次盘点与致敬</li>
+      </ul>
+    </div>
+  </div>
+</main>
+
+<div class="footer-nav">
+  <a href="index.html">首页</a>
+  <a href="honor.html">荣誉室</a>
+  <a href="gallery.html">照片墙</a>
+  <a href="news.html">新闻中心</a>
+</div>
+
+<footer>
+  © <script>document.write(new Date().getFullYear())</script> 兰星少年俱乐部 · Honor Room
+</footer>
+</body>
+</html>

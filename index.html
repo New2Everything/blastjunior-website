@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>兰星少年俱乐部 | 官方网站</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="兰星少年俱乐部官方站点：俱乐部介绍、联赛积分、赞助合作、最新新闻与活动。" />
+  <style>
+    :root {
+      --lanxing-blue: #1f5fff;
+      --lanxing-dark: #0b1020;
+      --lanxing-light: #f5f7ff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-soft: #e5e7eb;
+      --radius-lg: 16px;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color: var(--text-main);
+      background: #fff;
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+
+    /* 顶部导航 */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(18px);
+      background: rgba(255,255,255,0.88);
+      border-bottom: 1px solid rgba(229,231,235,0.8);
+    }
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-left {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 18px;
+    }
+    .nav-logo {
+      width: 32px; height: 32px; border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #a5b4fc, #1d4ed8);
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #f9fafb; font-size: 18px; font-weight: 800;
+    }
+    .nav-links { display: flex; gap: 20px; font-size: 14px; }
+    .nav-links a {
+      position: relative; padding-bottom: 3px; color: #4b5563;
+    }
+    .nav-links a:hover::after {
+      content:""; position:absolute; left:0; bottom:0; width:100%; height:2px;
+      border-radius:999px; background:var(--lanxing-blue);
+    }
+    .nav-cta { display:flex; align-items:center; gap:8px; }
+
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:8px 16px; border-radius:999px;
+      border:1px solid transparent;
+      font-size:14px; font-weight:500; cursor:pointer;
+      transition:all .18s ease-out;
+      background:#fff; color:#111827;
+    }
+    .btn-primary {
+      background:var(--lanxing-blue); color:#f9fafb;
+      box-shadow:0 10px 25px rgba(37,99,235,0.35);
+    }
+    .btn-primary:hover {
+      transform:translateY(-1px);
+      box-shadow:0 16px 40px rgba(37,99,235,0.4);
+    }
+    .btn-soft {
+      border-color:rgba(148,163,184,0.6);
+      background:rgba(248,250,252,0.9);
+    }
+    .btn-soft:hover {
+      background:#fff; border-color:var(--lanxing-blue);
+      color:var(--lanxing-blue);
+    }
+
+    .lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.lang-switch a {
+  color: #6b7280;
+  text-decoration: none;
+}
+
+.lang-switch a:hover {
+  color: #111827;
+  text-decoration: underline;
+}
+
+.lang-switch .current-lang {
+  color: #111827;
+  font-weight: 600;
+}
+
+
+    /* Hero */
+    .hero {
+      background: radial-gradient(circle at top left, #e0e7ff, #f9fafb);
+      padding: 40px 0 52px;
+    }
+    .hero-grid {
+      display:grid;
+      grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr);
+      gap:40px; align-items:center;
+    }
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:4px 10px; border-radius:999px;
+      background:rgba(15,23,42,0.04);
+      font-size:12px; color:#4b5563;
+      margin-bottom:14px;
+    }
+    .hero-badge span {
+      display:inline-flex; width:7px; height:7px; border-radius:999px;
+      background:#22c55e;
+      box-shadow:0 0 0 4px rgba(34,197,94,0.25);
+    }
+    .hero-title {
+      font-size:clamp(30px,4vw,40px);
+      line-height:1.2; letter-spacing:0.02em;
+      margin-bottom:12px;
+    }
+    .hero-subtitle {
+      font-size:15px; color:#4b5563;
+      max-width:480px; margin-bottom:20px;
+    }
+    .hero-actions { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+    .hero-meta { display:flex; flex-wrap:wrap; gap:16px; font-size:12px; color:#6b7280; }
+    .hero-meta strong { color:#111827; }
+
+    .hero-card {
+      border-radius:24px;
+      background:linear-gradient(145deg,#020617,#0b1120);
+      color:#e5e7eb;
+      padding:18px 18px 20px;
+      box-shadow:var(--shadow-soft);
+    }
+    .hero-card-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:12px;
+    }
+    .hero-pill {
+      font-size:11px; padding:3px 10px;
+      border-radius:999px;
+      background:rgba(37,99,235,0.18);
+      border:1px solid rgba(96,165,250,0.6);
+    }
+    .hero-card-title { font-size:16px; font-weight:600; }
+    .hero-stats {
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:10px; margin-top:10px; font-size:11px;
+    }
+    .hero-stat-item {
+      padding:8px 8px; border-radius:14px;
+      background:radial-gradient(circle at top left,rgba(30,64,175,0.6),rgba(15,23,42,1));
+      border:1px solid rgba(148,163,184,0.4);
+    }
+    .hero-stat-item .label { color:#9ca3af; margin-bottom:4px; }
+    .hero-stat-item .value { font-size:15px; font-weight:700; color:#e5e7eb; }
+    .hero-footnote { margin-top:16px; font-size:11px; color:#9ca3af; }
+
+    /* 通用 section */
+    section { padding:40px 0; }
+    section:nth-of-type(odd) { background:#fff; }
+    section:nth-of-type(even){ background:var(--lanxing-light); }
+
+    .section-header { margin-bottom:22px; }
+    .section-title { font-size:22px; font-weight:700; margin-bottom:6px; }
+    .section-subtitle { font-size:14px; color:var(--text-muted); }
+
+    /* about */
+    .about-grid {
+      display:grid;
+      grid-template-columns:minmax(0,1.3fr) minmax(0,0.9fr);
+      gap:26px; align-items:flex-start;
+    }
+    .about-card {
+      border-radius:var(--radius-lg);
+      border:1px solid var(--border-soft);
+      padding:18px 20px; background:#fff;
+      box-shadow:0 12px 30px rgba(15,23,42,0.04);
+      font-size:14px;
+    }
+    .about-tags {
+      display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;
+    }
+    .tag {
+      font-size:11px; padding:3px 8px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:#f9fafb; color:#4b5563;
+    }
+
+    /* league */
+    .league-card {
+      border-radius:var(--radius-lg);
+      border:1px solid var(--border-soft);
+      background:#fff;
+      box-shadow:0 12px 30px rgba(15,23,42,0.04);
+      padding:18px 20px;
+    }
+    .league-top {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:16px; gap:10px; flex-wrap:wrap;
+    }
+    .badge-season {
+      font-size:12px; padding:3px 10px;
+      border-radius:999px;
+      background:rgba(59,130,246,0.1);
+      color:#1d4ed8;
+      border:1px solid rgba(59,130,246,0.5);
+    }
+    .league-meta {
+      font-size:12px; color:#6b7280; margin-top:4px;
+    }
+    .league-controls {
+      display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+    }
+    .league-select {
+      padding:6px 10px; border-radius:999px; border:1px solid #d1d5db;
+      font-size:12px; background:#f9fafb;
+    }
+    .league-table-wrapper { overflow-x:auto; margin-top:10px; }
+
+    table {
+      width:100%; border-collapse:collapse;
+      font-size:13px; min-width:480px;
+    }
+    th,td {
+      padding:8px 10px; border-bottom:1px solid #e5e7eb;
+      text-align:left; white-space:nowrap;
+    }
+    th {
+      font-weight:600; font-size:12px;
+      color:#6b7280; background:#f9fafb;
+    }
+    tr:nth-child(even) td { background:#f9fafb; }
+    tr:hover td { background:#eef2ff; }
+    .player-name { font-weight:600; }
+
+    .status-pill {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:2px 8px; border-radius:999px;
+      font-size:11px;
+    }
+    .status-active {
+      background:rgba(22,163,74,0.08);
+      color:#16a34a;
+      border:1px solid rgba(22,163,74,0.4);
+    }
+    .status-archived {
+      background:rgba(148,163,184,0.08);
+      color:#6b7280;
+      border:1px solid rgba(148,163,184,0.5);
+    }
+    .status-planned {
+      background:rgba(234,179,8,0.08);
+      color:#ca8a04;
+      border:1px solid rgba(234,179,8,0.5);
+    }
+
+    /* sponsors */
+    .sponsors-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+      gap:16px;
+    }
+    .sponsor-card {
+      border-radius:16px;
+      border:1px solid var(--border-soft);
+      background:#fff;
+      padding:14px 14px 16px;
+      box-shadow:0 10px 26px rgba(15,23,42,0.04);
+      font-size:13px;
+    }
+    .sponsor-header {
+      display:flex; align-items:center; gap:10px;
+      margin-bottom:8px;
+    }
+    .sponsor-logo {
+      width:40px; height:40px; border-radius:12px;
+      background:linear-gradient(135deg,#e5e7eb,#c7d2fe);
+      overflow:hidden;
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px; font-weight:700; color:#4b5563;
+    }
+    .sponsor-logo img {
+      max-width:100%; max-height:100%; object-fit:cover;
+    }
+    .sponsor-name { font-weight:600; font-size:14px; }
+    .sponsor-tag { font-size:11px; color:var(--text-muted); }
+
+    /* news */
+    .news-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:16px;
+    }
+    .news-card {
+      border-radius:16px;
+      border:1px solid var(--border-soft);
+      background:#fff;
+      padding:14px 14px 16px;
+      box-shadow:0 10px 26px rgba(15,23,42,0.04);
+      font-size:13px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .news-thumb {
+      width:100%;
+      border-radius:12px;
+      overflow:hidden;
+      aspect-ratio:16/9;
+      background:#e5e7eb;
+    }
+    .news-thumb img {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .news-meta { font-size:11px; color:var(--text-muted); }
+    .news-title { font-weight:600; font-size:14px; }
+    .news-more {
+      margin-top:6px; font-size:12px;
+      color:#1d4ed8; cursor:pointer;
+    }
+    .news-footer {
+      margin-top:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      font-size:12px;
+      color:var(--text-muted);
+    }
+
+    /* contact */
+    .contact-grid {
+      display:grid;
+      grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr);
+      gap:24px;
+    }
+    .contact-card,.contact-form {
+      border-radius:var(--radius-lg);
+      border:1px solid var(--border-soft);
+      background:#fff;
+      box-shadow:0 10px 24px rgba(15,23,42,0.04);
+      padding:16px 18px;
+      font-size:14px;
+    }
+    .contact-list {
+      list-style:none; margin-top:8px;
+      display:grid; gap:4px; font-size:13px;
+    }
+    .contact-list span { font-weight:600; }
+    .contact-form label {
+      display:block; font-size:12px;
+      margin-bottom:4px; color:#4b5563;
+    }
+    .contact-form input,.contact-form textarea {
+      width:100%; border-radius:10px;
+      border:1px solid #d1d5db;
+      padding:8px 10px; font-size:13px;
+      margin-bottom:10px; font-family:inherit;
+      resize:vertical;
+    }
+    .contact-form input:focus,.contact-form textarea:focus {
+      outline:none; border-color:var(--lanxing-blue);
+      box-shadow:0 0 0 1px rgba(59,130,246,0.3);
+    }
+    .qr-block {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-soft);
+      text-align: center;
+    }
+    .qr-block img {
+      max-width: 220px;
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+      background: #fff;
+    }
+    .qr-block p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+
+    /* footer */
+    footer {
+      padding:18px 0 22px;
+      background:#020617; color:#9ca3af;
+      font-size:12px;
+    }
+    .footer-inner {
+      display:flex; flex-wrap:wrap;
+      gap:10px; justify-content:space-between; align-items:center;
+    }
+    .footer-links { display:flex; flex-wrap:wrap; gap:12px; }
+    .footer-links a { color:#9ca3af; }
+    .footer-links a:hover { color:#e5e7eb; }
+
+   /* bottom navigation */
+    .footer-nav {
+      margin-top: 28px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(229,231,235,0.8);
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      font-size: 14px;
+    }
+
+    .footer-nav a {
+      color: #4b5563;
+      text-decoration: none;
+    }
+
+    .footer-nav a:hover {
+      color: #111827;
+      text-decoration: underline;
+    }
+
+
+    /* 响应式 */
+    @media (max-width:900px) {
+      .hero-grid,.about-grid,.contact-grid {
+        grid-template-columns:minmax(0,1fr);
+      }
+      .hero { padding-top:26px; }
+      .hero-card { order:-1; }
+      .nav-links { display:none; }
+    }
+    @media (max-width:600px) {
+      .nav { height:56px; }
+      .hero-title { font-size:26px; }
+      section { padding:28px 0; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container nav">
+    <div class="nav-left">
+      <div class="nav-logo">L</div>
+      <div>兰星少年俱乐部</div>
+    </div>
+    <nav class="nav-links">
+      <a href="#about">俱乐部介绍</a>
+      <a href="#league">联赛积分</a>
+      <a href="#sponsors">赞助合作</a>
+      <a href="#news">俱乐部新闻</a>
+      <a href="#contact">加入我们</a>
+    </nav>
+    <div class="nav-cta">
+      <button class="btn btn-primary" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'});">
+        立即加入
+      </button>
+    </div>
+    <div class="lang-switch">
+  <span class="current-lang">中文</span>
+  <span>·</span>
+  <a href="/en/">EN</a>
+</div>
+
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <div class="hero-badge">
+          <span></span>
+          <div>Tech-Sport · 少年成长 · 社区联赛</div>
+        </div>
+        <h1 class="hero-title">
+          兰星少年俱乐部<br/>
+          让孩子在对战中发光。
+        </h1>
+        <p class="hero-subtitle">
+          这里是热爱科技运动与团队竞技的少年们的据点。陪伴，不只是“我在这里”，而是“我和你一起上”。在 HADO 的战场上，父母与孩子并肩冲刺、配合、喊战术，一起经历胜利与失误。当我们一起战斗，你们之间的光就会再次亮起。
+        </p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'});">
+            填写信息 · 加入俱乐部
+          </button>
+          <button class="btn btn-soft" onclick="document.getElementById('league').scrollIntoView({behavior:'smooth'});">
+            查看俱乐部联赛积分
+          </button>
+        </div>
+        <div class="hero-meta">
+          <div><strong>面向范围：</strong> 全年龄段的体育竞技爱好者</div>
+          <div><strong>基地：</strong> 上海北外滩 星荟中心 HADO 场馆</div>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="hero-card-header">
+          <div>
+            <div class="hero-card-title">兰星俱乐部联赛 · 当前赛季</div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:2px;">
+              单人随机超级联赛 · 周末定期更新积分
+            </div>
+          </div>
+          <div class="hero-pill">LIVE LEAGUE</div>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat-item">
+            <div class="label">赛季场次</div>
+            <div class="value">3</div>
+            <div style="font-size:10px;color:#9ca3af;">逐步增加中</div>
+          </div>
+          <div class="hero-stat-item">
+            <div class="label">注册选手</div>
+            <div class="value">50+</div>
+            <div style="font-size:10px;color:#9ca3af;">含兰星少年&家长</div>
+          </div>
+          <div class="hero-stat-item">
+            <div class="label">俱乐部战队</div>
+            <div class="value">10+</div>
+            <div style="font-size:10px;color:#9ca3af;">持续招新</div>
+          </div>
+        </div>
+        <div class="hero-footnote">
+          最新积分与赛程以现场公布为准，本页面将在每个比赛日后做线上同步更新。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">兰星少年俱乐部（Blxst）是什么？</h2>
+        <p class="section-subtitle">
+          以 HADO 为核心的未来运动俱乐部，融合科技、体育与团队合作，让少年在真实对战中完成成长。
+        </p>
+      </div>
+      <div class="about-grid">
+        <div class="about-card">
+          <h3 style="font-size:15px;margin-bottom:8px;">我们的愿景</h3>
+          <p>
+            兰星少年俱乐部希望打造一个“让孩子愿意主动来的地方”：在这里，孩子们既能体验到电子竞技的紧张刺激，又能获得线下运动带来的体能提升与社交连结。
+          </p>
+          <p style="margin-top:8px;">
+            我们以俱乐部联赛、青训体系、亲子专场等多种形式，以HADO为名，赴青春之约。
+          </p>
+          <div class="about-tags">
+            <div class="tag">HADO 未来运动</div>
+            <div class="tag">少年成长体系</div>
+            <div class="tag">亲子联赛</div>
+            <div class="tag">俱乐部成员制</div>
+          </div>
+        </div>
+        <div class="about-card">
+          <h3 style="font-size:15px;margin-bottom:8px;">适合哪些孩子？</h3>
+          <p>
+            · 喜欢科技 & 游戏，但又希望有真实对抗体验的孩子<br/>
+            · 想要提升反应速度、决策能力、团队协作的孩子<br/>
+            · 需要一个“稳定小社群”，结交同龄伙伴和榜样的孩子
+          </p>
+          <p style="margin-top:8px;">
+            如需预约体验或了解青训安排，欢迎直接联系我们，我们会根据年龄和经验，为孩子推荐合适的组别和场次。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEAGUE -->
+  <section id="league">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">俱乐部联赛 · 积分榜</h2>
+        <p class="section-subtitle">
+         Club Leagues。
+        </p>
+      </div>
+
+      <div class="league-card">
+        <div class="league-top">
+          <div>
+            <div class="badge-season" id="league-season-title">
+              正在加载赛季信息…
+            </div>
+            <div class="league-meta">
+              <span id="league-season-status-pill" class="status-pill status-active" style="display:none;"></span>
+            </div>
+            <div class="league-meta">
+              更新频率：每个比赛日结束后 · 请俱乐部管理员手工更新数据文件
+            </div>
+          </div>
+          <div class="league-controls">
+            <label for="season-select" style="font-size:12px;color:#6b7280;">选择赛季：</label>
+            <select id="season-select" class="league-select">
+              <option>加载中…</option>
+            </select>
+            <button class="btn btn-soft">
+              完整赛程（预留入口）
+            </button>
+          </div>
+        </div>
+
+        <div class="league-table-wrapper">
+          <table>
+            <thead id="league-thead">
+              <tr>
+                <th>排名</th>
+                <th>选手姓名</th>
+                <th>联赛积分</th>
+              </tr>
+            </thead>
+            <tbody id="league-tbody">
+              <tr>
+                <td colspan="3">正在加载积分数据…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="league-meta" id="league-rounds-note" style="margin-top:6px;">
+          <!-- 可在这里显示“共 X 个比赛日”之类的信息 -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPONSORS -->
+  <section id="sponsors">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">俱乐部赞助与合作伙伴</h2>
+        <p class="section-subtitle">
+          以下列表来自数据文件，可随时添加或下架赞助商，无需修改网页代码。
+        </p>
+      </div>
+
+      <div id="sponsors-grid" class="sponsors-grid">
+        <div class="sponsor-card">
+          <p>正在加载赞助商信息…</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWS -->
+  <section id="news">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">俱乐部新闻 & 活动</h2>
+        <p class="section-subtitle">
+          首页默认展示最近 3 条新闻，如需查看全部历史内容，可进入“全部新闻”单独页面。
+        </p>
+      </div>
+
+      <div id="news-grid" class="news-grid">
+        <article class="news-card">
+          <p>正在加载新闻列表…</p>
+        </article>
+      </div>
+
+      <div class="news-footer">
+  	 <div>更多内容：完整战报、活动回顾、媒体报道等。</div>
+  	 <a href="news.html" class="btn btn-soft">查看全部新闻</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">加入兰星少年俱乐部</h2>
+        <p class="section-subtitle">
+          Please Join us。
+        </p>
+      </div>
+
+      <div class="contact-grid">
+        <div class="contact-card">
+          <h3 style="font-size:15px;margin-bottom:8px;">联系信息</h3>
+          <ul class="contact-list">
+            <li><span>邮箱：</span><a href="mailto:blastjunior@163.com">blastjunior@163.com</a></li>
+            <li><span>微信：</span>可添加俱乐部小助手（此处可写微信号）</li>
+            <li><span>场馆地址：</span>上海 · 北外滩 星荟中心 HADO 旗舰场馆</li>
+            <li><span>开放时间：</span> 周末联赛日 + 工作日预约体验</li>
+          </ul>
+          <p style="margin-top:10px;font-size:13px;color:#6b7280;">
+            欢迎家长扫码关注俱乐部视频号，获取最新比赛片段、活动预告与赛事回放。
+          </p>
+
+          <div class="qr-block">
+            <!-- 请把二维码图片放到 /assets 目录里，并保证文件名一致 -->
+            <img src="assets/lanxing-video-qr.jpg" alt="HADO 兰星少年俱乐部视频号二维码" />
+            <p>扫一扫二维码，关注「HADO 兰星少年」视频号</p>
+          </div>
+
+        </div>
+
+        <!-- 报名表单，提交到 Cloudflare Worker /contact-submit -->
+        <form
+          class="contact-form"
+          action="https://blastjunior.com/contact-submit"
+          method="POST"
+        >
+          <h3 style="font-size:15px;margin-bottom:8px;">报名 / 咨询</h3>
+
+          <label for="child-name">孩子姓名</label>
+          <input id="child-name" type="text" name="childName" placeholder="请输入孩子姓名" required />
+
+          <label for="age">孩子年龄</label>
+          <input id="age" type="number" name="age" min="2" max="120" placeholder="例如：12" required />
+
+          <label for="contact-way">联系方式（家长手机号 / 微信）</label>
+          <input id="contact-way" type="text" name="contact" placeholder="我们将通过此方式与您确认" required />
+
+          <label for="message">想了解的内容 / 备注</label>
+          <textarea id="message" name="message" rows="3" placeholder="例如：希望加入周末联赛；希望先安排一次体验课；有 3 位同学想一起报名等……"></textarea>
+
+          <!-- 可选：表单标题 / 备注，方便你在邮件里区分来源 -->
+          <input type="hidden" name="_subject" value="兰星少年俱乐部官网 · 报名 / 咨询" />
+
+          <button type="submit" class="btn btn-primary" style="margin-top:4px;width:100%;">
+            提交报名意向
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="footer-nav">
+  <a href="index.html">首页</a>
+  <a href="honor.html">荣誉室</a>
+  <a href="gallery.html">照片墙</a>
+  <a href="news.html">新闻中心</a>
+</div>
+
+<footer>
+  <div class="container footer-inner">
+    <div>© <span id="year"></span> 兰星少年俱乐部 · 保留所有权利</div>
+    <div class="footer-links">
+      <a href="#">隐私政策（预留）</a>
+      <a href="#">使用条款（预留）</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // 年份
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  // 联赛
+  async function loadLeagues() {
+    const res = await fetch('./data/leagues.json');
+    const data = await res.json();
+
+    const select = document.getElementById('season-select');
+    const thead = document.getElementById('league-thead');
+    const tbody = document.getElementById('league-tbody');
+    const seasonTitle = document.getElementById('league-season-title');
+    const statusPill = document.getElementById('league-season-status-pill');
+    const roundsNote = document.getElementById('league-rounds-note');
+
+    // 填充赛季下拉框
+    select.innerHTML = '';
+    data.seasons.forEach(season => {
+      const opt = document.createElement('option');
+      opt.value = season.id;
+      opt.textContent = season.name;
+      if (season.id === data.currentSeasonId) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    function renderStatusPill(season) {
+      statusPill.style.display = 'inline-flex';
+      statusPill.className = 'status-pill';
+      let text = '';
+      if (season.status === 'active') {
+        statusPill.classList.add('status-active');
+        text = '进行中赛季';
+      } else if (season.status === 'archived') {
+        statusPill.classList.add('status-archived');
+        text = '历史赛季';
+      } else if (season.status === 'planned') {
+        statusPill.classList.add('status-planned');
+        text = '筹备中赛季';
+      } else {
+        text = '赛季状态未设置';
+      }
+      statusPill.textContent = text;
+    }
+
+    function renderSeason(seasonId) {
+      const season = data.seasons.find(s => s.id === seasonId);
+      if (!season) return;
+
+      // 标题
+      seasonTitle.textContent = season.name;
+      renderStatusPill(season);
+
+      // 计算所有比赛日期
+      const dates = (season.rounds || []).map(r => r.date);
+      const uniqueDates = [...new Set(dates)].sort();
+
+      // 构建 “日期 -> { 选手名: 当日积分 }”
+      const pointsByDate = {};
+      (season.rounds || []).forEach(round => {
+        const map = {};
+        (round.playerPoints || []).forEach(p => {
+          map[p.name] = p.points;
+        });
+        pointsByDate[round.date] = map;
+      });
+
+      // 表头
+      const headRow = document.createElement('tr');
+      headRow.innerHTML = `
+        <th>排名</th>
+        <th>选手姓名</th>
+        ${uniqueDates.map(d => `<th>${d}</th>`).join('')}
+        <th>联赛积分</th>
+      `;
+      thead.innerHTML = '';
+      thead.appendChild(headRow);
+
+      // 表体
+      tbody.innerHTML = '';
+      if (!season.standings || season.standings.length === 0) {
+        const tr = document.createElement('tr');
+        const colSpan = 3 + uniqueDates.length;
+        tr.innerHTML = `<td colspan="${colSpan}">当前赛季暂无积分数据，请在 data/leagues.json 中维护 standings。</td>`;
+        tbody.appendChild(tr);
+      } else {
+        season.standings.forEach((item, idx) => {
+          const tr = document.createElement('tr');
+          const rank = item.rank != null ? item.rank : (idx + 1);
+          const perDateCells = uniqueDates.map(d => {
+            const map = pointsByDate[d] || {};
+            const val = map[item.name];
+            return `<td>${val != null ? val : '-'}</td>`;
+          }).join('');
+          tr.innerHTML = `
+            <td>${rank}</td>
+            <td class="player-name">${item.name}</td>
+            ${perDateCells}
+            <td><strong>${item.totalPoints != null ? item.totalPoints : '-'}</strong></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // 底部文字
+      const roundsCount = uniqueDates.length;
+      roundsNote.textContent = roundsCount
+        ? `本赛季已进行 ${roundsCount} 个比赛日（按日期汇总显示）。`
+        : '本赛季尚未开始或尚未录入比赛日数据。';
+    }
+
+    renderSeason(data.currentSeasonId);
+    select.addEventListener('change', e => {
+      renderSeason(e.target.value);
+    });
+  }
+
+  // 新闻
+  async function loadNews() {
+    const res = await fetch('./data/news.json');
+    const data = await res.json();
+    const container = document.getElementById('news-grid');
+    container.innerHTML = '';
+
+    if (!Array.isArray(data) || data.length === 0) {
+      const card = document.createElement('article');
+      card.className = 'news-card';
+      card.innerHTML = '<p>暂时还没有新闻，可以在 data/news.json 中添加。</p>';
+      container.appendChild(card);
+      return;
+    }
+
+    // 按日期倒序
+    const sorted = [...data].sort((a, b) => {
+      return new Date(b.date) - new Date(a.date);
+    });
+
+    const latest = sorted.slice(0, 3);
+    latest.forEach(item => {
+      const card = document.createElement('article');
+      card.className = 'news-card';
+      const tag = item.tag ? ` · ${item.tag}` : '';
+      const imgHtml = item.imageUrl
+        ? `<div class="news-thumb"><img src="${item.imageUrl}" alt="${item.title}"></div>`
+        : '';
+      card.innerHTML = `
+        ${imgHtml}
+        <div class="news-meta">${item.date}${tag}</div>
+        <h3 class="news-title">${item.title}</h3>
+        <p>${item.summary || ''}</p>
+        ${item.linkUrl ? `<a class="news-more" href="${item.linkUrl}" target="_blank" rel="noopener">查看详情</a>` : ''}
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // 赞助商
+  async function loadSponsors() {
+    const res = await fetch('./data/sponsors.json');
+    const data = await res.json();
+    const grid = document.getElementById('sponsors-grid');
+    grid.innerHTML = '';
+
+    if (!Array.isArray(data) || data.length === 0) {
+      const card = document.createElement('div');
+      card.className = 'sponsor-card';
+      card.innerHTML = '<p>当前暂无赞助商展示，可在 data/sponsors.json 中添加。</p>';
+      grid.appendChild(card);
+      return;
+    }
+
+    data.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'sponsor-card';
+      const level = item.level ? item.level : '合作伙伴';
+      const nameHtml = item.website
+        ? `<a href="${item.website}" target="_blank" rel="noopener" class="sponsor-name">${item.name}</a>`
+        : `<div class="sponsor-name">${item.name}</div>`;
+      const logoContent = item.logoUrl
+        ? `<img src="${item.logoUrl}" alt="${item.name}" />`
+        : (item.name ? item.name.charAt(0) : 'S');
+
+      card.innerHTML = `
+        <div class="sponsor-header">
+          <div class="sponsor-logo">${logoContent}</div>
+          <div>
+            ${nameHtml}
+            <div class="sponsor-tag">${level}${item.tagline ? ' · ' + item.tagline : ''}</div>
+          </div>
+        </div>
+        <p>${item.description || ''}</p>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadLeagues().catch(console.error);
+    loadNews().catch(console.error);
+    loadSponsors().catch(console.error);
+  });
+</script>
+
+</body>
+</html>

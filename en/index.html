@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BLXST JUNIOR – Stories, People and Moments from Our Club in Shanghai</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="BLXST JUNIOR is a youth tech sport club in Shanghai where parents and kids play HADO side by side. This page is a calm window into our stories, people and moments."
+  />
+  <style>
+    :root {
+      --brand-blue: #1655ff;     /* 可以按你实际“兰星蓝”改 */
+      --brand-dark: #111827;
+      --brand-light: #f3f4f6;
+      --brand-border: #e5e7eb;
+      --brand-muted: #6b7280;
+      --content-width: 960px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Helvetica, Arial, sans-serif;
+      color: var(--brand-dark);
+      background-color: #ffffff;
+      line-height: 1.7;
+    }
+
+    a {
+      color: var(--brand-blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Header */
+
+    .site-header {
+      border-bottom: 1px solid var(--brand-border);
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .header-inner {
+      max-width: var(--content-width);
+      margin: 0 auto;
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .site-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
+
+    .site-logo-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 2px solid var(--brand-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: var(--brand-blue);
+    }
+
+  .section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 1.6rem;
+  row-gap: 0.35rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.section-nav a {
+  color: var(--brand-muted);
+  font-weight: 500;
+  position: relative;
+  padding-bottom: 0.25rem;
+}
+
+.section-nav a:hover {
+  color: var(--brand-dark);
+}
+
+.section-nav a:hover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--brand-blue);
+}
+
+
+
+    .main-nav {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      font-size: 0.88rem;
+    }
+
+    .main-nav a {
+      color: var(--brand-muted);
+      font-weight: 500;
+      position: relative;
+    }
+
+    .main-nav a.nav-active {
+      color: var(--brand-dark);
+    }
+
+    .main-nav a.nav-active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -0.4rem;
+      height: 2px;
+      background: var(--brand-blue);
+      border-radius: 999px;
+    }
+
+    .lang-switch {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--brand-muted);
+    }
+
+    .lang-switch a {
+      color: var(--brand-muted);
+      padding: 0.1rem 0.2rem;
+    }
+
+    .lang-switch span.current {
+      color: var(--brand-dark);
+      font-weight: 600;
+    }
+
+    /* Layout */
+
+    .page {
+      max-width: var(--content-width);
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 3.5rem;
+    }
+
+    .hero {
+      padding: 2.5rem 0 2rem;
+      border-bottom: 1px solid var(--brand-border);
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-kicker {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.78rem;
+      color: var(--brand-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .hero-title {
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      line-height: 1.25;
+      margin: 0 0 0.75rem;
+    }
+
+    .hero-subtitle {
+      max-width: 36rem;
+      color: var(--brand-muted);
+      font-size: 0.98rem;
+    }
+
+    .hero-tagline {
+      margin-top: 1.5rem;
+      padding: 0.9rem 1rem;
+      border-left: 3px solid var(--brand-blue);
+      background: #f9fafb;
+      font-size: 0.95rem;
+      color: #374151;
+    }
+
+    .hero-photo {
+  margin: 2.2rem 0 2.6rem;
+}
+
+.hero-photo-inner {
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+  background: #000;
+}
+
+/* 横条效果：高度不宜太高，居中裁切 */
+.hero-photo-inner img {
+  width: 100%;
+  display: block;
+  height: 340px;
+  object-fit: cover;
+  object-position: center;
+}
+
+.hero-photo-caption {
+  margin-top: 0.6rem;
+  font-size: 0.86rem;
+  color: var(--brand-muted);
+  text-align: center;
+}
+    
+@media (max-width: 768px) {
+  .hero-photo-inner img {
+    height: 220px; 
+  }
+}
+
+
+    /* Sections */
+
+    section {
+      margin-bottom: 2.5rem;
+      scroll-margin-top: 96px;
+    }
+
+    .section-label {
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.75rem;
+      color: var(--brand-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      margin: 0 0 0.85rem;
+    }
+
+    .section-lead {
+      font-size: 0.98rem;
+      color: var(--brand-muted);
+      max-width: 38rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .section-body {
+      font-size: 0.98rem;
+    }
+
+    .list-soft {
+      list-style: none;
+      padding-left: 0;
+      margin: 0.6rem 0 0.2rem;
+    }
+
+    .list-soft li {
+      margin-bottom: 0.35rem;
+    }
+
+    .card {
+      border-radius: 0.75rem;
+      border: 1px solid var(--brand-border);
+      padding: 1.25rem 1.4rem;
+      background: #ffffff;
+    }
+
+    .card + .card {
+      margin-top: 0.9rem;
+    }
+
+    .meta {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--brand-muted);
+      margin-bottom: 0.3rem;
+    }
+
+    .small-note {
+      font-size: 0.86rem;
+      color: var(--brand-muted);
+      margin-top: 0.5rem;
+    }
+
+    .quote-list {
+      margin: 0.6rem 0 0;
+      padding-left: 1rem;
+      border-left: 2px solid var(--brand-border);
+    }
+
+    .quote-list p {
+      margin: 0 0 0.55rem;
+      font-size: 0.96rem;
+      font-style: italic;
+    }
+
+    .quote-list p:last-child {
+      margin-bottom: 0;
+    }
+
+    .pill-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid var(--brand-border);
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: var(--brand-dark);
+      background: #ffffff;
+      text-decoration: none;
+    }
+
+    .pill-link span.icon {
+      font-size: 0.9rem;
+    }
+
+    .pill-link:hover {
+      border-color: var(--brand-blue);
+      text-decoration: none;
+    }
+
+    .visit-block {
+      border-radius: 0.9rem;
+      border: 1px solid var(--brand-border);
+      padding: 1.4rem 1.5rem;
+      background: #f9fafb;
+      margin-top: 0.8rem;
+    }
+
+    .visit-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.3fr);
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 768px) {
+      .header-inner {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .main-nav {
+        display: none; /* 英文单页导航可以先隐藏，避免太挤 */
+      }
+
+      .page {
+        padding-inline: 1rem;
+      }
+
+      .visit-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    /* Footer */
+
+    .site-footer {
+      border-top: 1px solid var(--brand-border);
+      padding: 1.5rem 1.25rem 2.5rem;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: var(--brand-muted);
+    }
+
+.site-footer a {
+  color: var(--brand-muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}
+
+
+    .footer-inner {
+      max-width: var(--content-width);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="site-logo">
+        <div class="site-logo-mark">BJ</div>
+        <div>BLXST&nbsp;JUNIOR / Shanghai</div>
+      </div>
+      <nav class="section-nav">
+  <a href="#welcome">Welcome</a>
+  <a href="#stories">Stories</a>
+  <a href="#people">People</a>
+  <a href="#why-we-play">Why We Play</a>
+  <a href="#news">News</a>
+  <a href="#scenes">Scenes</a>
+  <a href="#day">A Day in Our Club</a>
+  <a href="#letters">Letters</a>
+  <a href="#notes">Notes</a>
+  <a href="#visit">Visit</a>
+</nav>
+
+      <div class="lang-switch">
+        <a href="/">中文</a>
+        <span>·</span>
+        <span class="current">EN</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page -->
+  <main class="page">
+    <!-- Hero / Welcome -->
+    <section class="hero" id="welcome">
+      <div class="hero-kicker">English Cultural Hub</div>
+      <h1 class="hero-title">Welcome to BLXST JUNIOR</h1>
+      <p class="hero-subtitle">
+        A youth tech sport club in Shanghai, where parents and kids stand on
+        the same field and play side by side. This page is a small window into
+        our world&mdash;quiet, honest and not trying to sell you anything.
+      </p>
+      <div class="hero-tagline">
+        We are not here to impress you. We are here to show you what it feels
+        like when families move, think and play together.
+      </div>
+    </section>
+
+    <section class="hero-photo">
+      <div class="hero-photo-inner">
+        <img
+          src="/images/english/worldcup-2025-hero.jpg"
+          alt="Players and teams from around the world celebrating at the HADO World Cup 2025 in Shanghai."
+          loading="lazy"
+        />
+      </div>
+      <p class="hero-photo-caption">
+        HADO World Cup 2025 · Shanghai North Bund &mdash; players, families and teams from around the world sharing the same stage.
+      </p>
+    </section>
+
+    <!-- Stories From Us -->
+    <section id="stories">
+      <div class="section-label">Section 01</div>
+      <h2 class="section-title">Stories From Us</h2>
+      <p class="section-body">
+        We are a small club in Shanghai, built around a simple idea:
+        parents and kids should be able to play, sweat, and grow together.
+      </p>
+      <p class="section-body">
+        HADO gave us a new way to do that. It is fast, energetic, a little
+        chaotic at times&mdash;but in that chaos, something beautiful
+        happens. Parents become teammates. Kids become leaders. And
+        families discover a new way of being close.
+      </p>
+      <p class="section-body">
+        We are not a big institution. We are simply a group of people who
+        believe that youth, technology and play can shape better memories
+        for the next generation.
+      </p>
+      <p class="section-body">
+        This space is where we share moments from our journey&mdash;not as
+        advertisements, but as small pieces of who we are.
+      </p>
+    </section>
+
+    <!-- People You'll Meet -->
+    <section id="people">
+      <div class="section-label">Section 02</div>
+      <h2 class="section-title">People You&rsquo;ll Meet</h2>
+      <p class="section-lead">
+        Short portraits of the people who shape our small world.
+      </p>
+      <ul class="list-soft section-body">
+        <li>– A father who discovered he could still move like he was eighteen.</li>
+        <li>– A teenager who calls every teammate by name before the match starts.</li>
+        <li>– A coach who believes strategy matters more than strength.</li>
+        <li>– A mother who joined &ldquo;just for fun&rdquo; and became the best defender on her team.</li>
+      </ul>
+      <p class="section-body">
+        You may not remember all their names. But if you visit us, you will
+        remember the way the room feels when they play together.
+      </p>
+    </section>
+
+    <!-- Why We Play -->
+    <section id="why-we-play">
+      <div class="section-label">Section 03</div>
+      <h2 class="section-title">Why We Play</h2>
+      <p class="section-body">
+        We don&rsquo;t play HADO just to win matches. We play because of
+        what happens around the game.
+      </p>
+      <ul class="list-soft section-body">
+        <li>– We believe parents and kids should share the same field.</li>
+        <li>– We believe noise is part of learning.</li>
+        <li>– We believe play can be serious, and seriousness can be fun.</li>
+        <li>– We believe competition without fear builds confidence.</li>
+        <li>– We believe memories are made when people move together.</li>
+      </ul>
+      <p class="section-body">
+        BLXST JUNIOR is our way of making these beliefs visible.
+      </p>
+    </section>
+
+    <!-- News From Our Days -->
+    <section id="news">
+      <div class="section-label">Section 04</div>
+      <h2 class="section-title">News From Our Days</h2>
+      <p class="section-lead">
+        We don&rsquo;t publish every score or announcement here. Instead,
+        this space is for small moments we&rsquo;d like to share.
+      </p>
+
+      <article class="card">
+        <div class="meta">2025-09-01 · Autumn Super League</div>
+        <h3 class="section-body">Autumn Super League kicks off</h3>
+        <p class="section-body">
+          Our club gathered for the first matches of the Autumn Super
+          League. Some parents played more rounds than their kids. The
+          loudest cheers came when families were on the same team.
+        </p>
+      </article>
+
+      <article class="card">
+        <div class="meta">2025-08-15 · Family Night</div>
+        <h3 class="section-body">A family night that didn&rsquo;t feel like “practice”</h3>
+        <p class="section-body">
+          We opened the evening just for families. No rankings, no pressure
+          &mdash; only mixed teams of parents and kids. One mother said,
+          &ldquo;I haven&rsquo;t run this much in years, and it feels good.&rdquo;
+        </p>
+      </article>
+
+      <article class="card">
+        <div class="meta">2025-07-20 · Overseas Friends</div>
+        <h3 class="section-body">First visit from overseas friends</h3>
+        <p class="section-body">
+          A group of visitors from abroad joined our regular session.
+          Language was different, but tactics, laughter and high-fives
+          worked perfectly without translation.
+        </p>
+        <p class="small-note">
+          In the future, selected English news can also be found on our main
+          <a href="/news.html">news page</a>.
+        </p>
+      </article>
+    </section>
+
+    <!-- Scenes From Our Club (no photos, link to gallery) -->
+    <section id="scenes">
+      <div class="section-label">Section 05</div>
+      <h2 class="section-title">Scenes From Our Club</h2>
+      <p class="section-body">
+        Sometimes words are not enough. Our daily life is better seen than
+        explained. If you&rsquo;d like to get a feeling for the space,
+        faces and energy of our club, you can visit our photo wall.
+      </p>
+      <p>
+        <a class="pill-link" href="/gallery.html">
+          <span class="icon">📷</span>
+          <span>See our photo gallery (Chinese)</span>
+        </a>
+      </p>
+      <p class="small-note">
+        Captions are in Chinese, but the smiles, sweat and high-fives don&rsquo;t
+        need translation.
+      </p>
+    </section>
+
+    <!-- A Day in Our Club -->
+    <section id="day">
+      <div class="section-label">Section 06</div>
+      <h2 class="section-title">A Day in Our Club</h2>
+      <p class="section-body">
+        No two days are the same here. Some days are loud, full of running
+        and shouting and last-second comebacks. Some days are slower, with
+        long talks about strategy and team roles.
+      </p>
+      <p class="section-body">
+        Most days, though, end the same way: parents and kids walking out
+        together, still discussing a play that almost worked, or laughing
+        about the moment someone forgot they were &ldquo;supposed to be
+        old&rdquo;.
+      </p>
+      <p class="section-body">
+        For us, that is a good day.
+      </p>
+    </section>
+
+    <!-- Letters We Keep -->
+    <section id="letters">
+      <div class="section-label">Section 07</div>
+      <h2 class="section-title">Letters We Keep</h2>
+      <p class="section-lead">
+        From time to time, people leave us words we don&rsquo;t want to
+        forget. We keep a few of them here.
+      </p>
+      <div class="quote-list">
+        <p>&ldquo;This is the first sport my son and I do together.&rdquo;</p>
+        <p>&ldquo;I didn&rsquo;t know I could enjoy losing so much.&rdquo;</p>
+        <p>&ldquo;My daughter is braver here and I feel I can be protected by her.&rdquo;</p>
+        <p>
+          &ldquo;I come for the matches. I stay for the way my family talks on
+          the way home.&rdquo;
+        </p>
+      </div>
+      <p class="small-note">
+        In the future, some of these lines may come from you and please share with us if you feel touched.
+      </p>
+    </section>
+
+    <!-- Notes on HADO -->
+    <section id="notes">
+      <div class="section-label">Section 08</div>
+      <h2 class="section-title">Notes on HADO</h2>
+      <p class="section-body">
+        HADO is an augmented-reality sport where players wear a headset,
+        hold a sensor, and throw virtual energy balls at each other inside
+        a real, physical court.
+      </p>
+      <p class="section-body">
+        But for us, HADO is also a way to observe people:
+      </p>
+      <ul class="list-soft section-body">
+        <li>– HADO teaches timing.</li>
+        <li>– HADO teaches patience.</li>
+        <li>– HADO teaches how to lose and try again.</li>
+        <li>– HADO teaches parents to listen to their kids’ ideas.</li>
+      </ul>
+      <p class="section-body">
+        The rules matter. The scores matter. But the people matter more.
+      </p>
+    </section>
+
+    <!-- Play With Us (Visit Us) -->
+    <section id="visit">
+      <div class="section-label">Section 09</div>
+      <h2 class="section-title">Play With Us (Visit Us)</h2>
+      <p class="section-lead">
+        If you ever pass through Shanghai, our door is open. You don&rsquo;t
+        need to be an athlete. You don&rsquo;t even need to know the rules.
+      </p>
+
+      <div class="visit-grid">
+        <div class="visit-block">
+          <h3 class="section-body">How to visit</h3>
+          <p class="section-body">
+            You can simply watch a match, or, if you feel like it, join one.
+            We recommend reaching out in advance if you come with a group,
+            so we can make sure there is space on the court.
+          </p>
+          <p class="section-body">
+            <strong>Location</strong><br />
+            HADO Arena, B1/328，Tian Tong Rd, North Bund, Shanghai<br />
+            <!-- 在这里填你的具体英文地址 -->
+          </p>
+        </div>
+        <div class="visit-block">
+          <h3 class="section-body">Language &amp; contact</h3>
+          <p class="section-body">
+            Basic English is available on site. Tactics and laughter do not
+            require translation.
+          </p>
+          <p class="section-body">
+            <strong>For visit or collaboration inquiries:</strong><br />
+            <!-- 替换成你的真实邮箱或联络方式 -->
+            <a href="mailto:blastjunior@163.com">blastjunior@163.com</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <strong>BLXST JUNIOR</strong><br />
+      Shanghai, China
+    </div>
+
+    <div>
+      <div><a href="/">Home（中文）</a></div>
+      <div><a href="/honor.html">Honor</a></div>
+      <div><a href="/gallery.html">Gallery</a></div>
+      <div><a href="/news.html">News</a></div>
+    </div>
+
+    <div>
+      <div><a href="/privacy.html">Privacy Policy</a></div>
+      <div><a href="/terms.html">Terms of Use</a></div>
+      <div>© 2025 BLXST JUNIOR Club</div>
+      <div>Made in China · Written in English for friends from everywhere.</div>
+
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
+

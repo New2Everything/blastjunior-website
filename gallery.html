@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>兰星少年俱乐部 · 照片宇宙</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --lanxing-blue: #1f5fff;
+      --lanxing-dark: #020617;
+      --lanxing-light: #f5f7ff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-soft: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4ff;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* 顶部导航 */
+    header {
+      padding: 14px 0;
+      background: #ffffffcc;
+      border-bottom: 1px solid rgba(229, 231, 235, 0.9);
+      backdrop-filter: blur(14px);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .nav-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #a5b4fc, #1d4ed8);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #f9fafb;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .nav a {
+      color: #4b5563;
+      text-decoration: none;
+    }
+
+    .nav a:hover {
+      color: #111827;
+    }
+
+    main {
+      flex: 1;
+      padding: 28px 0 32px;
+    }
+
+    /* 上半部分简介卡片 */
+
+    .intro-card {
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid var(--border-soft);
+      padding: 22px 22px 20px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .subtitle-small {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .notice {
+      border-radius: 12px;
+      border: 1px dashed #cbd5f5;
+      background: var(--lanxing-light);
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .notice a {
+      color: var(--lanxing-blue);
+      text-decoration: none;
+    }
+    .notice a:hover {
+      text-decoration: underline;
+    }
+
+    /* ===================================
+       宇宙背景容器 + 星空 + 流星
+       =================================== */
+
+    /* 宇宙背景 + 星云 */
+    .universe-bg {
+      position: relative;
+      width: 100%;
+      min-height: 1200px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 20% 0%, #3b5fc4 0, #151b3a 40%, #050818 100%);
+    }
+
+    .universe-bg::before {
+      content: "";
+      position: absolute;
+      inset: -20%;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 18% 32%, rgba(120, 150, 255, 0.25) 0, transparent 55%),
+        radial-gradient(circle at 82% 72%, rgba(190, 120, 255, 0.22) 0, transparent 60%),
+        radial-gradient(circle at 60% 10%, rgba(255, 255, 255, 0.15) 0, transparent 40%);
+      mix-blend-mode: screen;
+      opacity: 0.9;
+    }
+
+    /* 星空层，多层随机星星 */
+    .stars {
+      position: absolute;
+      inset: -40%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .stars::before,
+    .stars::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(rgba(255,255,255,0.95) 1px, transparent 1px),
+        radial-gradient(rgba(255,255,255,0.6) 1.5px, transparent 1.5px),
+        radial-gradient(rgba(255,255,255,0.35) 2px, transparent 2px);
+      background-size:
+        190px 210px,
+        280px 260px,
+        420px 430px;
+      background-position:
+        0 0,
+        80px 50px,
+        -70px 130px;
+      opacity: 0.45;
+      animation: twinkle 9s infinite alternate ease-in-out;
+      mix-blend-mode: screen;
+    }
+
+    .stars::after {
+      background-position:
+        -120px -40px,
+        120px 160px,
+        -40px 260px;
+      opacity: 0.35;
+      animation-duration: 13s;
+    }
+
+    @keyframes twinkle {
+      0% {
+        opacity: 0.25;
+        transform: translate3d(0, 0, 0);
+      }
+      50% {
+        opacity: 0.7;
+        transform: translate3d(8px, -6px, 0);
+      }
+      100% {
+        opacity: 0.35;
+        transform: translate3d(-5px, 4px, 0);
+      }
+    }
+
+    /* 流星层 */
+    .shooting-star {
+      position: absolute;
+      inset: -10%;
+      pointer-events: none;
+      z-index: 3;
+      overflow: hidden;
+    }
+
+    @keyframes meteor {
+      0% {
+        opacity: 0;
+        transform: translate(0,0) rotate(-45deg);
+      }
+      5% {
+        opacity: 1;
+      }
+      20% {
+        opacity: 0;
+        transform: translate(350px, 350px) rotate(-45deg);
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+
+    /* 浮动照片宇宙主容器 */
+
+    .floating-wrapper {
+      margin-top: 8px;
+      padding-bottom: 8px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .floating-wall {
+      position: relative;
+      width: 100%;
+      height: 1080px;
+      border-radius: 22px;
+      background: radial-gradient(circle at top,
+                  rgba(255,255,255,0.22) 0,
+                  rgba(243,244,255,0.16) 38%,
+                  rgba(15,23,42,0.55) 100%);
+      box-shadow: 0 26px 60px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+    }
+
+    /* 单张照片卡片 */
+
+    .photo-card,
+    .photo-stack {
+      position: absolute;
+      cursor: pointer;
+      transition:
+        transform 0.25s ease-out,
+        box-shadow 0.25s ease-out,
+        filter 0.25s ease-out;
+    }
+
+    .photo-card-inner {
+      position: relative;
+      width: 190px;
+      height: 125px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+      background: #000;
+      transform-style: preserve-3d;
+      transform-origin: center center;
+    }
+
+    .photo-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      backface-visibility: hidden;
+    }
+
+    .photo-card:hover,
+    .photo-stack:hover {
+      transform: translate3d(0, -4px, 0) scale(1.03) rotate(var(--rot));
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.3);
+      filter: brightness(1.05);
+    }
+
+    /* 背面卡牌 */
+
+    .photo-card.is-back .front-face {
+      display: none;
+    }
+
+    .photo-card.is-back .back-face {
+      display: flex;
+    }
+
+    .back-face {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 20% 0, #ffffff 0, #1e293b 48%, #020617 100%);
+      color: #e5e7eb;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0.8rem;
+      font-size: 0.8rem;
+      backface-visibility: hidden;
+    }
+
+    .back-face span {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      opacity: 0.9;
+    }
+
+    /* 堆叠卡牌 */
+
+    .photo-stack-inner {
+      position: relative;
+      width: 200px;
+      height: 135px;
+    }
+
+    .stack-card {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+      background: #000;
+      transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+
+    .stack-card:nth-child(1) {
+      transform: translate(-10px, -10px) rotate(-5deg);
+      z-index: 1;
+    }
+    .stack-card:nth-child(2) {
+      transform: translate(0, 0) rotate(1deg);
+      z-index: 2;
+    }
+    .stack-card:nth-child(3) {
+      transform: translate(10px, 8px) rotate(6deg);
+      z-index: 3;
+    }
+
+    .photo-stack:hover .stack-card:nth-child(1) {
+      transform: translate(-18px, -16px) rotate(-8deg);
+    }
+    .photo-stack:hover .stack-card:nth-child(3) {
+      transform: translate(18px, 16px) rotate(9deg);
+    }
+
+    .stack-label {
+      position: absolute;
+      top: -26px;
+      left: 0;
+      background: rgba(255, 255, 255, 0.9);
+      color: #111827;
+      border-radius: 999px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+    }
+
+    /* 模态框 */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 1.5rem;
+    }
+
+    .modal.visible {
+      display: flex;
+    }
+
+    .modal-inner {
+      background: #ffffff;
+      border-radius: 16px;
+      max-width: 960px;
+      width: 100%;
+      max-height: 90vh;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+    }
+
+    .modal-image-wrap {
+      position: relative;
+      background: #000;
+    }
+
+    .modal-image-wrap img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .modal-info {
+      padding: 1rem 1.25rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .modal-meta-label {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .modal-photo-id {
+      font-weight: 600;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      border: none;
+      background: rgba(15, 23, 42, 0.75);
+      color: #e5e7eb;
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .comment-box {
+      margin-top: 0.3rem;
+    }
+
+    .comment-box textarea {
+      width: 100%;
+      min-height: 80px;
+      resize: vertical;
+      font-family: inherit;
+      padding: 0.5rem 0.6rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      font-size: 0.88rem;
+    }
+
+    .comment-box button {
+      margin-top: 0.4rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      border: none;
+      background: var(--lanxing-blue);
+      color: #fff;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .comment-box button:hover {
+      filter: brightness(1.05);
+    }
+
+    .comment-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* 底部导航 */
+
+    .footer-nav {
+      margin-top: 8px;
+      padding: 18px 0 10px;
+      border-top: 1px solid rgba(229, 231, 235, 0.8);
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      font-size: 14px;
+      background: #f9fafb;
+    }
+
+    .footer-nav a {
+      color: #4b5563;
+      text-decoration: none;
+    }
+
+    .footer-nav a:hover {
+      color: #111827;
+      text-decoration: underline;
+    }
+
+    footer {
+      padding: 8px 0 18px;
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+      background: #f9fafb;
+    }
+
+    @media (max-width: 960px) {
+      .floating-wall {
+        height: 900px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .floating-wall {
+        height: 820px;
+      }
+
+      .photo-card-inner {
+        width: 160px;
+        height: 110px;
+      }
+
+      .photo-stack-inner {
+        width: 170px;
+        height: 120px;
+      }
+
+      .modal-inner {
+        grid-template-columns: minmax(0, 1fr);
+        max-height: 92vh;
+      }
+
+      .modal-image-wrap {
+        max-height: 50vh;
+      }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="container nav">
+    <div class="nav-left">
+      <div class="nav-logo">L</div>
+      <div>兰星少年俱乐部 · 照片宇宙</div>
+    </div>
+    <a href="index.html">返回首页</a>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <div class="intro-card">
+      <h1>兰星少年 · 照片宇宙</h1>
+      <p class="subtitle-small">
+        如果某张照片让你想起有趣的故事、比赛的那一秒、某个孩子的闪光点，
+        欢迎在照片下方留言，一起把这片照片宇宙“装修”得更热闹、更有温度。
+      </p>
+
+      <div class="notice">
+        <p style="margin-bottom: 4px;"><strong>📌 温馨提示（中文）</strong><br>
+          如果你发现某张照片不适合公开展示，请邮件联系我们：
+          <a href="mailto:blastjunior@163.com">blastjunior@163.com</a>，
+          我们会尽快处理并下架。
+        </p>
+
+        <p style="margin-bottom: 4px;"><strong>📌 Friendly Notice (English)</strong><br>
+          If you find a photo that you believe should not be displayed, please contact us at
+          <a href="mailto:blastjunior@163.com">blastjunior@163.com</a>.
+          We will review and remove it as soon as possible.
+        </p>
+
+        <p style="margin-bottom: 4px;"><strong>📌 ご連絡ください（日本語）</strong><br>
+          公開に不適切と思われる写真がありましたら、
+          <a href="mailto:blastjunior@163.com">blastjunior@163.com</a> までご連絡ください。
+          確認後、速やかに削除いたします。
+        </p>
+
+        <p style="margin-bottom: 0;"><strong>📌 안내문 (한국어)</strong><br>
+          공개되기 어려운 사진을 발견하시면
+          <a href="mailto:blastjunior@163.com">blastjunior@163.com</a> 으로 연락주세요.
+          확인 후 신속히 삭제하겠습니다.
+        </p>
+      </div>
+    </div>
+
+    <div class="universe-bg">
+      <div class="stars"></div>
+      <div class="shooting-star"></div>
+
+      <div class="floating-wrapper">
+        <div class="floating-wall" id="floatingWall">
+          <!-- JS 会在这里生成随机散落 / 堆叠的照片 -->
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="footer-nav">
+  <a href="index.html">首页</a>
+  <a href="honor.html">荣誉室</a>
+  <a href="gallery.html">照片墙</a>
+  <a href="news.html">新闻中心</a>
+</div>
+
+<footer>
+  © <script>document.write(new Date().getFullYear())</script> 兰星少年俱乐部 · Photo Wall
+</footer>
+
+<!-- 照片宇宙脚本（缩略图 + 延迟加载原图） -->
+<script>
+  const wall = document.getElementById("floatingWall");
+  const MIN_SINGLES = 30; // 至少多少张作为单张散落
+
+  const IMAGE_BASE = "/images";        // 原图目录
+  const THUMB_BASE = "/images/thumbs"; // 缩略图目录
+
+  // 把打乱后的图片数组分成：stacks（堆叠）和 singles（单张）
+  function makeGroups(shuffled) {
+    const stacks = [];
+    const singles = [];
+    const pool = shuffled.slice();
+    const total = pool.length;
+
+    if (total <= MIN_SINGLES) {
+      while (pool.length > 0) {
+        singles.push(pool.shift());
+      }
+      return { stacks, singles };
+    }
+
+    while (pool.length > 0) {
+      const remaining = pool.length;
+      const singlesNeeded = Math.max(0, MIN_SINGLES - singles.length);
+      const maxStackable = remaining - singlesNeeded;
+
+      if (maxStackable < 2) {
+        singles.push(pool.shift());
+        continue;
+      }
+
+      const r = Math.random();
+      if (r < 0.30) {
+        // 堆叠：>=2 张，上不封顶
+        const stackSize =
+          2 + Math.floor(Math.random() * (maxStackable - 1)); // [2, maxStackable)
+
+        const group = pool.splice(0, stackSize);
+        stacks.push(group);
+      } else {
+        singles.push(pool.shift());
+      }
+    }
+
+    return { stacks, singles };
+  }
+
+  // 随机摆放
+  function randomPlacement(el) {
+    const top = 8 + Math.random() * 84;
+    const left = 8 + Math.random() * 84;
+    const rot = (Math.random() * 26 - 13).toFixed(1);
+    const scale = 0.85 + Math.random() * 0.3;
+
+    el.style.top = top + "%";
+    el.style.left = left + "%";
+    el.style.transform = `translate(-50%, -50%) rotate(${rot}deg) scale(${scale})`;
+    el.style.setProperty("--rot", `${rot}deg`);
+  }
+
+  // 打开大图（这里才加载原图）
+  function openModal(photo) {
+    const img = document.getElementById("modalImage");
+    img.src = photo.full;  // 原图
+    document.getElementById("modalPhotoId").textContent =
+      `#${String(photo.id).padStart(3, "0")}`;
+    document.getElementById("photoModal").classList.add("visible");
+  }
+
+  function closeModal() {
+    document.getElementById("photoModal").classList.remove("visible");
+    const img = document.getElementById("modalImage");
+    img.src = "";
+    const textarea = document.getElementById("commentText");
+    if (textarea) textarea.value = "";
+  }
+  window.closeModal = closeModal;
+
+  // 单张照片（用缩略图）
+  function renderSinglePhoto(photo) {
+    const card = document.createElement("div");
+    card.className = "photo-card";
+    card.dataset.photoId = photo.id;
+
+    const inner = document.createElement("div");
+    inner.className = "photo-card-inner";
+
+    const front = document.createElement("img");
+    front.src = photo.thumb;
+    front.alt = `Photo ${photo.id}`;
+    front.className = "front-face";
+    front.loading = "lazy";
+
+    const back = document.createElement("div");
+    back.className = "back-face";
+    back.innerHTML = "<span>CLICK TO FLIP</span>";
+
+    inner.appendChild(front);
+    inner.appendChild(back);
+    card.appendChild(inner);
+
+    if (Math.random() < 0.25) {
+      card.classList.add("is-back");
+    }
+
+    card.addEventListener("click", () => {
+      if (card.classList.contains("is-back")) {
+        card.classList.remove("is-back");
+        setTimeout(() => openModal(photo), 120);
+      } else {
+        openModal(photo);
+      }
+    });
+
+    randomPlacement(card);
+    wall.appendChild(card);
+  }
+
+  // 堆叠（用缩略图）
+  function renderStack(group, stackIndex) {
+    const stack = document.createElement("div");
+    stack.className = "photo-stack";
+    stack.dataset.stackIndex = stackIndex;
+
+    const inner = document.createElement("div");
+    inner.className = "photo-stack-inner";
+
+    group.forEach((photo) => {
+      const card = document.createElement("div");
+      card.className = "stack-card";
+      const img = document.createElement("img");
+      img.src = photo.thumb;
+      img.alt = `Photo ${photo.id}`;
+      img.loading = "lazy";
+      card.appendChild(img);
+      inner.appendChild(card);
+    });
+
+    const size = group.length;
+
+    const label = document.createElement("div");
+    label.className = "stack-label";
+    label.textContent = `STACK · ${size}`;
+
+    const baseFont = 11;
+    const font = baseFont + Math.min(size * 0.18, 7);
+    label.style.fontSize = font + "px";
+
+    const padY = 2 + Math.min(size * 0.06, 4);
+    const padX = 6 + Math.min(size * 0.1, 6);
+    label.style.padding = `${padY}px ${padX}px`;
+
+    stack.appendChild(inner);
+    stack.appendChild(label);
+
+    stack.addEventListener("click", () => {
+      const max = group.length;
+      const input = prompt(
+        `This stack holds ${max} photos.\n` +
+        `Enter a number between 1 and ${max} to draw one:`
+      );
+
+      if (input === null) return;
+
+      const n = parseInt(input, 10);
+      if (Number.isNaN(n) || n < 1 || n > max) {
+        alert(`Please enter a number between 1 and ${max}.`);
+        return;
+      }
+
+      const picked = group[n - 1];
+      openModal(picked); // 这里同样是原图
+    });
+
+    randomPlacement(stack);
+    wall.appendChild(stack);
+  }
+
+  // 读取 list.json，生成 {id, thumb, full}
+  fetch("/images/list.json")
+    .then((r) => r.json())
+    .then((files) => {
+      const shuffled = files
+        .map((name, index) => ({
+          id: index + 1,
+          name,
+          thumb: `${THUMB_BASE}/${name}`,
+          full: `${IMAGE_BASE}/${name}`,
+        }))
+        .sort(() => Math.random() - 0.5);
+
+      const { stacks, singles } = makeGroups(shuffled);
+
+      stacks.forEach((group, i) => renderStack(group, i));
+      singles.forEach((photo) => renderSinglePhoto(photo));
+    })
+    .catch((err) => {
+      console.error("加载 /images/list.json 失败：", err);
+    });
+
+  /* 流星系统 */
+  function launchMeteor() {
+    const star = document.querySelector(".shooting-star");
+    if (!star) return;
+
+    const node = document.createElement("div");
+    node.classList.add("meteor-beam");
+    node.style.position = "absolute";
+
+    const startX = Math.random() * window.innerWidth * 0.8;
+    node.style.top = Math.random() * 200 + "px";
+    node.style.left = startX + "px";
+
+    node.style.width = "2px";
+    node.style.height = "160px";
+    node.style.background = "linear-gradient(white, rgba(255,255,255,0))";
+    node.style.transform = "rotate(-45deg)";
+    node.style.opacity = "0";
+    node.style.animation = "meteor 1.8s ease-in-out forwards";
+
+    star.appendChild(node);
+    setTimeout(() => star.removeChild(node), 2000);
+
+    const next = Math.random() * 15000 + 5000;
+    setTimeout(launchMeteor, next);
+  }
+
+  setTimeout(launchMeteor, 3000);
+</script>
+
+<!-- 模态框 -->
+<div class="modal" id="photoModal">
+  <div class="modal-inner">
+    <div class="modal-image-wrap">
+      <img id="modalImage" src="" alt="Photo preview" />
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-info">
+      <div>
+        <div class="modal-meta-label">Photo</div>
+        <div class="modal-photo-id" id="modalPhotoId"></div>
+      </div>
+      <div>
+        <div class="modal-meta-label">Notes</div>
+        <p id="modalPlaceholderText">
+          这是兰星少年俱乐部的一个瞬间。未来这里会显示已审核通过的留言节选。
+        </p>
+      </div>
+      <div class="comment-box">
+        <div class="modal-meta-label">Leave a message</div>
+        <textarea id="commentText" placeholder="Write a short message about this photo..."></textarea>
+        <button id="commentSubmitBtn"
+                onclick="alert('目前为演示版，未来会接入 Cloudflare Worker 进行留言审核与保存。');">
+          Send (demo)
+        </button>
+        <div class="comment-hint">
+          Demo 版本：暂时不会真正保存留言。正式版会通过 Cloudflare KV 存储并人工审核后展示。
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

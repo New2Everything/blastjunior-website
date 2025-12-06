@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>俱乐部新闻 | 兰星少年俱乐部</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="兰星少年俱乐部新闻列表：赛事战报、活动回顾、重要公告与训练日记。" />
+  <style>
+    :root {
+      --lanxing-blue: #1f5fff;
+      --lanxing-dark: #0b1020;
+      --lanxing-light: #f5f7ff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-soft: #e5e7eb;
+      --radius-lg: 16px;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color: var(--text-main);
+      background: #fff;
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: blur(16px);
+      background: rgba(255,255,255,0.9);
+      border-bottom: 1px solid rgba(229,231,235,0.8);
+    }
+    .nav {
+      display:flex; align-items:center; justify-content:space-between;
+      height:56px;
+    }
+    .nav-left {
+      display:flex; align-items:center; gap:10px;
+      font-weight:700; font-size:17px;
+    }
+    .nav-logo {
+      width:30px; height:30px; border-radius:999px;
+      background:radial-gradient(circle at 30% 20%, #a5b4fc, #1d4ed8);
+      display:inline-flex; align-items:center; justify-content:center;
+      color:#f9fafb; font-size:18px; font-weight:800;
+    }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:7px 14px; border-radius:999px;
+      border:1px solid #d1d5db;
+      font-size:13px; cursor:pointer;
+      background:#fff; transition:all .18s ease-out;
+    }
+    .btn:hover {
+      border-color:var(--lanxing-blue);
+      color:var(--lanxing-blue);
+    }
+
+    main { padding:28px 0 32px; }
+    .page-header { margin-bottom:20px; }
+    .page-title { font-size:22px; font-weight:700; margin-bottom:6px; }
+    .page-subtitle { font-size:14px; color:var(--text-muted); }
+
+    .news-list {
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      margin-top:14px;
+    }
+    .news-item {
+      border-radius:var(--radius-lg);
+      border:1px solid var(--border-soft);
+      background:#fff;
+      box-shadow:0 10px 26px rgba(15,23,42,0.04);
+      padding:14px 14px 16px;
+      display:grid;
+      grid-template-columns: minmax(0,1.1fr) minmax(0,0.9fr);
+      gap:14px;
+    }
+    .news-item-body { font-size:14px; }
+    .news-meta { font-size:12px; color:var(--text-muted); margin-bottom:2px; }
+    .news-title { font-size:16px; font-weight:600; margin-bottom:4px; }
+    .news-summary { font-size:14px; color:#374151; }
+    .news-thumb {
+      width:100%; border-radius:12px; overflow:hidden;
+      aspect-ratio:16/9; background:#e5e7eb;
+    }
+    .news-thumb img {
+      width:100%; height:100%; object-fit:cover; display:block;
+    }
+
+    .news-footer-text {
+      margin-top:22px;
+      font-size:12px; color:var(--text-muted);
+    }
+
+    footer {
+      padding:18px 0 22px;
+      background:#020617; color:#9ca3af;
+      font-size:12px;
+    }
+    .footer-inner {
+      max-width:960px; margin:0 auto;
+      padding:0 16px;
+      display:flex; justify-content:space-between;
+      flex-wrap:wrap; gap:10px;
+    }
+    @media (max-width:720px) {
+      .news-item {
+        grid-template-columns:minmax(0,1fr);
+      }
+    }
+/* bottom navigation */
+.footer-nav {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(229,231,235,0.8);
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  font-size: 14px;
+}
+
+.footer-nav a {
+  color: #4b5563;
+  text-decoration: none;
+}
+
+.footer-nav a:hover {
+  color: #111827;
+  text-decoration: underline;
+}
+  </style>
+</head>
+<body>
+<header>
+  <div class="container nav">
+    <div class="nav-left">
+      <div class="nav-logo">L</div>
+      <div>兰星少年俱乐部 · 新闻</div>
+    </div>
+    <a href="index.html" class="btn">返回官网首页</a>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">俱乐部新闻与活动一览</h1>
+      <p class="page-subtitle">
+        这里记录兰星少年俱乐部的重要节点：国际赛事、联赛战报、工作团队与训练日记等。
+      </p>
+    </div>
+
+    <section>
+      <div id="news-list" class="news-list">
+        <div>正在加载新闻列表…</div>
+      </div>
+      <p class="news-footer-text">
+        如需补充新闻或纠正信息，请联系俱乐部管理员，通过更新 <code>data/news.json</code> 完成内容维护。
+      </p>
+    </section>
+  </div>
+</main>
+
+<div class="footer-nav">
+  <a href="index.html">首页</a>
+  <a href="honor.html">荣誉室</a>
+  <a href="gallery.html">照片墙</a>
+  <a href="news.html">新闻中心</a>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div>© <span id="year"></span> 兰星少年俱乐部</div>
+    <div>Tech-Sport · 少年成长 · 社区联赛</div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  async function loadAllNews() {
+    const res = await fetch('./data/news.json');
+    const data = await res.json();
+    const list = document.getElementById('news-list');
+    list.innerHTML = '';
+
+    if (!Array.isArray(data) || data.length === 0) {
+      list.innerHTML = '<div>暂时还没有新闻，可以在 data/news.json 中添加。</div>';
+      return;
+    }
+
+    const sorted = [...data].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    sorted.forEach(item => {
+      const el = document.createElement('article');
+      el.className = 'news-item';
+
+      const tag = item.tag ? ' · ' + item.tag : '';
+      const imgHtml = item.imageUrl
+        ? `<div class="news-thumb"><img src="${item.imageUrl}" alt="${item.title}"></div>`
+        : '';
+
+      el.innerHTML = `
+        <div class="news-item-body">
+          <div class="news-meta">${item.date}${tag}</div>
+          <h2 class="news-title">${item.title}</h2>
+          <p class="news-summary">${item.summary || ''}</p>
+        </div>
+        ${imgHtml}
+      `;
+
+      list.appendChild(el);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAllNews().catch(console.error);
+  });
+</script>
+</body>
+</html>
