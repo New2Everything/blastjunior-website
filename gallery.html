@@ -623,8 +623,11 @@
 
 <!-- 照片宇宙脚本（缩略图 + 延迟加载原图） -->
 <script>
+document.addEventListener("DOMContentLoaded", () => {
   // ====== 基本 DOM 引用和常量 ======
   const wall = document.getElementById("floatingWall");
+  if (!wall) return;
+
   const IMAGE_BASE = "/images";        // 原图目录
   const THUMB_BASE = "/images/thumbs"; // 缩略图目录
   const MIN_SINGLES = 30;              // 至少多少张照片作为散落单张
@@ -635,19 +638,21 @@
     const idSpan = document.getElementById("modalPhotoId");
     const modal = document.getElementById("photoModal");
 
-    img.src = ""; // 先清空，避免上一张闪一下
+    if (!img || !idSpan || !modal) return;
+
+    img.src = ""; // 先清空上一张
     idSpan.textContent = `#${String(photo.id).padStart(3, "0")}`;
     modal.classList.add("visible");
 
-    // 真正加载原图（可能很大，这一步才消耗）
+    // 真正加载原图（这里才消耗带宽）
     img.src = photo.full;
   }
 
   function closeModal() {
     const modal = document.getElementById("photoModal");
     const img = document.getElementById("modalImage");
-    modal.classList.remove("visible");
-    img.src = "";
+    if (modal) modal.classList.remove("visible");
+    if (img) img.src = "";
     const textarea = document.getElementById("commentText");
     if (textarea) textarea.value = "";
   }
@@ -677,7 +682,7 @@
 
       const r = Math.random();
       if (r < 0.30) {
-        // 创建一个堆叠：至少 2 张，上不封顶
+        // 创建一个堆叠：至少 2 张，没有硬性上限
         const stackSize = 2 + Math.floor(Math.random() * (maxStackable - 1)); // [2, maxStackable)
         const group = pool.splice(0, stackSize);
         stacks.push(group);
@@ -698,7 +703,7 @@
     el.style.top = top + "%";
     el.style.left = left + "%";
     el.style.transform = `translate(-50%, -50%) rotate(${rot}deg) scale(${scale})`;
-    el.style.setProperty("--rot", `${rot}deg");
+    el.style.setProperty("--rot", `${rot}deg`);
   }
 
   // ====== 懒加载：进入视口附近才加载缩略图 ======
@@ -715,8 +720,8 @@
       });
     },
     {
-      root: null,          // 以视口为参考
-      rootMargin: "200px", // 提前 200px 预加载
+      root: null,
+      rootMargin: "200px", // 提前一点加载
       threshold: 0.1
     }
   );
@@ -730,12 +735,11 @@
     const inner = document.createElement("div");
     inner.className = "photo-card-inner";
 
-    // 正面：img 用 data-src，懒加载
     const frontImg = document.createElement("img");
     frontImg.className = "front-face";
     frontImg.alt = `Photo ${photo.id}`;
     frontImg.loading = "lazy";
-    frontImg.dataset.src = photo.thumb;  // 先不设置 src，交给 IntersectionObserver
+    frontImg.dataset.src = photo.thumb; // 懒加载用 data-src
 
     const back = document.createElement("div");
     back.className = "back-face";
@@ -750,19 +754,17 @@
       card.classList.add("is-back");
     }
 
+    // ✅ 手机 & 电脑：一次点击就翻面 + 打开大图
     card.addEventListener("click", () => {
       if (card.classList.contains("is-back")) {
         card.classList.remove("is-back");
-        setTimeout(() => openModal(photo), 120);
-      } else {
-        openModal(photo);
       }
+      openModal(photo);
     });
 
     randomPlacement(card);
     wall.appendChild(card);
 
-    // 懒加载挂钩
     lazyObserver.observe(card);
   }
 
@@ -775,10 +777,8 @@
     const inner = document.createElement("div");
     inner.className = "photo-stack-inner";
 
-    // 用组里的一张照片作为预览（只这一张加载缩略图）
     const preview = group[Math.floor(Math.random() * group.length)];
 
-    // 三层 stack-card：只有顶层有图，其余只是“纸片感”
     const cardBottom = document.createElement("div");
     cardBottom.className = "stack-card";
     cardBottom.style.background =
@@ -795,14 +795,13 @@
     const img = document.createElement("img");
     img.alt = `Stack preview ${preview.id}`;
     img.loading = "lazy";
-    img.dataset.src = preview.thumb; // 懒加载
+    img.dataset.src = preview.thumb;
     cardTop.appendChild(img);
 
     inner.appendChild(cardBottom);
     inner.appendChild(cardMid);
     inner.appendChild(cardTop);
 
-    // 标签
     const size = group.length;
     const label = document.createElement("div");
     label.className = "stack-label";
@@ -818,7 +817,7 @@
     stack.appendChild(inner);
     stack.appendChild(label);
 
-    // 点击抽签：此时才使用那一整个 group（但只大图加载）
+    // 抽签：这里才会用到整组 group（但只大图加载）
     stack.addEventListener("click", () => {
       const max = group.length;
       const input = prompt(
@@ -834,13 +833,12 @@
       }
 
       const picked = group[n - 1];
-      openModal(picked); // 这里才加载 picked.full 原图
+      openModal(picked);
     });
 
     randomPlacement(stack);
     wall.appendChild(stack);
 
-    // 懒加载挂钩（只有顶层 img 会真正加载）
     lazyObserver.observe(stack);
   }
 
@@ -848,7 +846,6 @@
   fetch("/images/list.json")
     .then((r) => r.json())
     .then((files) => {
-      // 把文件名变成 {id, thumb, full} 结构
       const photos = files.map((name, index) => ({
         id: index + 1,
         name,
@@ -856,13 +853,9 @@
         full: `${IMAGE_BASE}/${name}`,
       }));
 
-      // 打乱顺序
       const shuffled = photos.sort(() => Math.random() - 0.5);
-
-      // 按规则分成散落单张 & 堆叠
       const { stacks, singles } = makeGroups(shuffled);
 
-      // 渲染堆叠 & 单张
       stacks.forEach((group, i) => renderStack(group, i));
       singles.forEach((photo) => renderSinglePhoto(photo));
     })
@@ -870,7 +863,7 @@
       console.error("加载 /images/list.json 失败：", err);
     });
 
-  // ====== 流星（保留原效果） ======
+  // ====== 流星效果 ======
   function launchMeteor() {
     const starLayer = document.querySelector(".shooting-star");
     if (!starLayer) return;
@@ -898,7 +891,9 @@
     setTimeout(launchMeteor, next);
   }
   setTimeout(launchMeteor, 3000);
+});
 </script>
+
 
 <!-- 模态框 -->
 <div class="modal" id="photoModal">
