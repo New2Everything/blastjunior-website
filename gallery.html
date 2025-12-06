@@ -380,94 +380,66 @@
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.72);
+  background: rgba(15, 23, 42, 0.65);
   display: none;
-  align-items: center;
   justify-content: center;
-  z-index: 9999;
-  padding: 12px;
+  align-items: center;
+  z-index: 99999; /* 强制最顶层 */
+  padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
 }
 
-.modal.visible {
+/* 让折叠屏强制按比例显示，避免跳动 */
+.modal.visible { 
   display: flex;
 }
 
-/* 核心：就当成一张卡片，最多占屏幕 80% 高度、90% 宽度 */
+/*** 修复折叠屏高度问题 **/
 .modal-inner {
-  position: relative;                  /* 方便放关闭按钮 */
+  width: min(96vw, 900px);
+  max-height: 92vh;
+  background: #fff;
+  border-radius: 16px;
   display: flex;
-  flex-direction: row;
-  max-width: 900px;
-  width: 90vw;
-  max-height: 80vh;                    /* 不会超出屏幕 */
-  background: #0b1120;
-  border-radius: 18px;
+  flex-direction: column; /* 不再用 grid */
   overflow: hidden;
-  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.9);
 }
 
-/* 左边放大图，右边放信息（桌面） */
+/*** 图片区域高度固定成屏幕比例，更稳定 **/
 .modal-image-wrap {
-  flex: 1.6;
-  background: #020617;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  height: 60vh; /* 避免 cover 产生布局跳动 */
+  background: #000;
+  position: relative;
 }
 
 .modal-image-wrap img {
-  max-width: 100%;
-  max-height: 60vh;                    /* 图最多占屏幕 60% 高 */
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 替代 cover, 不裁图 */
 }
 
-/* 信息 / 留言区域 */
+/*** 文本信息区域 ***/
 .modal-info {
-  flex: 1;
-  min-width: 0;
-  padding: 1rem 1.1rem 1.2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-  color: #e5e7eb;
-  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 55%);
-  overflow-y: auto;                     /* 内容自己滚动，不把整页撑爆 */
+  padding: 1rem;
+  overflow-y: auto;
+  max-height: 32vh; /* 保证留言区不会被挤出屏幕 */
 }
 
-/* 小标题 / 编号 */
-.modal-meta-label {
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 0.72rem;
-  color: #94a3b8;
-}
-
-.modal-photo-id {
-  font-weight: 600;
-}
-
-/* 关闭按钮：永远在卡片右上角（不是屏幕右上角） */
+/*** 关闭按钮固定角落，不随布局跳动 **/
 .modal-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 12px;
+  right: 12px;
+  z-index: 100000;
+  background: rgba(0,0,0,0.65);
+  color: white;
   border: none;
-  background: rgba(15, 23, 42, 0.85);
-  color: #e5e7eb;
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 20px;
 }
+
 
 /* 留言区域 */
 .comment-box {
