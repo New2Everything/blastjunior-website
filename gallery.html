@@ -684,6 +684,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // ===== 模态框逻辑：锁定滚动 + 自适应大图 =====
 let _modalScrollY = 0;
 
+// ===== 折叠屏友好的弹窗逻辑 =====
+
+// 获取当前真实可用高度（优先用 visualViewport，兼容折叠屏）
+function getViewportHeight() {
+  if (window.visualViewport && window.visualViewport.height) {
+    return window.visualViewport.height;
+  }
+  return window.innerHeight || document.documentElement.clientHeight || 800;
+}
+
 function openModal(photo) {
   const modal = document.getElementById("photoModal");
   const img = document.getElementById("modalImage");
@@ -691,17 +701,28 @@ function openModal(photo) {
 
   if (!modal || !img || !idSpan) return;
 
-  // 如果以后有 full 尺寸，可以用 photo.full；暂时用 src
-  img.src = photo.full || photo.src;
+  // 设置编号
   idSpan.textContent = `#${String(photo.id).padStart(3, "0")}`;
 
-  // 锁定背景滚动，手机不会乱跳
-  _modalScrollY = window.scrollY || window.pageYOffset || 0;
-  document.body.style.position = "fixed";
-  document.body.style.top = `-${_modalScrollY}px`;
-  document.body.style.width = "100%";
-
+  // 先清空，再显示弹窗，再加载大图，避免旧图闪一下
+  img.src = "";
   modal.classList.add("visible");
+
+  // 动态根据当前视口高度调整卡片和图片大小（折叠屏展开/合上都能重新计算）
+  const vh = getViewportHeight();
+  const modalInner = modal.querySelector(".modal-inner");
+  if (modalInner) {
+    modalInner.style.maxHeight = Math.round(vh * 0.8) + "px";   // 卡片最多占 80% 屏高
+  }
+  img.style.maxHeight = Math.round(vh * 0.55) + "px";           // 图片最多占 55% 屏高
+
+  // 真正开始加载大图（有 full 就用 full，没有就用 src）
+  img.src = photo.full || photo.src;
+
+  // 确保弹窗在视野中心（尤其是从 stack prompt 里出来的时候）
+  setTimeout(() => {
+    modal.scrollIntoView({ block: "center", behavior: "instant" });
+  }, 0);
 }
 
 function closeModal() {
@@ -711,13 +732,6 @@ function closeModal() {
 
   if (modal) modal.classList.remove("visible");
   if (img) img.src = "";
-
-  // 解锁背景滚动并恢复原来位置
-  document.body.style.position = "";
-  document.body.style.top = "";
-  document.body.style.width = "";
-  window.scrollTo(0, _modalScrollY || 0);
-
   if (textarea) textarea.value = "";
 }
 
@@ -836,77 +850,84 @@ function closeModal() {
 
   // ====== 渲染堆叠：只加载 1 张预览缩略图，其他只是数据 ======
   function renderStack(group, stackIndex) {
-    const stack = document.createElement("div");
-    stack.className = "photo-stack";
-    stack.dataset.stackIndex = stackIndex;
+  const stack = document.createElement("div");
+  stack.className = "photo-stack";
+  stack.dataset.stackIndex = stackIndex;
 
-    const inner = document.createElement("div");
-    inner.className = "photo-stack-inner";
+  const inner = document.createElement("div");
+  inner.className = "photo-stack-inner";
 
-    const preview = group[Math.floor(Math.random() * group.length)];
+  // 用组里的一张照片作为预览（只这一张加载缩略图）
+  const preview = group[Math.floor(Math.random() * group.length)];
 
-    const cardBottom = document.createElement("div");
-    cardBottom.className = "stack-card";
-    cardBottom.style.background =
-      "linear-gradient(135deg, #0f172a, #020617)";
+  // 三层 stack-card：只有顶层有图，其余只是“纸片感”
+  const cardBottom = document.createElement("div");
+  cardBottom.className = "stack-card";
+  cardBottom.style.background =
+    "linear-gradient(135deg, #0f172a, #020617)";
 
-    const cardMid = document.createElement("div");
-    cardMid.className = "stack-card";
-    cardMid.style.background =
-      "linear-gradient(135deg, #1f2937, #020617)";
+  const cardMid = document.createElement("div");
+  cardMid.className = "stack-card";
+  cardMid.style.background =
+    "linear-gradient(135deg, #1f2937, #020617)";
 
-    const cardTop = document.createElement("div");
-    cardTop.className = "stack-card";
+  const cardTop = document.createElement("div");
+  cardTop.className = "stack-card";
 
-    const img = document.createElement("img");
-    img.alt = `Stack preview ${preview.id}`;
-    img.loading = "lazy";
-    img.dataset.src = preview.thumb;
-    cardTop.appendChild(img);
+  const img = document.createElement("img");
+  img.alt = `Stack preview ${preview.id}`;
+  img.loading = "lazy";
+  img.dataset.src = preview.thumb; // 懒加载缩略图
+  cardTop.appendChild(img);
 
-    inner.appendChild(cardBottom);
-    inner.appendChild(cardMid);
-    inner.appendChild(cardTop);
+  inner.appendChild(cardBottom);
+  inner.appendChild(cardMid);
+  inner.appendChild(cardTop);
 
-    const size = group.length;
-    const label = document.createElement("div");
-    label.className = "stack-label";
-    label.textContent = `STACK · ${size}`;
+  // 标签：STACK · 数量
+  const size = group.length;
+  const label = document.createElement("div");
+  label.className = "stack-label";
+  label.textContent = `STACK · ${size}`;
 
-    const baseFont = 11;
-    const font = baseFont + Math.min(size * 0.18, 7);
-    label.style.fontSize = font + "px";
-    const padY = 2 + Math.min(size * 0.06, 4);
-    const padX = 6 + Math.min(size * 0.1, 6);
-    label.style.padding = `${padY}px ${padX}px`;
+  const baseFont = 11;
+  const font = baseFont + Math.min(size * 0.18, 7);
+  label.style.fontSize = font + "px";
+  const padY = 2 + Math.min(size * 0.06, 4);
+  const padX = 6 + Math.min(size * 0.1, 6);
+  label.style.padding = `${padY}px ${padX}px`;
 
-    stack.appendChild(inner);
-    stack.appendChild(label);
+  stack.appendChild(inner);
+  stack.appendChild(label);
 
-    // 抽签：这里才会用到整组 group（但只大图加载）
-    stack.addEventListener("click", () => {
-      const max = group.length;
-      const input = prompt(
-        `This stack holds ${max} photos.\n` +
-        `Enter a number between 1 and ${max} to draw one:`
-      );
-      if (input === null) return;
+  // 🔴 关键就是下面这个点击逻辑
+  stack.addEventListener("click", () => {
+    const max = group.length;
+    const input = prompt(
+      `This stack holds ${max} photos.\n` +
+      `Enter a number between 1 and ${max} to draw one:`
+    );
+    if (input === null) return;
 
-      const n = parseInt(input, 10);
-      if (Number.isNaN(n) || n < 1 || n > max) {
-        alert(`Please enter a number between 1 and ${max}.`);
-        return;
-      }
+    const n = parseInt(input, 10);
+    if (Number.isNaN(n) || n < 1 || n > max) {
+      alert(`Please enter a number between 1 and ${max}.`);
+      return;
+    }
 
-      const picked = group[n - 1];
-      openModal(picked);
-    });
+    const picked = group[n - 1];
 
-    randomPlacement(stack);
-    wall.appendChild(stack);
+    // 这里直接打开大图，位置计算都交给 openModal 去做
+    openModal(picked);
+  });
 
-    lazyObserver.observe(stack);
-  }
+  randomPlacement(stack);
+  wall.appendChild(stack);
+
+  // 懒加载缩略图
+  lazyObserver.observe(stack);
+}
+
 
   // ====== 读取 list.json，生成“元数据宇宙” ======
   fetch("/images/list.json")
