@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>BLAST 留言审核后台</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 0;
+    }
+    .wrap {
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 20px 24px 32px;
+      background: #020617;
+      border-radius: 16px;
+      box-shadow: 0 18px 45px rgba(15,23,42,0.6);
+      border: 1px solid rgba(148,163,184,0.4);
+    }
+    h1 {
+      margin: 0 0 16px;
+      font-size: 22px;
+    }
+    .sub {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 20px;
+    }
+    .bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    label {
+      font-size: 13px;
+    }
+    input[type="password"],
+    input[type="text"],
+    select {
+      background: #020617;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      color: #e5e7eb;
+      padding: 6px 12px;
+      font-size: 13px;
+      min-width: 180px;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59,130,246,0.5);
+    }
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    button.primary {
+      background: #3b82f6;
+      color: white;
+    }
+    button.primary:hover {
+      background: #2563eb;
+    }
+    button.secondary {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #4b5563;
+    }
+    button.secondary:hover {
+      border-color: #9ca3af;
+    }
+    button.small {
+      padding: 3px 9px;
+      font-size: 12px;
+    }
+    button:disabled {
+      opacity: .6;
+      cursor: default;
+    }
+
+    .status-info {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 13px;
+      background: #020617;
+    }
+    th, td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #1f2937;
+      vertical-align: top;
+    }
+    th {
+      text-align: left;
+      font-weight: 600;
+      color: #9ca3af;
+      white-space: nowrap;
+    }
+    tr:hover td {
+      background: rgba(15,23,42,0.75);
+    }
+    .td-actions {
+      white-space: nowrap;
+    }
+    .td-content {
+      max-width: 360px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid #4b5563;
+      margin-right: 4px;
+    }
+    .tag.pending { border-color: #f59e0b; color: #fbbf24; }
+    .tag.approved { border-color: #22c55e; color: #4ade80; }
+    .tag.rejected { border-color: #ef4444; color: #f97373; }
+
+    .tag-id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .empty {
+      margin-top: 24px;
+      padding: 18px;
+      text-align: center;
+      font-size: 13px;
+      color: #9ca3af;
+      border-radius: 12px;
+      border: 1px dashed #4b5563;
+      background: rgba(15,23,42,0.7);
+    }
+
+    @media (max-width: 720px) {
+      .wrap {
+        margin: 12px;
+        padding: 16px;
+      }
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      th {
+        display: none;
+      }
+      td {
+        border-bottom: 1px solid #111827;
+        padding: 6px 4px;
+      }
+      tr {
+        margin-bottom: 10px;
+        border-bottom: 1px solid #1f2937;
+      }
+      .td-actions {
+        margin-top: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>BLAST 照片留言 · 审核后台</h1>
+  <div class="sub">
+    使用 Cloudflare Worker + KV 存储的简易后台。请勿公开此页面地址，并妥善保管管理密钥。
+  </div>
+
+  <div class="bar">
+    <label>
+      管理密钥（ADMIN_TOKEN）：
+      <input type="password" id="tokenInput" placeholder="在此输入管理密钥" />
+    </label>
+
+    <label>
+      状态：
+      <select id="statusSelect">
+        <option value="pending">待审核</option>
+        <option value="approved">已通过</option>
+        <option value="rejected">已拒绝</option>
+      </select>
+    </label>
+
+    <button class="primary" id="loadBtn">加载评论</button>
+    <button class="secondary" id="clearTokenBtn">清除密钥</button>
+  </div>
+
+  <div class="status-info" id="statusInfo">
+    提示：密钥只保存在本机（sessionStorage），刷新后仍然有效；点击「清除密钥」可立即移除。
+  </div>
+
+  <div id="tableWrap"></div>
+</div>
+
+<script>
+  const API_BASE = "https://blast-comments-api.kanjiaming2022.workers.dev";
+
+  const tokenInput = document.getElementById("tokenInput");
+  const statusSelect = document.getElementById("statusSelect");
+  const loadBtn = document.getElementById("loadBtn");
+  const clearTokenBtn = document.getElementById("clearTokenBtn");
+  const tableWrap = document.getElementById("tableWrap");
+  const statusInfo = document.getElementById("statusInfo");
+
+  // 从 sessionStorage 读 token，减少每次输入
+  const savedToken = sessionStorage.getItem("blast_admin_token");
+  if (savedToken) {
+    tokenInput.value = savedToken;
+  }
+
+  clearTokenBtn.addEventListener("click", () => {
+    tokenInput.value = "";
+    sessionStorage.removeItem("blast_admin_token");
+    alert("已清除本机保存的管理密钥。");
+  });
+
+  loadBtn.addEventListener("click", () => {
+    loadComments();
+  });
+
+  async function loadComments(cursor) {
+    const token = tokenInput.value.trim();
+    if (!token) {
+      alert("请先输入管理密钥（ADMIN_TOKEN）");
+      tokenInput.focus();
+      return;
+    }
+
+    sessionStorage.setItem("blast_admin_token", token);
+
+    const status = statusSelect.value;
+    loadBtn.disabled = true;
+    loadBtn.textContent = "加载中…";
+
+    try {
+      const params = new URLSearchParams();
+      if (status) params.set("status", status);
+      params.set("limit", "50");
+      if (cursor) params.set("cursor", cursor);
+
+      const res = await fetch(`${API_BASE}/admin/comments?` + params.toString(), {
+        method: "GET",
+        headers: {
+          "X-Admin-Token": token
+        }
+      });
+
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error("响应不是 JSON：", text);
+        throw new Error("服务器返回非 JSON：" + text);
+      }
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+
+      renderTable(data.items || [], data.cursor || null, status);
+    } catch (err) {
+      console.error(err);
+      alert("加载失败：" + err.message);
+    } finally {
+      loadBtn.disabled = false;
+      loadBtn.textContent = "加载评论";
+    }
+  }
+
+  function renderTable(items, cursor, status) {
+    if (!items.length) {
+      tableWrap.innerHTML = '<div class="empty">当前状态下暂无留言记录。</div>';
+      return;
+    }
+
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>照片ID</th>
+            <th>地区 / 时间</th>
+            <th>内容</th>
+            <th>状态 / 操作</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    for (const item of items) {
+      const date = item.createdAt ? new Date(item.createdAt).toLocaleString() : "";
+      const region = item.region || "未知地区";
+      const pid = item.photoId || "?";
+      const statusTag = item.status || "pending";
+
+      html += `
+        <tr data-id="${item.id}">
+          <td>
+            <div>PHOTO #${pid}</div>
+            <div class="tag-id">${item.id}</div>
+          </td>
+          <td>
+            <div>${region}</div>
+            <div style="font-size:11px;color:#9ca3af;">${date}</div>
+          </td>
+          <td class="td-content">${escapeHtml(item.content || "")}</td>
+          <td class="td-actions">
+            <div class="tag ${statusTag}">${statusLabel(statusTag)}</div>
+            <div style="margin-top:4px;">
+              <button class="small secondary" onclick="approveComment('${item.id}', 'approve')">通过</button>
+              <button class="small secondary" onclick="approveComment('${item.id}', 'reject')" style="margin-left:4px;">拒绝</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    html += `
+        </tbody>
+      </table>
+    `;
+
+    if (cursor) {
+      html += `
+        <div style="margin-top:12px; text-align:center;">
+          <button class="secondary" onclick="loadComments('${cursor}')">加载更多...</button>
+        </div>
+      `;
+    }
+
+    tableWrap.innerHTML = html;
+  }
+
+  function statusLabel(s) {
+    if (s === "approved") return "已通过";
+    if (s === "rejected") return "已拒绝";
+    return "待审核";
+  }
+
+  function escapeHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  window.approveComment = async function(id, action) {
+    const token = tokenInput.value.trim();
+    if (!token) {
+      alert("请先输入管理密钥。");
+      return;
+    }
+
+    if (!confirm(`确认将该留言标记为「${action === "approve" ? "通过" : "拒绝"}」？`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/comments/approve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Token": token
+        },
+        body: JSON.stringify({ id, action })
+      });
+
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error("服务器返回非 JSON：" + text);
+      }
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+
+      alert("操作成功，当前状态：" + data.status);
+      loadComments(); // 重新刷新列表
+    } catch (err) {
+      console.error(err);
+      alert("操作失败：" + err.message);
+    }
+  };
+</script>
+</body>
+</html>

@@ -87,6 +87,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const THUMB_BASE = "/images/thumbs";
   const MIN_SINGLES = 30;
 
+  // ---- 留言 API 基础地址 ----
+  const COMMENTS_API_BASE = "https://blast-comments-api.kanjiaming2022.workers.dev";
+
+  let currentPhotoId = null;
+  let commentsCursor = null;
+  let isCommentsLoading = false;
+
+    function escapeHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   /* ---------- 折叠屏友好的可视高度 ---------- */
   function getViewportHeight() {
     if (window.visualViewport && window.visualViewport.height) {
@@ -118,19 +134,199 @@ document.addEventListener("DOMContentLoaded", () => {
     img.style.maxHeight = Math.round(vh * 0.55) + "px";
 
     img.src = photo.full || photo.src;
+
+    // ---- 打开时重置并加载该照片的留言 ----
+    resetComments(photo.id);
+    loadComments(photo.id);
   }
 
-  function closeModal() {
+    function closeModal() {
     const modal = document.getElementById("photoModal");
     const img   = document.getElementById("modalImage");
     const textarea = document.getElementById("commentText");
+    const listEl = document.getElementById("commentList");
+    const placeholder = document.getElementById("modalPlaceholderText");
+    const loadMoreBtn = document.getElementById("commentLoadMoreBtn");
 
     if (modal) modal.classList.remove("visible");
     if (img) img.src = "";
     if (textarea) textarea.value = "";
+
+    currentPhotoId = null;
+    commentsCursor = null;
+
+    if (listEl) listEl.innerHTML = "";
+    if (placeholder) {
+      placeholder.style.display = "block";
+      placeholder.textContent =
+        "这是兰星少年俱乐部的一个瞬间。如果有已审核通过的留言，会显示在下面。";
+    }
+    if (loadMoreBtn) loadMoreBtn.style.display = "none";
   }
 
+
   window.closeModal = closeModal;
+
+  // ---- 打开新照片时重置留言 UI ----
+  function resetComments(photoId) {
+    currentPhotoId = photoId;
+    commentsCursor = null;
+
+    const listEl = document.getElementById("commentList");
+    const placeholder = document.getElementById("modalPlaceholderText");
+    const loadMoreBtn = document.getElementById("commentLoadMoreBtn");
+
+    if (listEl) listEl.innerHTML = "";
+    if (placeholder) {
+      placeholder.style.display = "block";
+      placeholder.textContent = "正在加载留言…";
+    }
+    if (loadMoreBtn) loadMoreBtn.style.display = "none";
+  }
+
+  // ---- 从 Worker 拉取留言（支持分页）----
+  async function loadComments(photoId, { append = false } = {}) {
+    const listEl = document.getElementById("commentList");
+    const placeholder = document.getElementById("modalPlaceholderText");
+    const loadMoreBtn = document.getElementById("commentLoadMoreBtn");
+
+    if (!listEl || !placeholder) return;
+    if (!photoId || photoId !== currentPhotoId) return;
+    if (isCommentsLoading) return;
+
+    isCommentsLoading = true;
+    try {
+      let url = `${COMMENTS_API_BASE}/comments?photoId=${encodeURIComponent(photoId)}`;
+      if (append && commentsCursor) {
+        url += `&cursor=${encodeURIComponent(commentsCursor)}`;
+      }
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("加载失败");
+      const data = await res.json();
+      const comments = Array.isArray(data.comments) ? data.comments : [];
+
+      if (!append) {
+        listEl.innerHTML = "";
+      }
+
+      if (comments.length === 0 && !append) {
+        placeholder.style.display = "block";
+        placeholder.textContent = "暂时还没有留言，可以做第一个留言的人。";
+      } else if (comments.length > 0) {
+        placeholder.style.display = "none";
+
+        const frag = document.createDocumentFragment();
+        comments.forEach(c => {
+          const item = document.createElement("div");
+          item.className = "comment-item";
+
+          const region = c.region || "某地";
+          const created = c.createdAt
+            ? new Date(c.createdAt).toLocaleDateString()
+            : "";
+
+          item.innerHTML = `
+            <div class="comment-meta">
+              <span class="comment-region">${escapeHtml(region)}</span>
+              ${created ? `<span class="comment-date">${escapeHtml(created)}</span>` : ""}
+            </div>
+            <div class="comment-content">${escapeHtml(c.content)}</div>
+          `;
+          frag.appendChild(item);
+        });
+        listEl.appendChild(frag);
+      }
+
+      commentsCursor = data.cursor || null;
+      if (loadMoreBtn) {
+        loadMoreBtn.style.display = commentsCursor ? "inline-flex" : "none";
+      }
+    } catch (err) {
+      console.error("加载留言失败：", err);
+      placeholder.style.display = "block";
+      placeholder.textContent = "留言加载失败，请稍后重试。";
+    } finally {
+      isCommentsLoading = false;
+    }
+  }
+
+  // ---- 提交留言 ----
+  async function handleSubmitComment() {
+  const textarea = document.getElementById("commentText");
+  const btn = document.getElementById("commentSubmitBtn");
+  if (!textarea || !btn || !currentPhotoId) return;
+
+  const content = textarea.value.trim();
+  if (!content) {
+    alert("留言内容不能为空。");
+    return;
+  }
+  if (content.length < 4) {
+    alert("可以多写一点点吗？至少 4 个字。");
+    return;
+  }
+  if (content.length > 300) {
+    alert("留言有点长了，可以控制在 300 字以内吗？");
+    return;
+  }
+
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  btn.textContent = "发送中…";
+
+  try {
+    const payload = {
+      photoId: String(currentPhotoId),
+      
+      content
+    };
+
+    console.log("即将提交留言：", payload);
+
+    const res = await fetch(`${COMMENTS_API_BASE}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const rawText = await res.text(); // 先拿原始文本
+    console.log("Worker 返回原始响应：", res.status, rawText);
+
+    let data = {};
+    try {
+      data = rawText ? JSON.parse(rawText) : {};
+    } catch (e) {
+      // 不是 JSON 也没关系，下面统一处理
+      console.warn("响应不是 JSON：", e);
+    }
+
+    if (!res.ok || !data.ok) {
+      const msg =
+        (data && (data.message || data.error)) ||
+        rawText ||
+        `HTTP ${res.status}`;
+      throw new Error(msg);
+    }
+
+    textarea.value = "";
+    alert("已提交，我们会在审核通过后展示这条留言。");
+  } catch (err) {
+    console.error("提交留言失败：", err);
+    alert("提交失败：" + (err && err.message ? err.message : "未知错误"));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+
+  // ---- “加载更多留言”按钮 ----
+  function handleLoadMoreComments() {
+    if (!currentPhotoId || !commentsCursor) return;
+    loadComments(currentPhotoId, { append: true });
+  }
+
 
   /* ---------- 分组：哪些做 STACK，哪些散落 ---------- */
   function makeGroups(shuffled) {
@@ -362,6 +558,13 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(launchMeteor, next);
   }
   setTimeout(launchMeteor, 3000);
+
+// 绑定留言相关按钮
+  const submitBtn = document.getElementById("commentSubmitBtn");
+  if (submitBtn) submitBtn.addEventListener("click", handleSubmitComment);
+
+  const loadMoreBtn = document.getElementById("commentLoadMoreBtn");
+  if (loadMoreBtn) loadMoreBtn.addEventListener("click", handleLoadMoreComments);
 });
 </script>
 
@@ -377,24 +580,29 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="modal-meta-label">PHOTO</div>
         <div class="modal-photo-id" id="modalPhotoId"></div>
       </div>
-      <div>
+            <div>
         <div class="modal-meta-label">NOTES</div>
-        <p id="modalPlaceholderText">
-          这是兰星少年俱乐部的一个瞬间。未来这里会显示已审核通过的留言节选。
+        <p id="modalPlaceholderText" class="comment-placeholder">
+          这是兰星少年俱乐部的一个瞬间。如果有已审核通过的留言，会显示在下面。
         </p>
+        <div id="commentList" class="comment-list"></div>
+        <button id="commentLoadMoreBtn" class="comment-load-more" style="display:none;">
+          加载更多留言
+        </button>
       </div>
+
       <div class="comment-box">
         <div class="modal-meta-label">LEAVE A MESSAGE</div>
         <textarea id="commentText"
-          placeholder="Write a short message about this photo..."></textarea>
-        <button id="commentSubmitBtn"
-          onclick="alert('目前为演示版，未来会接入 Cloudflare Worker 进行留言审核与保存。');">
-          Send (demo)
+          placeholder="写一句关于这张照片的小留言（20~120 字为宜）。"></textarea>
+        <button id="commentSubmitBtn">
+          发送留言
         </button>
         <div class="comment-hint">
-          Demo 版本：暂时不会真正保存留言。正式版会通过 Cloudflare KV 存储并人工审核后展示。
+          提交后留言会进入审核队列。通过审核后才会在这里显示，请耐心等待。
         </div>
       </div>
+
     </div>
   </div>
 </div>
