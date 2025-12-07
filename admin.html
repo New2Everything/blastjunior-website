@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>BLAST 留言审核后台</title>
+  <title>BLAST 管理后台 · 留言 & 报名</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -13,7 +13,7 @@
       padding: 0;
     }
     .wrap {
-      max-width: 960px;
+      max-width: 1100px;
       margin: 32px auto;
       padding: 20px 24px 32px;
       background: #020617;
@@ -22,26 +22,45 @@
       border: 1px solid rgba(148,163,184,0.4);
     }
     h1 {
-      margin: 0 0 16px;
+      margin: 0 0 8px;
       font-size: 22px;
     }
     .sub {
       font-size: 13px;
       color: #9ca3af;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #1f2937;
+      padding-bottom: 4px;
+    }
+    .tab {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .tab.active {
+      background: #111827;
+      border-color: #3b82f6;
+      color: #bfdbfe;
+    }
+
     .bar {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 10px;
     }
     label {
       font-size: 13px;
     }
     input[type="password"],
-    input[type="text"],
     select {
       background: #020617;
       border-radius: 999px;
@@ -93,13 +112,12 @@
     .status-info {
       font-size: 12px;
       color: #9ca3af;
-      margin-top: 6px;
+      margin-bottom: 10px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 16px;
       font-size: 13px;
       background: #020617;
     }
@@ -138,6 +156,8 @@
     .tag.pending { border-color: #f59e0b; color: #fbbf24; }
     .tag.approved { border-color: #22c55e; color: #4ade80; }
     .tag.rejected { border-color: #ef4444; color: #f97373; }
+    .tag.new { border-color: #38bdf8; color: #7dd3fc; }
+    .tag.done { border-color: #22c55e; color: #bbf7d0; }
 
     .tag-id {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -146,7 +166,7 @@
     }
 
     .empty {
-      margin-top: 24px;
+      margin-top: 16px;
       padding: 18px;
       text-align: center;
       font-size: 13px;
@@ -183,9 +203,9 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>BLAST 照片留言 · 审核后台</h1>
+  <h1>BLAST 管理后台</h1>
   <div class="sub">
-    使用 Cloudflare Worker + KV 存储的简易后台。请勿公开此页面地址，并妥善保管管理密钥。
+    照片留言 + 报名/咨询信息统一后台。请勿公开此页面地址，并妥善保管管理密钥。
   </div>
 
   <div class="bar">
@@ -194,16 +214,6 @@
       <input type="password" id="tokenInput" placeholder="在此输入管理密钥" />
     </label>
 
-    <label>
-      状态：
-      <select id="statusSelect">
-        <option value="pending">待审核</option>
-        <option value="approved">已通过</option>
-        <option value="rejected">已拒绝</option>
-      </select>
-    </label>
-
-    <button class="primary" id="loadBtn">加载评论</button>
     <button class="secondary" id="clearTokenBtn">清除密钥</button>
   </div>
 
@@ -211,24 +221,65 @@
     提示：密钥只保存在本机（sessionStorage），刷新后仍然有效；点击「清除密钥」可立即移除。
   </div>
 
-  <div id="tableWrap"></div>
+  <div class="tabs">
+    <div class="tab active" data-tab="comments">照片留言</div>
+    <div class="tab" data-tab="forms">报名 / 咨询</div>
+  </div>
+
+  <!-- 照片留言 -->
+  <section id="commentsSection">
+    <div class="bar">
+      <label>
+        状态：
+        <select id="statusSelectComments">
+          <option value="pending">待审核</option>
+          <option value="approved">已通过</option>
+          <option value="rejected">已拒绝</option>
+        </select>
+      </label>
+      <button class="primary" id="loadCommentsBtn">加载留言</button>
+    </div>
+    <div id="commentsTableWrap"></div>
+  </section>
+
+  <!-- 报名 / 咨询 -->
+  <section id="formsSection" style="display:none;">
+    <div class="bar">
+      <label>
+        状态：
+        <select id="statusSelectForms">
+          <option value="new">新报名</option>
+          <option value="done">已处理</option>
+          <option value="">全部</option>
+        </select>
+      </label>
+      <button class="primary" id="loadFormsBtn">加载报名</button>
+    </div>
+    <div id="formsTableWrap"></div>
+  </section>
 </div>
 
 <script>
-  const API_BASE = "https://blast-comments-api.kanjiaming2022.workers.dev";
+  const COMMENTS_API_BASE = "https://blast-comments-api.kanjiaming2022.workers.dev";
+  const FORMS_API_BASE    = "https://contact-form-handler.kanjiaming2022.workers.dev";
 
-  const tokenInput = document.getElementById("tokenInput");
-  const statusSelect = document.getElementById("statusSelect");
-  const loadBtn = document.getElementById("loadBtn");
-  const clearTokenBtn = document.getElementById("clearTokenBtn");
-  const tableWrap = document.getElementById("tableWrap");
-  const statusInfo = document.getElementById("statusInfo");
+  const tokenInput       = document.getElementById("tokenInput");
+  const clearTokenBtn    = document.getElementById("clearTokenBtn");
+  const commentsSection  = document.getElementById("commentsSection");
+  const formsSection     = document.getElementById("formsSection");
+  const tabs             = document.querySelectorAll(".tab");
 
-  // 从 sessionStorage 读 token，减少每次输入
+  const statusSelectComments = document.getElementById("statusSelectComments");
+  const loadCommentsBtn      = document.getElementById("loadCommentsBtn");
+  const commentsTableWrap    = document.getElementById("commentsTableWrap");
+
+  const statusSelectForms = document.getElementById("statusSelectForms");
+  const loadFormsBtn      = document.getElementById("loadFormsBtn");
+  const formsTableWrap    = document.getElementById("formsTableWrap");
+
+  // ==== token 存本机 ====
   const savedToken = sessionStorage.getItem("blast_admin_token");
-  if (savedToken) {
-    tokenInput.value = savedToken;
-  }
+  if (savedToken) tokenInput.value = savedToken;
 
   clearTokenBtn.addEventListener("click", () => {
     tokenInput.value = "";
@@ -236,63 +287,65 @@
     alert("已清除本机保存的管理密钥。");
   });
 
-  loadBtn.addEventListener("click", () => {
-    loadComments();
+  // ==== tab 切换 ====
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+
+      const name = tab.dataset.tab;
+      if (name === "comments") {
+        commentsSection.style.display = "";
+        formsSection.style.display = "none";
+      } else {
+        commentsSection.style.display = "none";
+        formsSection.style.display = "";
+      }
+    });
   });
 
+  // ==== 照片留言：加载 ====
+  loadCommentsBtn.addEventListener("click", () => loadComments());
+
   async function loadComments(cursor) {
-    const token = tokenInput.value.trim();
-    if (!token) {
-      alert("请先输入管理密钥（ADMIN_TOKEN）");
-      tokenInput.focus();
-      return;
-    }
+    const token = getToken();
+    if (!token) return;
 
-    sessionStorage.setItem("blast_admin_token", token);
-
-    const status = statusSelect.value;
-    loadBtn.disabled = true;
-    loadBtn.textContent = "加载中…";
+    loadCommentsBtn.disabled = true;
+    loadCommentsBtn.textContent = "加载中…";
 
     try {
+      const status = statusSelectComments.value;
       const params = new URLSearchParams();
       if (status) params.set("status", status);
       params.set("limit", "50");
       if (cursor) params.set("cursor", cursor);
 
-      const res = await fetch(`${API_BASE}/admin/comments?` + params.toString(), {
+      const res = await fetch(`${COMMENTS_API_BASE}/admin/comments?` + params.toString(), {
         method: "GET",
-        headers: {
-          "X-Admin-Token": token
-        }
+        headers: { "X-Admin-Token": token }
       });
 
       const text = await res.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        console.error("响应不是 JSON：", text);
-        throw new Error("服务器返回非 JSON：" + text);
-      }
+      const data = JSON.parse(text);
 
       if (!res.ok || !data.ok) {
         throw new Error(data.error || `HTTP ${res.status}`);
       }
 
-      renderTable(data.items || [], data.cursor || null, status);
-    } catch (err) {
-      console.error(err);
-      alert("加载失败：" + err.message);
+      renderCommentsTable(data.items || [], data.cursor || null);
+    } catch (e) {
+      console.error(e);
+      alert("加载留言失败：" + e.message);
     } finally {
-      loadBtn.disabled = false;
-      loadBtn.textContent = "加载评论";
+      loadCommentsBtn.disabled = false;
+      loadCommentsBtn.textContent = "加载留言";
     }
   }
 
-  function renderTable(items, cursor, status) {
+  function renderCommentsTable(items, cursor) {
     if (!items.length) {
-      tableWrap.innerHTML = '<div class="empty">当前状态下暂无留言记录。</div>';
+      commentsTableWrap.innerHTML = '<div class="empty">当前状态下暂无留言记录。</div>';
       return;
     }
 
@@ -316,7 +369,7 @@
       const statusTag = item.status || "pending";
 
       html += `
-        <tr data-id="${item.id}">
+        <tr>
           <td>
             <div>PHOTO #${pid}</div>
             <div class="tag-id">${item.id}</div>
@@ -327,20 +380,17 @@
           </td>
           <td class="td-content">${escapeHtml(item.content || "")}</td>
           <td class="td-actions">
-            <div class="tag ${statusTag}">${statusLabel(statusTag)}</div>
+            <div class="tag ${statusTag}">${statusLabelComment(statusTag)}</div>
             <div style="margin-top:4px;">
-              <button class="small secondary" onclick="approveComment('${item.id}', 'approve')">通过</button>
-              <button class="small secondary" onclick="approveComment('${item.id}', 'reject')" style="margin-left:4px;">拒绝</button>
+              <button class="small secondary" onclick="approveComment('${item.id}','approve')">通过</button>
+              <button class="small secondary" onclick="approveComment('${item.id}','reject')" style="margin-left:4px;">拒绝</button>
             </div>
           </td>
         </tr>
       `;
     }
 
-    html += `
-        </tbody>
-      </table>
-    `;
+    html += `</tbody></table>`;
 
     if (cursor) {
       html += `
@@ -350,13 +400,182 @@
       `;
     }
 
-    tableWrap.innerHTML = html;
+    commentsTableWrap.innerHTML = html;
   }
 
-  function statusLabel(s) {
+  function statusLabelComment(s) {
     if (s === "approved") return "已通过";
     if (s === "rejected") return "已拒绝";
     return "待审核";
+  }
+
+  window.approveComment = async function(id, action) {
+    const token = getToken();
+    if (!token) return;
+
+    if (!confirm(`确认将该留言标记为「${action === "approve" ? "通过" : "拒绝"}」？`)) return;
+
+    try {
+      const res = await fetch(`${COMMENTS_API_BASE}/admin/comments/approve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Token": token
+        },
+        body: JSON.stringify({ id, action })
+      });
+
+      const text = await res.text();
+      const data = JSON.parse(text);
+
+      if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      alert("操作成功，当前状态：" + data.status);
+      loadComments();
+    } catch (e) {
+      console.error(e);
+      alert("操作失败：" + e.message);
+    }
+  };
+
+  // ==== 报名：加载 ====
+  loadFormsBtn.addEventListener("click", () => loadForms());
+
+  async function loadForms(cursor) {
+    const token = getToken();
+    if (!token) return;
+
+    loadFormsBtn.disabled = true;
+    loadFormsBtn.textContent = "加载中…";
+
+    try {
+      const status = statusSelectForms.value;
+      const params = new URLSearchParams();
+      if (status) params.set("status", status);
+      params.set("limit", "50");
+      if (cursor) params.set("cursor", cursor);
+
+      const res = await fetch(`${FORMS_API_BASE}/admin/forms?` + params.toString(), {
+        method: "GET",
+        headers: { "X-Admin-Token": token }
+      });
+
+      const text = await res.text();
+      const data = JSON.parse(text);
+      if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+      renderFormsTable(data.items || [], data.cursor || null);
+    } catch (e) {
+      console.error(e);
+      alert("加载报名失败：" + e.message);
+    } finally {
+      loadFormsBtn.disabled = false;
+      loadFormsBtn.textContent = "加载报名";
+    }
+  }
+
+  function renderFormsTable(items, cursor) {
+    if (!items.length) {
+      formsTableWrap.innerHTML = '<div class="empty">当前状态下暂无报名记录。</div>';
+      return;
+    }
+
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>孩子信息</th>
+            <th>联系方式</th>
+            <th>备注</th>
+            <th>状态 / 操作</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    for (const f of items) {
+      const date = f.createdAt ? new Date(f.createdAt).toLocaleString() : "";
+      const status = f.status || "new";
+
+      html += `
+        <tr>
+          <td>
+            <div>${escapeHtml(f.childName || "未填姓名")}</div>
+            <div style="font-size:11px;color:#9ca3af;">年龄：${escapeHtml(f.childAge || "未知")}</div>
+            <div class="tag-id">${f.id}</div>
+          </td>
+          <td>
+            ${escapeHtml(f.contact || "未填联系方式")}
+            <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${date}</div>
+          </td>
+          <td class="td-content">${escapeHtml(f.note || "")}</td>
+          <td class="td-actions">
+            <div class="tag ${status}">${statusLabelForm(status)}</div>
+            <div style="margin-top:4px;">
+              <button class="small secondary" onclick="updateFormStatus('${f.id}','done')">标记已处理</button>
+              <button class="small secondary" onclick="updateFormStatus('${f.id}','new')" style="margin-left:4px;">标记为新</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    html += `</tbody></table>`;
+
+    if (cursor) {
+      html += `
+        <div style="margin-top:12px; text-align:center;">
+          <button class="secondary" onclick="loadForms('${cursor}')">加载更多...</button>
+        </div>
+      `;
+    }
+
+    formsTableWrap.innerHTML = html;
+  }
+
+  function statusLabelForm(s) {
+    if (s === "done") return "已处理";
+    if (s === "new") return "新报名";
+    return s;
+  }
+
+  window.updateFormStatus = async function(id, status) {
+    const token = getToken();
+    if (!token) return;
+
+    const label = status === "done" ? "标记为已处理" : "标记为新报名";
+    if (!confirm(`确认${label}？`)) return;
+
+    try {
+      const res = await fetch(`${FORMS_API_BASE}/admin/forms/update`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-Token": token
+        },
+        body: JSON.stringify({ id, status })
+      });
+
+      const text = await res.text();
+      const data = JSON.parse(text);
+      if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+      alert("操作成功，当前状态：" + data.status);
+      loadForms();
+    } catch (e) {
+      console.error(e);
+      alert("操作失败：" + e.message);
+    }
+  };
+
+  function getToken() {
+    const t = tokenInput.value.trim();
+    if (!t) {
+      alert("请先输入管理密钥（ADMIN_TOKEN）");
+      tokenInput.focus();
+      return null;
+    }
+    sessionStorage.setItem("blast_admin_token", t);
+    return t;
   }
 
   function escapeHtml(str) {
@@ -367,47 +586,6 @@
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
   }
-
-  window.approveComment = async function(id, action) {
-    const token = tokenInput.value.trim();
-    if (!token) {
-      alert("请先输入管理密钥。");
-      return;
-    }
-
-    if (!confirm(`确认将该留言标记为「${action === "approve" ? "通过" : "拒绝"}」？`)) {
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/admin/comments/approve`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Admin-Token": token
-        },
-        body: JSON.stringify({ id, action })
-      });
-
-      const text = await res.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        throw new Error("服务器返回非 JSON：" + text);
-      }
-
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || `HTTP ${res.status}`);
-      }
-
-      alert("操作成功，当前状态：" + data.status);
-      loadComments(); // 重新刷新列表
-    } catch (err) {
-      console.error(err);
-      alert("操作失败：" + err.message);
-    }
-  };
 </script>
 </body>
 </html>
