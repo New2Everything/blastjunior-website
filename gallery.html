@@ -376,137 +376,143 @@
       pointer-events: none;
     }
 
-  /* ====== 模态框：简化版（电脑 & 手机统一逻辑） ====== */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.65);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 99999; /* 强制最顶层 */
-  padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
-}
+    /* ====== 模态框：统一处理 PC / 手机 / 折叠屏 ====== */
 
-/* 让折叠屏强制按比例显示，避免跳动 */
-.modal.visible { 
-  display: flex;
-}
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
+    }
 
-/*** 修复折叠屏高度问题 **/
-.modal-inner {
-  width: min(96vw, 900px);
-  max-height: 92vh;
-  background: #fff;
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column; /* 不再用 grid */
-  overflow: hidden;
-}
+    .modal.visible {
+      display: flex;
+    }
 
-/*** 图片区域高度固定成屏幕比例，更稳定 **/
-.modal-image-wrap {
-  width: 100%;
-  height: 60vh; /* 避免 cover 产生布局跳动 */
-  background: #000;
-  position: relative;
-}
+    .modal-inner {
+      width: min(96vw, 900px);
+      max-height: 92vh;
+      background: #ffffff;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
 
-.modal-image-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* 替代 cover, 不裁图 */
-}
+    .modal-image-wrap {
+      width: 100%;
+      height: 60vh;
+      background: #000;
+      position: relative;
+    }
 
-/*** 文本信息区域 ***/
-.modal-info {
-  padding: 1rem;
-  overflow-y: auto;
-  max-height: 32vh; /* 保证留言区不会被挤出屏幕 */
-}
+    .modal-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
 
-/*** 关闭按钮固定角落，不随布局跳动 **/
-.modal-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 100000;
-  background: rgba(0,0,0,0.65);
-  color: white;
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  font-size: 20px;
-}
+    .modal-info {
+      padding: 1rem 1.1rem 1.2rem;
+      overflow-y: auto;
+      max-height: 32vh;
+      font-size: 0.9rem;
+    }
 
+    .modal-meta-label {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 0.15rem;
+    }
 
-/* 留言区域 */
-.comment-box {
-  margin-top: 0.3rem;
-}
+    .modal-photo-id {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.6rem;
+    }
 
-.comment-box textarea {
-  width: 100%;
-  min-height: 80px;
-  resize: vertical;
-  font-family: inherit;
-  padding: 0.5rem 0.6rem;
-  border-radius: 8px;
-  border: 1px solid #475569;
-  font-size: 0.88rem;
-  background: rgba(15, 23, 42, 0.7);
-  color: #e2e8f0;
-}
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      border: none;
+      background: rgba(15, 23, 42, 0.8);
+      color: #e5e7eb;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100000;
+    }
 
-.comment-box textarea::placeholder {
-  color: #64748b;
-}
+    .comment-box {
+      margin-top: 0.4rem;
+    }
 
-.comment-box button {
-  margin-top: 0.4rem;
-  padding: 0.45rem 0.9rem;
-  border-radius: 999px;
-  border: none;
-  background: var(--lanxing-blue);
-  color: #fff;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
+    .comment-box textarea {
+      width: 100%;
+      min-height: 80px;
+      resize: vertical;
+      font-family: inherit;
+      padding: 0.5rem 0.6rem;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      font-size: 0.88rem;
+      background: rgba(15, 23, 42, 0.7);
+      color: #e2e8f0;
+    }
 
-.comment-box button:hover {
-  filter: brightness(1.05);
-}
+    .comment-box textarea::placeholder {
+      color: #64748b;
+    }
 
-.comment-hint {
-  font-size: 0.78rem;
-  color: #94a3b8;
-}
+    .comment-box button {
+      margin-top: 0.4rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      border: none;
+      background: var(--lanxing-blue);
+      color: #fff;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
 
-/* --------- 手机：改成上下结构，但仍然是“卡片”，不会全屏 --------- */
-@media (max-width: 768px) {
-  .modal-inner {
-    flex-direction: column;    /* 上图下字 */
-    width: 92vw;
-    max-height: 80vh;          /* 仍然是最多 80% 屏高 */
-  }
+    .comment-box button:hover {
+      filter: brightness(1.05);
+    }
 
-  .modal-image-wrap {
-    flex: 0 0 auto;
-    max-height: 55vh;
-  }
+    .comment-hint {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin-top: 0.25rem;
+    }
 
-  .modal-image-wrap img {
-    max-height: 55vh;          /* 图最多占屏幕 ~55% 高 */
-  }
+    @media (max-width: 768px) {
+      .modal-inner {
+        width: 92vw;
+        max-height: 80vh;
+      }
 
-  .modal-info {
-    flex: 1;
-  }
-}
+      .modal-image-wrap {
+        height: 55vh;
+      }
 
-
-
+      .modal-info {
+        max-height: 25vh;
+      }
+    }
 
     /* 底部导航 */
 
@@ -559,15 +565,6 @@
         width: 170px;
         height: 120px;
       }
-
-      .modal-inner {
-        grid-template-columns: minmax(0, 1fr);
-        max-height: 92vh;
-      }
-
-      .modal-image-wrap {
-        max-height: 50vh;
-      }
     }
   </style>
 </head>
@@ -593,25 +590,25 @@
 
       <div class="notice">
         <p style="margin-bottom: 4px;"><strong>📌 温馨提示（中文）</strong><br>
-          如果你发现某张照片不适合公开展示，请邮件联系我们：
-          <a href="mailto:blastjunior@163.com">blastjunior@163.com</a>，
-          我们会尽快处理并下架。
+          如果你发现某张照片不适合公开展示，请在该照片留言处留言或邮件联系我们：
+          <a href="mailto:blastjunior@163.com">blastjunior@163.com</a>，我们会尽快处理并下架。
         </p>
 
         <p style="margin-bottom: 4px;"><strong>📌 Friendly Notice (English)</strong><br>
-          If you find a photo that you believe should not be displayed, please contact us at
+          If you find a photo that you believe should not be displayed,
+          please leave a message under that photo or contact us at
           <a href="mailto:blastjunior@163.com">blastjunior@163.com</a>.
           We will review and remove it as soon as possible.
         </p>
 
         <p style="margin-bottom: 4px;"><strong>📌 ご連絡ください（日本語）</strong><br>
-          公開に不適切と思われる写真がありましたら、
+          公開に不適切と思われる写真がありましたら、その写真のコメント欄にメッセージを残すか、
           <a href="mailto:blastjunior@163.com">blastjunior@163.com</a> までご連絡ください。
           確認後、速やかに削除いたします。
         </p>
 
         <p style="margin-bottom: 0;"><strong>📌 안내문 (한국어)</strong><br>
-          공개되기 어려운 사진을 발견하시면
+          공개되기 어려운 사진을 발견하시면, 해당 사진의 댓글에 남겨주시거나
           <a href="mailto:blastjunior@163.com">blastjunior@163.com</a> 으로 연락주세요.
           확인 후 신속히 삭제하겠습니다.
         </p>
@@ -645,72 +642,59 @@
 <!-- 照片宇宙脚本（缩略图 + 延迟加载原图） -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  // ====== 基本 DOM 引用和常量 ======
   const wall = document.getElementById("floatingWall");
   if (!wall) return;
 
-  const IMAGE_BASE = "/images";        // 原图目录
-  const THUMB_BASE = "/images/thumbs"; // 缩略图目录
-  const MIN_SINGLES = 30;              // 至少多少张照片作为散落单张
+  const IMAGE_BASE = "/images";
+  const THUMB_BASE = "/images/thumbs";
+  const MIN_SINGLES = 30;
 
-    // ===== 模态框逻辑：锁定滚动 + 自适应大图 =====
-let _modalScrollY = 0;
-
-// ===== 折叠屏友好的弹窗逻辑 =====
-
-// 获取当前真实可用高度（优先用 visualViewport，兼容折叠屏）
-function getViewportHeight() {
-  if (window.visualViewport && window.visualViewport.height) {
-    return window.visualViewport.height;
+  /* ---------- 折叠屏友好的可视高度 ---------- */
+  function getViewportHeight() {
+    if (window.visualViewport && window.visualViewport.height) {
+      return window.visualViewport.height;
+    }
+    return window.innerHeight || document.documentElement.clientHeight || 800;
   }
-  return window.innerHeight || document.documentElement.clientHeight || 800;
-}
 
-function openModal(photo) {
-  const modal = document.getElementById("photoModal");
-  const img = document.getElementById("modalImage");
-  const idSpan = document.getElementById("modalPhotoId");
+  /* ---------- 模态框打开 / 关闭 ---------- */
+  function openModal(photo) {
+    const modal = document.getElementById("photoModal");
+    const img   = document.getElementById("modalImage");
+    const idSpan = document.getElementById("modalPhotoId");
 
-  if (!modal || !img || !idSpan) return;
+    if (!modal || !img || !idSpan) return;
 
-  // 设置编号
-  idSpan.textContent = `#${String(photo.id).padStart(3, "0")}`;
+    // 固定编号：直接用 photo.id（来自文件名）
+    idSpan.textContent = `#${String(photo.id).padStart(3, "0")}`;
 
-  // 先清空，再显示弹窗，再加载大图，避免旧图闪一下
-  img.src = "";
-  modal.classList.add("visible");
+    // 清空旧图，避免闪烁
+    img.src = "";
+    modal.classList.add("visible");
 
-  // 动态根据当前视口高度调整卡片和图片大小（折叠屏展开/合上都能重新计算）
-  const vh = getViewportHeight();
-  const modalInner = modal.querySelector(".modal-inner");
-  if (modalInner) {
-    modalInner.style.maxHeight = Math.round(vh * 0.8) + "px";   // 卡片最多占 80% 屏高
+    const vh = getViewportHeight();
+    const modalInner = modal.querySelector(".modal-inner");
+    if (modalInner) {
+      modalInner.style.maxHeight = Math.round(vh * 0.9) + "px";
+    }
+    img.style.maxHeight = Math.round(vh * 0.55) + "px";
+
+    img.src = photo.full || photo.src;
   }
-  img.style.maxHeight = Math.round(vh * 0.55) + "px";           // 图片最多占 55% 屏高
 
-  // 真正开始加载大图（有 full 就用 full，没有就用 src）
-  img.src = photo.full || photo.src;
+  function closeModal() {
+    const modal = document.getElementById("photoModal");
+    const img   = document.getElementById("modalImage");
+    const textarea = document.getElementById("commentText");
 
-  // 确保弹窗在视野中心（尤其是从 stack prompt 里出来的时候）
-  setTimeout(() => {
-    modal.scrollIntoView({ block: "center", behavior: "instant" });
-  }, 0);
-}
-
-function closeModal() {
-  const modal = document.getElementById("photoModal");
-  const img = document.getElementById("modalImage");
-  const textarea = document.getElementById("commentText");
-
-  if (modal) modal.classList.remove("visible");
-  if (img) img.src = "";
-  if (textarea) textarea.value = "";
-}
+    if (modal) modal.classList.remove("visible");
+    if (img) img.src = "";
+    if (textarea) textarea.value = "";
+  }
 
   window.closeModal = closeModal;
 
-
-  // ====== 随机分组：哪些做 STACK，哪些做单张 ======
+  /* ---------- 分组：哪些做 STACK，哪些散落 ---------- */
   function makeGroups(shuffled) {
     const stacks = [];
     const singles = [];
@@ -723,9 +707,9 @@ function closeModal() {
     }
 
     while (pool.length > 0) {
-      const remaining = pool.length;
+      const remaining     = pool.length;
       const singlesNeeded = Math.max(0, MIN_SINGLES - singles.length);
-      const maxStackable = remaining - singlesNeeded;
+      const maxStackable  = remaining - singlesNeeded;
 
       if (maxStackable < 2) {
         singles.push(pool.shift());
@@ -734,8 +718,7 @@ function closeModal() {
 
       const r = Math.random();
       if (r < 0.30) {
-        // 创建一个堆叠：至少 2 张，没有硬性上限
-        const stackSize = 2 + Math.floor(Math.random() * (maxStackable - 1)); // [2, maxStackable)
+        const stackSize = 2 + Math.floor(Math.random() * (maxStackable - 1));
         const group = pool.splice(0, stackSize);
         stacks.push(group);
       } else {
@@ -745,20 +728,20 @@ function closeModal() {
     return { stacks, singles };
   }
 
-  // ====== 随机位置 / 角度 ======
+  /* ---------- 随机位置 ---------- */
   function randomPlacement(el) {
-    const top = 8 + Math.random() * 84;
-    const left = 8 + Math.random() * 84;
-    const rot = (Math.random() * 26 - 13).toFixed(1);
+    const top   = 8 + Math.random() * 84;
+    const left  = 8 + Math.random() * 84;
+    const rot   = (Math.random() * 26 - 13).toFixed(1);
     const scale = 0.85 + Math.random() * 0.3;
 
-    el.style.top = top + "%";
+    el.style.top  = top + "%";
     el.style.left = left + "%";
     el.style.transform = `translate(-50%, -50%) rotate(${rot}deg) scale(${scale})`;
     el.style.setProperty("--rot", `${rot}deg`);
   }
 
-  // ====== 懒加载：进入视口附近才加载缩略图 ======
+  /* ---------- 懒加载：进入视口附近再加载缩略图 ---------- */
   const lazyObserver = new IntersectionObserver(
     (entries, observer) => {
       entries.forEach(entry => {
@@ -766,19 +749,19 @@ function closeModal() {
         const host = entry.target;
         const img = host.querySelector("img[data-src]");
         if (img && !img.src) {
-          img.src = img.dataset.src; // 这里才真正加载缩略图
+          img.src = img.dataset.src;
         }
         observer.unobserve(host);
       });
     },
     {
       root: null,
-      rootMargin: "200px", // 提前一点加载
+      rootMargin: "200px",
       threshold: 0.1
     }
   );
 
-  // ====== 渲染单张照片（只挂缩略图，并懒加载） ======
+  /* ---------- 渲染单张 ---------- */
   function renderSinglePhoto(photo) {
     const card = document.createElement("div");
     card.className = "photo-card";
@@ -791,7 +774,7 @@ function closeModal() {
     frontImg.className = "front-face";
     frontImg.alt = `Photo ${photo.id}`;
     frontImg.loading = "lazy";
-    frontImg.dataset.src = photo.thumb; // 懒加载用 data-src
+    frontImg.dataset.src = photo.thumb;
 
     const back = document.createElement("div");
     back.className = "back-face";
@@ -801,12 +784,10 @@ function closeModal() {
     inner.appendChild(back);
     card.appendChild(inner);
 
-    // 有一部分默认是“背面朝上”
     if (Math.random() < 0.25) {
       card.classList.add("is-back");
     }
 
-    // ✅ 手机 & 电脑：一次点击就翻面 + 打开大图
     card.addEventListener("click", () => {
       if (card.classList.contains("is-back")) {
         card.classList.remove("is-back");
@@ -816,125 +797,114 @@ function closeModal() {
 
     randomPlacement(card);
     wall.appendChild(card);
-
     lazyObserver.observe(card);
   }
 
-  // ====== 渲染堆叠：只加载 1 张预览缩略图，其他只是数据 ======
+  /* ---------- 渲染堆叠（只加载 1 张预览缩略图） ---------- */
   function renderStack(group, stackIndex) {
-  const stack = document.createElement("div");
-  stack.className = "photo-stack";
-  stack.dataset.stackIndex = stackIndex;
+    const stack = document.createElement("div");
+    stack.className = "photo-stack";
+    stack.dataset.stackIndex = stackIndex;
 
-  const inner = document.createElement("div");
-  inner.className = "photo-stack-inner";
+    const inner = document.createElement("div");
+    inner.className = "photo-stack-inner";
 
-  // 用组里的一张照片作为预览（只这一张加载缩略图）
-  const preview = group[Math.floor(Math.random() * group.length)];
+    const preview = group[Math.floor(Math.random() * group.length)];
 
-  // 三层 stack-card：只有顶层有图，其余只是“纸片感”
-  const cardBottom = document.createElement("div");
-  cardBottom.className = "stack-card";
-  cardBottom.style.background =
-    "linear-gradient(135deg, #0f172a, #020617)";
+    const cardBottom = document.createElement("div");
+    cardBottom.className = "stack-card";
+    cardBottom.style.background =
+      "linear-gradient(135deg, #0f172a, #020617)";
 
-  const cardMid = document.createElement("div");
-  cardMid.className = "stack-card";
-  cardMid.style.background =
-    "linear-gradient(135deg, #1f2937, #020617)";
+    const cardMid = document.createElement("div");
+    cardMid.className = "stack-card";
+    cardMid.style.background =
+      "linear-gradient(135deg, #1f2937, #020617)";
 
-  const cardTop = document.createElement("div");
-  cardTop.className = "stack-card";
+    const cardTop = document.createElement("div");
+    cardTop.className = "stack-card";
 
-  const img = document.createElement("img");
-  img.alt = `Stack preview ${preview.id}`;
-  img.loading = "lazy";
-  img.dataset.src = preview.thumb; // 懒加载缩略图
-  cardTop.appendChild(img);
+    const img = document.createElement("img");
+    img.alt = `Stack preview ${preview.id}`;
+    img.loading = "lazy";
+    img.dataset.src = preview.thumb;
+    cardTop.appendChild(img);
 
-  inner.appendChild(cardBottom);
-  inner.appendChild(cardMid);
-  inner.appendChild(cardTop);
+    inner.appendChild(cardBottom);
+    inner.appendChild(cardMid);
+    inner.appendChild(cardTop);
 
-  // 标签：STACK · 数量
-  const size = group.length;
-  const label = document.createElement("div");
-  label.className = "stack-label";
-  label.textContent = `STACK · ${size}`;
+    const size = group.length;
+    const label = document.createElement("div");
+    label.className = "stack-label";
+    label.textContent = `STACK · ${size}`;
 
-  const baseFont = 11;
-  const font = baseFont + Math.min(size * 0.18, 7);
-  label.style.fontSize = font + "px";
-  const padY = 2 + Math.min(size * 0.06, 4);
-  const padX = 6 + Math.min(size * 0.1, 6);
-  label.style.padding = `${padY}px ${padX}px`;
+    const baseFont = 11;
+    const font = baseFont + Math.min(size * 0.18, 7);
+    label.style.fontSize = font + "px";
+    const padY = 2 + Math.min(size * 0.06, 4);
+    const padX = 6 + Math.min(size * 0.1, 6);
+    label.style.padding = `${padY}px ${padX}px`;
 
-  stack.appendChild(inner);
-  stack.appendChild(label);
+    stack.appendChild(inner);
+    stack.appendChild(label);
 
-  // 🔴 关键就是下面这个点击逻辑
-  stack.addEventListener("click", () => {
-    const max = group.length;
-    const input = prompt(
-      `This stack holds ${max} photos.\n` +
-      `Enter a number between 1 and ${max} to draw one:`
-    );
-    if (input === null) return;
+    stack.addEventListener("click", () => {
+      const max = group.length;
+      const input = prompt(
+        `This stack holds ${max} photos.\n` +
+        `Enter a number between 1 and ${max} to draw one:`
+      );
+      if (input === null) return;
 
-    const n = parseInt(input, 10);
-    if (Number.isNaN(n) || n < 1 || n > max) {
-      alert(`Please enter a number between 1 and ${max}.`);
-      return;
-    }
+      const n = parseInt(input, 10);
+      if (Number.isNaN(n) || n < 1 || n > max) {
+        alert(`Please enter a number between 1 and ${max}.`);
+        return;
+      }
 
-    const picked = group[n - 1];
+      const picked = group[n - 1];
+      openModal(picked);
+    });
 
-    // 这里直接打开大图，位置计算都交给 openModal 去做
-    openModal(picked);
-  });
+    randomPlacement(stack);
+    wall.appendChild(stack);
+    lazyObserver.observe(stack);
+  }
 
-  randomPlacement(stack);
-  wall.appendChild(stack);
-
-  // 懒加载缩略图
-  lazyObserver.observe(stack);
-}
-
-
-  // ====== 读取 list.json，生成“元数据宇宙” ======
+  /* ---------- 从 list.json 生成照片元数据 ---------- */
   fetch("/images/list.json")
-    .then((r) => r.json())
-    .then((files) => {
-      const photos = files.map((name, index) => ({
-        id: index + 1,
-        name,
-        thumb: `${THUMB_BASE}/${name}`,
-        full: `${IMAGE_BASE}/${name}`,
-      }));
+    .then(r => r.json())
+    .then(files => {
+      const photos = files.map((name, index) => {
+        // 从文件名中抽取 (123) 这样的数字作为稳定 ID
+        const m = name.match(/\((\d+)\)/);
+        const id = m ? parseInt(m[1], 10) : index + 1;
+        return {
+          id,
+          name,
+          thumb: `${THUMB_BASE}/${name}`,
+          full:  `${IMAGE_BASE}/${name}`,
+        };
+      });
 
-      const shuffled = photos.sort(() => Math.random() - 0.5);
+      const shuffled = photos.slice().sort(() => Math.random() - 0.5);
       const { stacks, singles } = makeGroups(shuffled);
 
       stacks.forEach((group, i) => renderStack(group, i));
-      singles.forEach((photo) => renderSinglePhoto(photo));
+      singles.forEach(photo => renderSinglePhoto(photo));
     })
-    .catch((err) => {
+    .catch(err => {
       console.error("加载 /images/list.json 失败：", err);
     });
 
-  // ====== 流星效果 ======
+  /* ---------- 流星效果 ---------- */
   function launchMeteor() {
     const starLayer = document.querySelector(".shooting-star");
     if (!starLayer) return;
 
     const node = document.createElement("div");
-    node.classList.add("meteor-beam");
     node.style.position = "absolute";
-
-    const startX = Math.random() * window.innerWidth * 0.8;
-    node.style.top = Math.random() * 200 + "px";
-    node.style.left = startX + "px";
-
     node.style.width = "2px";
     node.style.height = "160px";
     node.style.background =
@@ -942,6 +912,10 @@ function closeModal() {
     node.style.transform = "rotate(-45deg)";
     node.style.opacity = "0";
     node.style.animation = "meteor 1.8s ease-in-out forwards";
+
+    const startX = Math.random() * window.innerWidth * 0.8;
+    node.style.top = Math.random() * 200 + "px";
+    node.style.left = startX + "px";
 
     starLayer.appendChild(node);
     setTimeout(() => starLayer.removeChild(node), 2000);
@@ -953,7 +927,6 @@ function closeModal() {
 });
 </script>
 
-
 <!-- 模态框 -->
 <div class="modal" id="photoModal">
   <div class="modal-inner">
@@ -963,20 +936,21 @@ function closeModal() {
     </div>
     <div class="modal-info">
       <div>
-        <div class="modal-meta-label">Photo</div>
+        <div class="modal-meta-label">PHOTO</div>
         <div class="modal-photo-id" id="modalPhotoId"></div>
       </div>
       <div>
-        <div class="modal-meta-label">Notes</div>
+        <div class="modal-meta-label">NOTES</div>
         <p id="modalPlaceholderText">
           这是兰星少年俱乐部的一个瞬间。未来这里会显示已审核通过的留言节选。
         </p>
       </div>
       <div class="comment-box">
-        <div class="modal-meta-label">Leave a message</div>
-        <textarea id="commentText" placeholder="Write a short message about this photo..."></textarea>
+        <div class="modal-meta-label">LEAVE A MESSAGE</div>
+        <textarea id="commentText"
+          placeholder="Write a short message about this photo..."></textarea>
         <button id="commentSubmitBtn"
-                onclick="alert('目前为演示版，未来会接入 Cloudflare Worker 进行留言审核与保存。');">
+          onclick="alert('目前为演示版，未来会接入 Cloudflare Worker 进行留言审核与保存。');">
           Send (demo)
         </button>
         <div class="comment-hint">
