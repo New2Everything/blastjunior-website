@@ -1,0 +1,563 @@
+<style>
+    :root {
+      --lanxing-blue: #1f5fff;
+      --lanxing-dark: #020617;
+      --lanxing-light: #f5f7ff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-soft: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4ff;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* 顶部导航 */
+    header {
+      padding: 14px 0;
+      background: #ffffffcc;
+      border-bottom: 1px solid rgba(229, 231, 235, 0.9);
+      backdrop-filter: blur(14px);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .nav-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #a5b4fc, #1d4ed8);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #f9fafb;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .nav a {
+      color: #4b5563;
+      text-decoration: none;
+    }
+
+    .nav a:hover {
+      color: #111827;
+    }
+
+    main {
+      flex: 1;
+      padding: 28px 0 32px;
+    }
+
+    /* 上半部分简介卡片 */
+
+    .intro-card {
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid var(--border-soft);
+      padding: 22px 22px 20px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .subtitle-small {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .notice {
+      border-radius: 12px;
+      border: 1px dashed #cbd5f5;
+      background: var(--lanxing-light);
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .notice a {
+      color: var(--lanxing-blue);
+      text-decoration: none;
+    }
+    .notice a:hover {
+      text-decoration: underline;
+    }
+
+    /* ===================================
+       宇宙背景容器 + 星空 + 流星
+       =================================== */
+
+    /* 宇宙背景 + 星云 */
+    .universe-bg {
+      position: relative;
+      width: 100%;
+      min-height: 1200px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 20% 0%, #3b5fc4 0, #151b3a 40%, #050818 100%);
+    }
+
+    .universe-bg::before {
+      content: "";
+      position: absolute;
+      inset: -20%;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 18% 32%, rgba(120, 150, 255, 0.25) 0, transparent 55%),
+        radial-gradient(circle at 82% 72%, rgba(190, 120, 255, 0.22) 0, transparent 60%),
+        radial-gradient(circle at 60% 10%, rgba(255, 255, 255, 0.15) 0, transparent 40%);
+      mix-blend-mode: screen;
+      opacity: 0.9;
+    }
+
+    /* 星空层，多层随机星星 */
+    .stars {
+      position: absolute;
+      inset: -40%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .stars::before,
+    .stars::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(rgba(255,255,255,0.95) 1px, transparent 1px),
+        radial-gradient(rgba(255,255,255,0.6) 1.5px, transparent 1.5px),
+        radial-gradient(rgba(255,255,255,0.35) 2px, transparent 2px);
+      background-size:
+        190px 210px,
+        280px 260px,
+        420px 430px;
+      background-position:
+        0 0,
+        80px 50px,
+        -70px 130px;
+      opacity: 0.45;
+      animation: twinkle 9s infinite alternate ease-in-out;
+      mix-blend-mode: screen;
+    }
+
+    .stars::after {
+      background-position:
+        -120px -40px,
+        120px 160px,
+        -40px 260px;
+      opacity: 0.35;
+      animation-duration: 13s;
+    }
+
+    @keyframes twinkle {
+      0% {
+        opacity: 0.25;
+        transform: translate3d(0, 0, 0);
+      }
+      50% {
+        opacity: 0.7;
+        transform: translate3d(8px, -6px, 0);
+      }
+      100% {
+        opacity: 0.35;
+        transform: translate3d(-5px, 4px, 0);
+      }
+    }
+
+    /* 流星层 */
+    .shooting-star {
+      position: absolute;
+      inset: -10%;
+      pointer-events: none;
+      z-index: 3;
+      overflow: hidden;
+    }
+
+    @keyframes meteor {
+      0% {
+        opacity: 0;
+        transform: translate(0,0) rotate(-45deg);
+      }
+      5% {
+        opacity: 1;
+      }
+      20% {
+        opacity: 0;
+        transform: translate(350px, 350px) rotate(-45deg);
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+
+    /* 浮动照片宇宙主容器 */
+
+    .floating-wrapper {
+      margin-top: 8px;
+      padding-bottom: 8px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .floating-wall {
+      position: relative;
+      width: 100%;
+      height: 1080px;
+      border-radius: 22px;
+      background: radial-gradient(circle at top,
+                  rgba(255,255,255,0.22) 0,
+                  rgba(243,244,255,0.16) 38%,
+                  rgba(15,23,42,0.55) 100%);
+      box-shadow: 0 26px 60px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+    }
+
+    /* 单张照片卡片 */
+
+    .photo-card,
+    .photo-stack {
+      position: absolute;
+      cursor: pointer;
+      transition:
+        transform 0.25s ease-out,
+        box-shadow 0.25s ease-out,
+        filter 0.25s ease-out;
+    }
+
+    .photo-card-inner {
+      position: relative;
+      width: 190px;
+      height: 125px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+      background: #000;
+      transform-style: preserve-3d;
+      transform-origin: center center;
+    }
+
+    .photo-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      backface-visibility: hidden;
+    }
+
+    .photo-card:hover,
+    .photo-stack:hover {
+      transform: translate3d(0, -4px, 0) scale(1.03) rotate(var(--rot));
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.3);
+      filter: brightness(1.05);
+    }
+
+    /* 背面卡牌 */
+
+    .photo-card.is-back .front-face {
+      display: none;
+    }
+
+    .photo-card.is-back .back-face {
+      display: flex;
+    }
+
+    .back-face {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 20% 0, #ffffff 0, #1e293b 48%, #020617 100%);
+      color: #e5e7eb;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0.8rem;
+      font-size: 0.8rem;
+      backface-visibility: hidden;
+    }
+
+    .back-face span {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      opacity: 0.9;
+    }
+
+    /* 堆叠卡牌 */
+
+    .photo-stack-inner {
+      position: relative;
+      width: 200px;
+      height: 135px;
+    }
+
+    .stack-card {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+      background: #000;
+      transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+
+    .stack-card:nth-child(1) {
+      transform: translate(-10px, -10px) rotate(-5deg);
+      z-index: 1;
+    }
+    .stack-card:nth-child(2) {
+      transform: translate(0, 0) rotate(1deg);
+      z-index: 2;
+    }
+    .stack-card:nth-child(3) {
+      transform: translate(10px, 8px) rotate(6deg);
+      z-index: 3;
+    }
+
+    .photo-stack:hover .stack-card:nth-child(1) {
+      transform: translate(-18px, -16px) rotate(-8deg);
+    }
+    .photo-stack:hover .stack-card:nth-child(3) {
+      transform: translate(18px, 16px) rotate(9deg);
+    }
+
+    .stack-label {
+      position: absolute;
+      top: -26px;
+      left: 0;
+      background: rgba(255, 255, 255, 0.9);
+      color: #111827;
+      border-radius: 999px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+    }
+
+    /* ====== 模态框：统一处理 PC / 手机 / 折叠屏 ====== */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
+    }
+
+    .modal.visible {
+      display: flex;
+    }
+
+    .modal-inner {
+      width: min(96vw, 900px);
+      max-height: 92vh;
+      background: #ffffff;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .modal-image-wrap {
+      width: 100%;
+      height: 60vh;
+      background: #000;
+      position: relative;
+    }
+
+    .modal-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .modal-info {
+      padding: 1rem 1.1rem 1.2rem;
+      overflow-y: auto;
+      max-height: 32vh;
+      font-size: 0.9rem;
+    }
+
+    .modal-meta-label {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 0.15rem;
+    }
+
+    .modal-photo-id {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      border: none;
+      background: rgba(15, 23, 42, 0.8);
+      color: #e5e7eb;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100000;
+    }
+
+    .comment-box {
+      margin-top: 0.4rem;
+    }
+
+    .comment-box textarea {
+      width: 100%;
+      min-height: 80px;
+      resize: vertical;
+      font-family: inherit;
+      padding: 0.5rem 0.6rem;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      font-size: 0.88rem;
+      background: rgba(15, 23, 42, 0.7);
+      color: #e2e8f0;
+    }
+
+    .comment-box textarea::placeholder {
+      color: #64748b;
+    }
+
+    .comment-box button {
+      margin-top: 0.4rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      border: none;
+      background: var(--lanxing-blue);
+      color: #fff;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .comment-box button:hover {
+      filter: brightness(1.05);
+    }
+
+    .comment-hint {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin-top: 0.25rem;
+    }
+
+    @media (max-width: 768px) {
+      .modal-inner {
+        width: 92vw;
+        max-height: 80vh;
+      }
+
+      .modal-image-wrap {
+        height: 55vh;
+      }
+
+      .modal-info {
+        max-height: 25vh;
+      }
+    }
+
+    /* 底部导航 */
+
+    .footer-nav {
+      margin-top: 8px;
+      padding: 18px 0 10px;
+      border-top: 1px solid rgba(229, 231, 235, 0.8);
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      font-size: 14px;
+      background: #f9fafb;
+    }
+
+    .footer-nav a {
+      color: #4b5563;
+      text-decoration: none;
+    }
+
+    .footer-nav a:hover {
+      color: #111827;
+      text-decoration: underline;
+    }
+
+    footer {
+      padding: 8px 0 18px;
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+      background: #f9fafb;
+    }
+
+    @media (max-width: 960px) {
+      .floating-wall {
+        height: 900px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .floating-wall {
+        height: 820px;
+      }
+
+      .photo-card-inner {
+        width: 160px;
+        height: 110px;
+      }
+
+      .photo-stack-inner {
+        width: 170px;
+        height: 120px;
+      }
+    }
+  </style>

@@ -1,6 +1,16 @@
+RUN LIST NUMBERS
+
 $files = Get-ChildItem -File | Where-Object {
     $_.Extension -in ".jpg", ".jpeg", ".webp", ".png"
 } | Sort-Object Name | Select-Object -ExpandProperty Name
 
 $json  = $files | ConvertTo-Json
 Set-Content -Path "list.json" -Value $json -Encoding UTF8
+
+
+PUSH COMMAND
+
+cd F:\blastjunior-website
+git add gallery.html
+git commit -m "fix modal layout on mobile"
+git push
