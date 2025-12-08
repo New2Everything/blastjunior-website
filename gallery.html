@@ -310,7 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     textarea.value = "";
-    alert("已提交，我们会在审核通过后展示这条留言。");
+    alert("Thank you! Your message has been submitted.<br>It will appear after approval.");
   } catch (err) {
     console.error("提交留言失败：", err);
     alert("提交失败：" + (err && err.message ? err.message : "未知错误"));
