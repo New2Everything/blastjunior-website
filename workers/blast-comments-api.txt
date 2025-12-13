@@ -1,0 +1,320 @@
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const { pathname, searchParams } = url;
+
+    // === CORS 支持 ===
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders() });
+    }
+
+    try {
+      // 玩家提交留言
+      if (request.method === "POST" && pathname === "/comments") {
+        return createComment(request, env);
+      }
+
+      // 获取某张照片的已审核评论
+      if (request.method === "GET" && pathname === "/comments") {
+        return listComments(request, env, searchParams);
+      }
+
+      // 管理员：查看评论
+      if (request.method === "GET" && pathname === "/admin/comments") {
+        return adminListComments(request, env, searchParams);
+      }
+
+      // 管理员：审核通过 / 拒绝
+      if (request.method === "POST" && pathname === "/admin/comments/approve") {
+        return adminApprove(request, env);
+      }
+
+      return new Response("Not found", { status: 404, headers: corsHeaders() });
+    } catch (err) {
+      console.error("Worker error:", err);
+      return new Response("Internal Server Error", {
+        status: 500,
+        headers: corsHeaders(),
+      });
+    }
+  },
+};
+
+// ============= 通用工具 =============
+
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "*",  // 必要时可改成你自己的域名
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Token",
+  };
+}
+
+function randomId() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+// 根据 Cloudflare 提供的地理信息，生成「大陆/地区」标签
+function getRegionLabel(cf) {
+  if (!cf) return "未知地区";
+
+  const country = cf.country || "";
+  const cont = cf.continent || "";
+
+  if (country === "CN") return "中国大陆";
+  if (country === "HK") return "中国香港";
+  if (country === "MO") return "中国澳门";
+  if (country === "TW") return "中国台湾";
+  if (country === "JP") return "日本";
+  if (country === "KR") return "韩国";
+
+  const map = {
+    AS: "亚洲",
+    EU: "欧洲",
+    NA: "北美洲",
+    SA: "南美洲",
+    AF: "非洲",
+    OC: "大洋洲",
+  };
+
+  if (map[cont]) return map[cont];
+  return "未知地区";
+}
+
+// 取出调用端 IP，用于简单限速
+function getClientIp(request) {
+  return (
+    request.headers.get("CF-Connecting-IP") ||
+    request.headers.get("x-forwarded-for") ||
+    "unknown"
+  );
+}
+
+// ============= 玩家提交评论（含限速 + IP→地区） =============
+
+async function createComment(request, env) {
+  const data = await request.json().catch(() => null);
+
+  if (!data || !data.photoId || !data.content) {
+    return jsonResponse(
+      { ok: false, error: "photoId & content required" },
+      400
+    );
+  }
+
+  const photoId = String(data.photoId).trim();
+  const content = String(data.content || "").trim().slice(0, 500);
+
+  if (!content) {
+    return jsonResponse({ ok: false, error: "Empty content" }, 400);
+  }
+
+  // --- 简单防灌水：同一 IP 每 60 秒最多 3 条 ---
+  const ip = getClientIp(request);
+  const now = Date.now();
+  const rateKey = `rate:ip:${ip}`;
+  const rateRaw = await env.COMMENTS.get(rateKey);
+  let rateInfo = null;
+
+  if (rateRaw) {
+    try {
+      rateInfo = JSON.parse(rateRaw);
+    } catch (e) {
+      rateInfo = null;
+    }
+  }
+
+  if (
+    rateInfo &&
+    typeof rateInfo.windowStart === "number" &&
+    typeof rateInfo.count === "number"
+  ) {
+    const windowMs = 60 * 1000; // 1 分钟窗口
+    if (now - rateInfo.windowStart < windowMs) {
+      if (rateInfo.count >= 3) {
+        return jsonResponse(
+          {
+            ok: false,
+            error: "Too many requests, please wait a moment.",
+          },
+          429
+        );
+      } else {
+        rateInfo.count += 1;
+      }
+    } else {
+      rateInfo = { windowStart: now, count: 1 };
+    }
+  } else {
+    rateInfo = { windowStart: now, count: 1 };
+  }
+
+  // 把限速信息存回 KV，设置一个过期时间防止垃圾积累
+  await env.COMMENTS.put(rateKey, JSON.stringify(rateInfo), {
+    expirationTtl: 600, // 10 分钟后自动过期
+  });
+
+  // --- 从 Cloudflare 提供的地理信息推断地区标签 ---
+  const cf = request.cf || {};
+  const regionLabel = getRegionLabel(cf);
+
+  const id = `p:${photoId}:${randomId()}`;
+
+  const record = {
+    id,
+    photoId,
+    region: regionLabel,
+    content,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+  };
+
+  await env.COMMENTS.put(id, JSON.stringify(record));
+
+  return jsonResponse(
+    {
+      ok: true,
+      id,
+      status: "pending",
+      message: "Thank you! Your message has been submitted.<br>It will appear after approval.",
+    },
+    200
+  );
+}
+
+// ============= 拉取评论（前台使用） =============
+
+async function listComments(request, env, searchParams) {
+  const photoId = searchParams.get("photoId");
+  if (!photoId) {
+    return jsonResponse(
+      { ok: false, error: "photoId required" },
+      400
+    );
+  }
+
+  const limit = Number(searchParams.get("limit") || 10);
+  const cursor = searchParams.get("cursor") || undefined;
+  const prefix = `p:${photoId}:`;
+
+  const list = await env.COMMENTS.list({
+    prefix,
+    limit,
+    cursor,
+  });
+
+  const approved = [];
+
+  for (const key of list.keys) {
+    const raw = await env.COMMENTS.get(key.name);
+    if (!raw) continue;
+
+    const item = JSON.parse(raw);
+
+    if (item.status === "approved") {
+      approved.push({
+        id: item.id,
+        region: item.region,
+        content: item.content,
+        createdAt: item.createdAt,
+      });
+    }
+  }
+
+  return jsonResponse(
+    {
+      ok: true,
+      comments: approved,
+      cursor: list.list_complete ? null : list.cursor,
+    },
+    200
+  );
+}
+
+// ============= 管理员：列表 =============
+
+async function adminListComments(request, env, searchParams) {
+  const token = request.headers.get("X-Admin-Token");
+  if (!token || token !== env.ADMIN_TOKEN) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const status = searchParams.get("status") || "pending";
+  const limit = Number(searchParams.get("limit") || 50);
+  const cursor = searchParams.get("cursor") || undefined;
+
+  const list = await env.COMMENTS.list({
+    prefix: "p:",
+    limit,
+    cursor,
+  });
+
+  const items = [];
+
+  for (const key of list.keys) {
+    const raw = await env.COMMENTS.get(key.name);
+    if (!raw) continue;
+
+    const item = JSON.parse(raw);
+
+    if (!status || item.status === status) {
+      items.push(item);
+    }
+  }
+
+  return jsonResponse(
+    {
+      ok: true,
+      items,
+      cursor: list.list_complete ? null : list.cursor,
+    },
+    200
+  );
+}
+
+// ============= 管理员：审核 =============
+
+async function adminApprove(request, env) {
+  const token = request.headers.get("X-Admin-Token");
+  if (!token || token !== env.ADMIN_TOKEN) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const data = await request.json().catch(() => null);
+  if (!data || !data.id || !data.action) {
+    return jsonResponse(
+      { ok: false, error: "id & action required" },
+      400
+    );
+  }
+
+  const raw = await env.COMMENTS.get(data.id);
+  if (!raw) {
+    return jsonResponse({ ok: false, error: "Not found" }, 404);
+  }
+
+  const item = JSON.parse(raw);
+
+  if (data.action === "approve") item.status = "approved";
+  else if (data.action === "reject") item.status = "rejected";
+
+  await env.COMMENTS.put(data.id, JSON.stringify(item));
+
+  return jsonResponse(
+    { ok: true, status: item.status },
+    200
+  );
+}
+
+// ============= 小工具：统一 JSON 响应 =============
+
+function jsonResponse(obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      ...corsHeaders(),
+    },
+  });
+}

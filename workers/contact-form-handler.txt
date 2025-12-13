@@ -1,0 +1,225 @@
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const { pathname, searchParams } = url;
+
+    // 表单提交
+    if (request.method === "POST" && pathname === "/contact-submit") {
+      return handleContactSubmit(request, env);
+    }
+
+    // 管理员：查看报名列表
+    if (request.method === "GET" && pathname === "/admin/forms") {
+      return adminListForms(request, env, searchParams);
+    }
+
+    // 管理员：更新报名状态
+    if (request.method === "POST" && pathname === "/admin/forms/update") {
+      return adminUpdateForm(request, env);
+    }
+
+    // 预检
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, X-Admin-Token",
+        },
+      });
+    }
+
+    return new Response("Not found", { status: 404 });
+  },
+};
+
+// ====== 处理前台报名表单 ======
+
+async function handleContactSubmit(request, env) {
+  const formData = await request.formData();
+
+  const childName = (formData.get("childName") || "").toString().trim();
+  const age       = (formData.get("age") || "").toString().trim();
+  const contact   = (formData.get("contact") || "").toString().trim();
+  const message   = (formData.get("message") || "").toString().trim();
+  const subject   = (formData.get("_subject") || "").toString().trim();
+
+  // 简单防呆
+  if (!childName || !age || !contact) {
+    return new Response("缺少必填字段", { status: 400 });
+  }
+
+  // 写入 KV
+  const id = "signup:" + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36));
+
+  const record = {
+    id,
+    childName,
+    age,
+    contact,
+    message,
+    subject,
+    status: "new",  // new=新报名, done=已处理
+    createdAt: new Date().toISOString(),
+    source: "blastjunior.com",
+  };
+
+  await env.REGISTRATIONS.put(id, JSON.stringify(record));
+
+  // 下面是成功页（你可以继续用自己的版本）
+  const successHtml = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>报名已提交</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .page {
+      max-width: 480px;
+      padding: 32px 24px;
+      background: #020617;
+      border-radius: 16px;
+      box-shadow: 0 18px 45px rgba(15,23,42,0.6);
+      border: 1px solid rgba(148,163,184,0.4);
+      text-align: center;
+    }
+    .title {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 6px 0;
+    }
+    .ok {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: #22c55e33;
+      color: #4ade80;
+      margin-left: 6px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="title">
+      报名信息已提交
+      <span class="ok">✔</span>
+    </div>
+    <p>感谢您对 <strong>兰星少年俱乐部</strong> 的信任，我们已经收到本次报名 / 咨询信息。</p>
+    <p>工作人员会尽快通过您填写的联系方式与您联络。</p>
+    <p style="margin-top:10px;">页面将在 <strong id="sec">5</strong> 秒后自动跳回首页。</p>
+    <p>如未跳转，请点击这里：<a href="/" style="color:#60a5fa;">返回首页</a></p>
+  </div>
+  <script>
+    let left = 5;
+    const span = document.getElementById('sec');
+    const timer = setInterval(() => {
+      left--;
+      if (left <= 0) {
+        clearInterval(timer);
+        window.location.href = '/';
+      } else {
+        span.textContent = left;
+      }
+    }, 1000);
+  </script>
+</body>
+</html>`;
+
+  return new Response(successHtml, {
+    status: 200,
+    headers: { "content-type": "text/html; charset=utf-8" },
+  });
+}
+
+// ====== 管理员：列表 ======
+
+function jsonResponse(obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, X-Admin-Token",
+    },
+  });
+}
+
+async function adminListForms(request, env, searchParams) {
+  const token = request.headers.get("X-Admin-Token");
+  if (!token || token !== env.ADMIN_TOKEN) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const statusFilter = searchParams.get("status") || "";  // new / done / 空=全部
+  const limit  = Number(searchParams.get("limit") || 50);
+  const cursor = searchParams.get("cursor") || undefined;
+
+  const list = await env.REGISTRATIONS.list({
+    prefix: "signup:",
+    limit,
+    cursor,
+  });
+
+  const items = [];
+  for (const key of list.keys) {
+    const raw = await env.REGISTRATIONS.get(key.name);
+    if (!raw) continue;
+    const rec = JSON.parse(raw);
+    if (!statusFilter || rec.status === statusFilter) {
+      items.push(rec);
+    }
+  }
+
+  return jsonResponse({
+    ok: true,
+    items,
+    cursor: list.list_complete ? null : list.cursor,
+  });
+}
+
+// ====== 管理员：更新状态 ======
+
+async function adminUpdateForm(request, env) {
+  const token = request.headers.get("X-Admin-Token");
+  if (!token || token !== env.ADMIN_TOKEN) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const data = await request.json().catch(() => null);
+  if (!data || !data.id || !data.status) {
+    return jsonResponse({ ok: false, error: "id & status required" }, 400);
+  }
+
+  const raw = await env.REGISTRATIONS.get(data.id);
+  if (!raw) {
+    return jsonResponse({ ok: false, error: "Not found" }, 404);
+  }
+
+  const rec = JSON.parse(raw);
+  rec.status = data.status;    // "new" / "done"
+  await env.REGISTRATIONS.put(data.id, JSON.stringify(rec));
+
+  return jsonResponse({ ok: true, status: rec.status }, 200);
+}

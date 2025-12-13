@@ -83,8 +83,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const wall = document.getElementById("floatingWall");
   if (!wall) return;
 
-  const IMAGE_BASE = "/images";
-  const THUMB_BASE = "/images/thumbs";
+  const IMAGE_BASE = "/media/web";
+  const THUMB_BASE = "/media/thumb";
   const MIN_SINGLES = 30;
 
   // ---- 留言 API 基础地址 ----
@@ -507,7 +507,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ---------- 从 list.json 生成照片元数据 ---------- */
-  fetch("/images/list.json")
+  fetch("/media/list")
     .then(r => r.json())
     .then(files => {
       const photos = files.map((name, index) => {
