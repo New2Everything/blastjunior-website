@@ -507,30 +507,74 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ---------- 从 list.json 生成照片元数据 ---------- */
-  fetch("/media/list")
-    .then(r => r.json())
-    .then(files => {
-      const photos = files.map((name, index) => {
-        // 从文件名中抽取 (123) 这样的数字作为稳定 ID
-        const m = name.match(/\((\d+)\)/);
-        const id = m ? parseInt(m[1], 10) : index + 1;
+  /* ---------- 从 list.json 生成照片元数据（兼容 v1 数组 / v2 对象） ---------- */
+function encodeFile(name) {
+  // 只编码文件名部分，确保空格、括号等都安全
+  return encodeURIComponent(String(name || ""));
+}
+
+function normalizeListJson(data) {
+  // 兼容：
+  // 1) ["HADO (1).jpg", ...]
+  // 2) { version: 2, items: [{id, file, uploadedAt, tags, ...}, ...] }
+  if (Array.isArray(data)) {
+    return data.map((file, index) => {
+      const m = String(file).match(/\((\d+)\)/);
+      const id = m ? parseInt(m[1], 10) : index + 1;
+      return { id, file };
+    });
+  }
+
+  if (data && Array.isArray(data.items)) {
+    return data.items
+      .map((it, index) => {
+        const file = it.file || it.name; // 兼容你可能用 file/name 两种写法
+        if (!file) return null;
+        const id = Number.isFinite(it.id) ? it.id : (index + 1);
         return {
           id,
-          name,
-          thumb: `${THUMB_BASE}/${name}`,
-          full:  `${IMAGE_BASE}/${name}`,
+          file,
+          uploadedAt: it.uploadedAt || null,
+          tags: Array.isArray(it.tags) ? it.tags : null,
+          caption: it.caption || null,
         };
-      });
+      })
+      .filter(Boolean);
+  }
 
-      const shuffled = photos.slice().sort(() => Math.random() - 0.5);
-      const { stacks, singles } = makeGroups(shuffled);
+  return [];
+}
 
-      stacks.forEach((group, i) => renderStack(group, i));
-      singles.forEach(photo => renderSinglePhoto(photo));
-    })
-    .catch(err => {
-      console.error("加载 /images/list.json 失败：", err);
+fetch("/media/list")
+  .then(r => r.json())
+  .then(data => {
+    const items = normalizeListJson(data);
+
+    const photos = items.map((it) => {
+      const safe = encodeFile(it.file);
+      return {
+        id: it.id,
+        name: it.file,
+        uploadedAt: it.uploadedAt,
+        tags: it.tags,
+        caption: it.caption,
+
+        // 关键：这里必须用编码后的 safe
+        thumb: `${THUMB_BASE}/${safe}`,
+        full:  `${IMAGE_BASE}/${safe}`,
+      };
     });
+
+    const shuffled = photos.slice().sort(() => Math.random() - 0.5);
+    const { stacks, singles } = makeGroups(shuffled);
+
+    stacks.forEach((group, i) => renderStack(group, i));
+    singles.forEach(photo => renderSinglePhoto(photo));
+  })
+  .catch(err => {
+    console.error("加载 /media/list 失败：", err);
+  });
+
 
   /* ---------- 流星效果 ---------- */
   function launchMeteor() {
