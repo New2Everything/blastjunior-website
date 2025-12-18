@@ -1,0 +1,17 @@
+# dependencies
+node_modules/
+
+# Cloudflare Wrangler local state (绝对不要提交)
+.wrangler/
+.mf/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# logs
+*.log
+
+# temp files
+t.jpg
