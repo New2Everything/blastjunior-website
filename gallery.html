@@ -112,6 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ---------- 模态框打开 / 关闭 ---------- */
+    /* ---------- 模态框打开 / 关闭 ---------- */
   function openModal(photo) {
     const modal = document.getElementById("photoModal");
     const img   = document.getElementById("modalImage");
@@ -123,22 +124,51 @@ document.addEventListener("DOMContentLoaded", () => {
     idSpan.textContent = `#${String(photo.id).padStart(3, "0")}`;
 
     // 清空旧图，避免闪烁
+    img.onerror = null;
+    img.onload = null;
     img.src = "";
+
     modal.classList.add("visible");
 
     const vh = getViewportHeight();
     const modalInner = modal.querySelector(".modal-inner");
-    if (modalInner) {
-      modalInner.style.maxHeight = Math.round(vh * 0.9) + "px";
-    }
+    if (modalInner) modalInner.style.maxHeight = Math.round(vh * 0.9) + "px";
     img.style.maxHeight = Math.round(vh * 0.55) + "px";
 
-    img.src = photo.full || photo.src;
+    // === 关键：多路径兜底 ===
+    // 你现在 photo.full 是 /media/web/<safe>，photo.thumb 是 /media/thumb/<safe>（见你当前 mapping）:contentReference[oaicite:3]{index=3}
+    // 这里我们再加几个候选路径，避免 web 版本缺失导致黑屏
+    const safeName = encodeFile(photo.name || photo.file || photo.original || "");
+    const candidates = [
+      photo.full,                               // /media/web/<safe>
+      `/media/original/${safeName}`,            // 可能存在
+      `/media/raw/${safeName}`,                 // 可能存在
+      `/media/full/${safeName}`,                // 可能存在
+      `/media/${safeName}`,                     // 兜底
+      photo.thumb                               // 最后退回缩略图，至少不黑屏
+    ].filter(Boolean);
+
+    let idx = 0;
+    const tryNext = () => {
+      if (idx >= candidates.length) return;
+      const url = candidates[idx++];
+      img.src = url;
+    };
+
+    img.onerror = () => {
+      // 你可以打开浏览器 Console 看看到底哪条 404
+      console.warn("Modal image failed, try fallback:", img.src);
+      tryNext();
+    };
+
+    // 先加载第一条
+    tryNext();
 
     // ---- 打开时重置并加载该照片的留言 ----
     resetComments(photo.id);
     loadComments(photo.id);
   }
+
 
     function closeModal() {
     const modal = document.getElementById("photoModal");
@@ -250,6 +280,80 @@ document.addEventListener("DOMContentLoaded", () => {
       isCommentsLoading = false;
     }
   }
+
+  // ---- Meta API（同域 Worker：/media/meta?id=xxx）----
+  const META_API_BASE = "/media";
+
+  function resetMetaUI() {
+    const loading = document.getElementById("metaLoadingText");
+    const uploadedAtEl = document.getElementById("metaUploadedAt");
+    const tagsEl = document.getElementById("metaTags");
+    const captionEl = document.getElementById("metaCaption");
+
+    if (loading) loading.style.display = "block";
+    if (uploadedAtEl) uploadedAtEl.textContent = "-";
+    if (tagsEl) tagsEl.textContent = "-";
+    if (captionEl) captionEl.textContent = "-";
+  }
+
+  function renderTags(tags) {
+    if (!Array.isArray(tags) || tags.length === 0) return "-";
+    return tags
+      .map(t => `<span class="meta-tag">${escapeHtml(t)}</span>`)
+      .join(" ");
+  }
+
+  async function loadMeta(photoId) {
+    const loading = document.getElementById("metaLoadingText");
+    const uploadedAtEl = document.getElementById("metaUploadedAt");
+    const tagsEl = document.getElementById("metaTags");
+    const captionEl = document.getElementById("metaCaption");
+
+    if (!photoId || photoId !== currentPhotoId) return;
+
+    try {
+      let url = `${META_API_BASE}/meta?id=${encodeURIComponent(photoId)}`;
+      const res = await fetch(url);
+
+      // 允许 Not found：表示还没写过 meta
+      if (res.status === 404) {
+        if (loading) loading.style.display = "none";
+        if (uploadedAtEl) uploadedAtEl.textContent = "（暂无）";
+        if (tagsEl) tagsEl.innerHTML = "（暂无）";
+        if (captionEl) captionEl.textContent = "（暂无）";
+        return;
+      }
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      if (loading) loading.style.display = "none";
+
+      // uploadedAt：用“上传时间戳”
+      if (uploadedAtEl) {
+        uploadedAtEl.textContent = data.uploadedAt
+          ? new Date(data.uploadedAt).toLocaleString()
+          : "（暂无）";
+      }
+
+      // tags：展示为小胶囊
+      if (tagsEl) {
+        tagsEl.innerHTML = renderTags(data.tags);
+      }
+
+      // caption：一句话
+      if (captionEl) {
+        captionEl.textContent = data.caption ? String(data.caption) : "（暂无）";
+      }
+    } catch (e) {
+      console.error("加载 meta 失败：", e);
+      if (loading) loading.style.display = "none";
+      if (uploadedAtEl) uploadedAtEl.textContent = "（加载失败）";
+      if (tagsEl) tagsEl.textContent = "（加载失败）";
+      if (captionEl) captionEl.textContent = "（加载失败）";
+    }
+  }
+
 
   // ---- 提交留言 ----
   async function handleSubmitComment() {
