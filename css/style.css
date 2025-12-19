@@ -687,5 +687,50 @@
   overflow-y: auto !important;
 }
 
+/* ===== Modal META box ===== */
+.modal-meta-box {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148,163,184,0.35);
+  background: rgba(15, 23, 42, 0.03);
+}
+
+.meta-muted {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.meta-row {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.meta-k {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.meta-v {
+  color: #111827;
+  word-break: break-word;
+}
+
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(31,95,255,0.25);
+  background: rgba(31,95,255,0.08);
+  color: #1f5fff;
+  font-size: 11px;
+  margin: 2px 6px 2px 0;
+}
+
 
   </style>

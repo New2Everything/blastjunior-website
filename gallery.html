@@ -620,34 +620,57 @@ fetch("/media/list")
       <button class="modal-close" onclick="closeModal()">&times;</button>
     </div>
     <div class="modal-info">
-      <div>
-        <div class="modal-meta-label">PHOTO</div>
-        <div class="modal-photo-id" id="modalPhotoId"></div>
-      </div>
-            <div>
-        <div class="modal-meta-label">NOTES</div>
-        <p id="modalPlaceholderText" class="comment-placeholder">
-          这是兰星少年俱乐部的一个瞬间。如果有已审核通过的留言，会显示在下面。
-        </p>
-        <div id="commentList" class="comment-list"></div>
-        <button id="commentLoadMoreBtn" class="comment-load-more" style="display:none;">
-          加载更多留言
-        </button>
-      </div>
+  <!-- PHOTO -->
+  <div>
+    <div class="modal-meta-label">PHOTO</div>
+    <div class="modal-photo-id" id="modalPhotoId"></div>
+  </div>
 
-      <div class="comment-box">
-        <div class="modal-meta-label">LEAVE A MESSAGE</div>
-        <textarea id="commentText"
-          placeholder="写一句关于这张照片的小留言（20~120 字为宜）。"></textarea>
-        <button id="commentSubmitBtn">
-          发送留言
-        </button>
-        <div class="comment-hint">
-          提交后留言会进入审核队列。通过审核后才会在这里显示，请耐心等待。
-        </div>
-      </div>
+  <!-- META（新增） -->
+  <div class="modal-meta-box" id="modalMetaBox">
+    <div class="modal-meta-label">META</div>
+    <div id="metaLoadingText" class="meta-muted">点开照片后加载中…</div>
 
+    <div class="meta-row">
+      <span class="meta-k">上传时间</span>
+      <span class="meta-v" id="metaUploadedAt">-</span>
     </div>
+
+    <div class="meta-row">
+      <span class="meta-k">分类标签</span>
+      <span class="meta-v" id="metaTags">-</span>
+    </div>
+
+    <div class="meta-row">
+      <span class="meta-k">一句话</span>
+      <span class="meta-v" id="metaCaption">-</span>
+    </div>
+  </div>
+
+  <!-- NOTES（留言展示） -->
+  <div>
+    <div class="modal-meta-label">NOTES</div>
+    <p id="modalPlaceholderText" class="comment-placeholder">
+      这是兰星少年俱乐部的一个瞬间。如果有已审核通过的留言，会显示在下面。
+    </p>
+    <div id="commentList" class="comment-list"></div>
+    <button id="commentLoadMoreBtn" class="comment-load-more" style="display:none;">
+      加载更多留言
+    </button>
+  </div>
+
+  <!-- 留言提交 -->
+  <div class="comment-box">
+    <div class="modal-meta-label">LEAVE A MESSAGE</div>
+    <textarea id="commentText"
+      placeholder="写一句关于这张照片的小留言（20~120 字为宜）。"></textarea>
+    <button id="commentSubmitBtn">发送留言</button>
+    <div class="comment-hint">
+      提交后留言会进入审核队列。通过审核后才会在这里显示，请耐心等待。
+    </div>
+  </div>
+</div>
+
   </div>
 </div>
 </body>
