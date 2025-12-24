@@ -1,590 +1,211 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <title>BLAST 管理后台 · 留言 & 报名</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>兰星少年俱乐部 - 媒体审核后台</title>
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      margin: 0;
-      padding: 0;
-    }
-    .wrap {
-      max-width: 1100px;
-      margin: 32px auto;
-      padding: 20px 24px 32px;
-      background: #020617;
-      border-radius: 16px;
-      box-shadow: 0 18px 45px rgba(15,23,42,0.6);
-      border: 1px solid rgba(148,163,184,0.4);
-    }
-    h1 {
-      margin: 0 0 8px;
-      font-size: 22px;
-    }
-    .sub {
-      font-size: 13px;
-      color: #9ca3af;
-      margin-bottom: 16px;
-    }
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid #1f2937;
-      padding-bottom: 4px;
-    }
-    .tab {
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 13px;
-      cursor: pointer;
-      border: 1px solid transparent;
-    }
-    .tab.active {
-      background: #111827;
-      border-color: #3b82f6;
-      color: #bfdbfe;
-    }
-
-    .bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    label {
-      font-size: 13px;
-    }
-    input[type="password"],
-    select {
-      background: #020617;
-      border-radius: 999px;
-      border: 1px solid #4b5563;
-      color: #e5e7eb;
-      padding: 6px 12px;
-      font-size: 13px;
-      min-width: 180px;
-    }
-    input:focus, select:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 1px rgba(59,130,246,0.5);
-    }
-    button {
-      border-radius: 999px;
-      border: none;
-      padding: 6px 14px;
-      font-size: 13px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    button.primary {
-      background: #3b82f6;
-      color: white;
-    }
-    button.primary:hover {
-      background: #2563eb;
-    }
-    button.secondary {
-      background: #111827;
-      color: #e5e7eb;
-      border: 1px solid #4b5563;
-    }
-    button.secondary:hover {
-      border-color: #9ca3af;
-    }
-    button.small {
-      padding: 3px 9px;
-      font-size: 12px;
-    }
-    button:disabled {
-      opacity: .6;
-      cursor: default;
-    }
-
-    .status-info {
-      font-size: 12px;
-      color: #9ca3af;
-      margin-bottom: 10px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      background: #020617;
-    }
-    th, td {
-      padding: 6px 8px;
-      border-bottom: 1px solid #1f2937;
-      vertical-align: top;
-    }
-    th {
-      text-align: left;
-      font-weight: 600;
-      color: #9ca3af;
-      white-space: nowrap;
-    }
-    tr:hover td {
-      background: rgba(15,23,42,0.75);
-    }
-    .td-actions {
-      white-space: nowrap;
-    }
-    .td-content {
-      max-width: 360px;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      padding: 1px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      border: 1px solid #4b5563;
-      margin-right: 4px;
-    }
-    .tag.pending { border-color: #f59e0b; color: #fbbf24; }
-    .tag.approved { border-color: #22c55e; color: #4ade80; }
-    .tag.rejected { border-color: #ef4444; color: #f97373; }
-    .tag.new { border-color: #38bdf8; color: #7dd3fc; }
-    .tag.done { border-color: #22c55e; color: #bbf7d0; }
-
-    .tag-id {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 11px;
-      color: #9ca3af;
-    }
-
-    .empty {
-      margin-top: 16px;
-      padding: 18px;
-      text-align: center;
-      font-size: 13px;
-      color: #9ca3af;
-      border-radius: 12px;
-      border: 1px dashed #4b5563;
-      background: rgba(15,23,42,0.7);
-    }
-
-    @media (max-width: 720px) {
-      .wrap {
-        margin: 12px;
-        padding: 16px;
-      }
-      table, thead, tbody, th, td, tr {
-        display: block;
-      }
-      th {
-        display: none;
-      }
-      td {
-        border-bottom: 1px solid #111827;
-        padding: 6px 4px;
-      }
-      tr {
-        margin-bottom: 10px;
-        border-bottom: 1px solid #1f2937;
-      }
-      .td-actions {
-        margin-top: 4px;
-      }
-    }
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;margin:22px;max-width:1100px}
+    h1{margin:0 0 12px 0}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    input[type="password"], input[type="text"]{padding:10px 12px;border:1px solid #ddd;border-radius:10px;min-width:260px}
+    button{padding:10px 14px;border-radius:10px;border:1px solid #2b6cb0;background:#fff;cursor:pointer}
+    button.primary{background:#2b6cb0;color:#fff}
+    button.danger{border-color:#b02b2b;color:#b02b2b}
+    .muted{color:#666;font-size:12px}
+    .card{border:1px solid #eee;border-radius:14px;padding:14px;margin:14px 0}
+    .grid{display:grid;grid-template-columns:240px 1fr;gap:14px}
+    img{width:240px;height:240px;object-fit:cover;border-radius:12px;border:1px solid #eee;background:#fafafa}
+    pre{background:#0b1020;color:#e7e7e7;padding:12px;border-radius:12px;overflow:auto}
+    .tag{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid #eee;background:#fafafa;font-size:12px;margin-right:8px}
+    .ok{color:#0a7a2f}
+    .bad{color:#b02b2b}
   </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>BLAST 管理后台</h1>
-  <div class="sub">
-    照片留言 + 报名/咨询信息统一后台。请勿公开此页面地址，并妥善保管管理密钥。
-  </div>
+  <h1>媒体审核后台</h1>
+  <div class="muted">说明：此页需要管理员口令（ADMIN_TOKEN）。待审核图片来自 /media/upload。</div>
 
-  <div class="bar">
-    <label>
-      管理密钥（ADMIN_TOKEN）：
-      <input type="password" id="tokenInput" placeholder="在此输入管理密钥" />
-    </label>
-
-    <button class="secondary" id="clearTokenBtn">清除密钥</button>
-  </div>
-
-  <div class="status-info" id="statusInfo">
-    提示：密钥只保存在本机（sessionStorage），刷新后仍然有效；点击「清除密钥」可立即移除。
-  </div>
-
-  <div class="tabs">
-    <div class="tab active" data-tab="comments">照片留言</div>
-    <div class="tab" data-tab="forms">报名 / 咨询</div>
-  </div>
-
-  <!-- 照片留言 -->
-  <section id="commentsSection">
-    <div class="bar">
-      <label>
-        状态：
-        <select id="statusSelectComments">
-          <option value="pending">待审核</option>
-          <option value="approved">已通过</option>
-          <option value="rejected">已拒绝</option>
-        </select>
-      </label>
-      <button class="primary" id="loadCommentsBtn">加载留言</button>
+  <div class="card">
+    <div class="row">
+      <label>管理员口令：</label>
+      <input id="token" type="password" placeholder="粘贴 ADMIN_TOKEN" />
+      <button class="primary" id="btnLoad">刷新待审核</button>
+      <span id="stat" class="muted"></span>
     </div>
-    <div id="commentsTableWrap"></div>
-  </section>
-
-  <!-- 报名 / 咨询 -->
-  <section id="formsSection" style="display:none;">
-    <div class="bar">
-      <label>
-        状态：
-        <select id="statusSelectForms">
-          <option value="new">新报名</option>
-          <option value="done">已处理</option>
-          <option value="">全部</option>
-        </select>
-      </label>
-      <button class="primary" id="loadFormsBtn">加载报名</button>
+    <div class="muted" style="margin-top:8px;">
+      图片预览通过：<span class="tag">/media/admin/file/&lt;receipt&gt;?token=...</span>
+      审核接口：<span class="tag">POST /media/admin/approve</span>
+      <span class="tag">POST /media/admin/reject</span>
     </div>
-    <div id="formsTableWrap"></div>
-  </section>
-</div>
+  </div>
+
+  <div id="list"></div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between;">
+      <div class="muted">调试输出：</div>
+      <button id="btnClear">清空</button>
+    </div>
+    <pre id="log">{}</pre>
+  </div>
 
 <script>
-  const COMMENTS_API_BASE = "https://blast-comments-api.kanjiaming2022.workers.dev";
-  const FORMS_API_BASE    = "https://contact-form-handler.kanjiaming2022.workers.dev";
+  const $ = (id) => document.getElementById(id);
+  const log = (obj) => { $("log").textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2); };
+  const setStat = (s) => { $("stat").textContent = s; };
 
-  const tokenInput       = document.getElementById("tokenInput");
-  const clearTokenBtn    = document.getElementById("clearTokenBtn");
-  const commentsSection  = document.getElementById("commentsSection");
-  const formsSection     = document.getElementById("formsSection");
-  const tabs             = document.querySelectorAll(".tab");
+  $("btnClear").onclick = () => log("{}");
 
-  const statusSelectComments = document.getElementById("statusSelectComments");
-  const loadCommentsBtn      = document.getElementById("loadCommentsBtn");
-  const commentsTableWrap    = document.getElementById("commentsTableWrap");
+  $("btnLoad").onclick = async () => {
+    const token = $("token").value.trim();
+    if (!token) { alert("请先输入管理员口令"); return; }
 
-  const statusSelectForms = document.getElementById("statusSelectForms");
-  const loadFormsBtn      = document.getElementById("loadFormsBtn");
-  const formsTableWrap    = document.getElementById("formsTableWrap");
-
-  // ==== token 存本机 ====
-  const savedToken = sessionStorage.getItem("blast_admin_token");
-  if (savedToken) tokenInput.value = savedToken;
-
-  clearTokenBtn.addEventListener("click", () => {
-    tokenInput.value = "";
-    sessionStorage.removeItem("blast_admin_token");
-    alert("已清除本机保存的管理密钥。");
-  });
-
-  // ==== tab 切换 ====
-  tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      tabs.forEach(t => t.classList.remove("active"));
-      tab.classList.add("active");
-
-      const name = tab.dataset.tab;
-      if (name === "comments") {
-        commentsSection.style.display = "";
-        formsSection.style.display = "none";
-      } else {
-        commentsSection.style.display = "none";
-        formsSection.style.display = "";
-      }
-    });
-  });
-
-  // ==== 照片留言：加载 ====
-  loadCommentsBtn.addEventListener("click", () => loadComments());
-
-  async function loadComments(cursor) {
-    const token = getToken();
-    if (!token) return;
-
-    loadCommentsBtn.disabled = true;
-    loadCommentsBtn.textContent = "加载中…";
+    setStat("加载中...");
+    $("list").innerHTML = "";
 
     try {
-      const status = statusSelectComments.value;
-      const params = new URLSearchParams();
-      if (status) params.set("status", status);
-      params.set("limit", "50");
-      if (cursor) params.set("cursor", cursor);
-
-      const res = await fetch(`${COMMENTS_API_BASE}/admin/comments?` + params.toString(), {
-        method: "GET",
-        headers: { "X-Admin-Token": token }
+      const res = await fetch("/media/admin/pending", {
+        headers: { "Authorization": "Bearer " + token }
       });
+      const data = await res.json().catch(() => ({}));
+      log(data);
 
-      const text = await res.text();
-      const data = JSON.parse(text);
-
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || `HTTP ${res.status}`);
+      if (!res.ok) {
+        setStat("加载失败");
+        alert("加载失败：" + (data.error || res.status));
+        return;
       }
 
-      renderCommentsTable(data.items || [], data.cursor || null);
+      setStat(`待审核：${data.count} 条`);
+      renderList(data.items || [], token);
     } catch (e) {
-      console.error(e);
-      alert("加载留言失败：" + e.message);
-    } finally {
-      loadCommentsBtn.disabled = false;
-      loadCommentsBtn.textContent = "加载留言";
-    }
-  }
-
-  function renderCommentsTable(items, cursor) {
-    if (!items.length) {
-      commentsTableWrap.innerHTML = '<div class="empty">当前状态下暂无留言记录。</div>';
-      return;
-    }
-
-    let html = `
-      <table>
-        <thead>
-          <tr>
-            <th>照片ID</th>
-            <th>地区 / 时间</th>
-            <th>内容</th>
-            <th>状态 / 操作</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-
-    for (const item of items) {
-      const date = item.createdAt ? new Date(item.createdAt).toLocaleString() : "";
-      const region = item.region || "未知地区";
-      const pid = item.photoId || "?";
-      const statusTag = item.status || "pending";
-
-      html += `
-        <tr>
-          <td>
-            <div>PHOTO #${pid}</div>
-            <div class="tag-id">${item.id}</div>
-          </td>
-          <td>
-            <div>${region}</div>
-            <div style="font-size:11px;color:#9ca3af;">${date}</div>
-          </td>
-          <td class="td-content">${escapeHtml(item.content || "")}</td>
-          <td class="td-actions">
-            <div class="tag ${statusTag}">${statusLabelComment(statusTag)}</div>
-            <div style="margin-top:4px;">
-              <button class="small secondary" onclick="approveComment('${item.id}','approve')">通过</button>
-              <button class="small secondary" onclick="approveComment('${item.id}','reject')" style="margin-left:4px;">拒绝</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    }
-
-    html += `</tbody></table>`;
-
-    if (cursor) {
-      html += `
-        <div style="margin-top:12px; text-align:center;">
-          <button class="secondary" onclick="loadComments('${cursor}')">加载更多...</button>
-        </div>
-      `;
-    }
-
-    commentsTableWrap.innerHTML = html;
-  }
-
-  function statusLabelComment(s) {
-    if (s === "approved") return "已通过";
-    if (s === "rejected") return "已拒绝";
-    return "待审核";
-  }
-
-  window.approveComment = async function(id, action) {
-    const token = getToken();
-    if (!token) return;
-
-    if (!confirm(`确认将该留言标记为「${action === "approve" ? "通过" : "拒绝"}」？`)) return;
-
-    try {
-      const res = await fetch(`${COMMENTS_API_BASE}/admin/comments/approve`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Admin-Token": token
-        },
-        body: JSON.stringify({ id, action })
-      });
-
-      const text = await res.text();
-      const data = JSON.parse(text);
-
-      if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      alert("操作成功，当前状态：" + data.status);
-      loadComments();
-    } catch (e) {
-      console.error(e);
-      alert("操作失败：" + e.message);
+      setStat("加载失败");
+      log(String(e));
+      alert("加载失败：" + e);
     }
   };
 
-  // ==== 报名：加载 ====
-  loadFormsBtn.addEventListener("click", () => loadForms());
-
-  async function loadForms(cursor) {
-    const token = getToken();
-    if (!token) return;
-
-    loadFormsBtn.disabled = true;
-    loadFormsBtn.textContent = "加载中…";
-
-    try {
-      const status = statusSelectForms.value;
-      const params = new URLSearchParams();
-      if (status) params.set("status", status);
-      params.set("limit", "50");
-      if (cursor) params.set("cursor", cursor);
-
-      const res = await fetch(`${FORMS_API_BASE}/admin/forms?` + params.toString(), {
-        method: "GET",
-        headers: { "X-Admin-Token": token }
-      });
-
-      const text = await res.text();
-      const data = JSON.parse(text);
-      if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
-
-      renderFormsTable(data.items || [], data.cursor || null);
-    } catch (e) {
-      console.error(e);
-      alert("加载报名失败：" + e.message);
-    } finally {
-      loadFormsBtn.disabled = false;
-      loadFormsBtn.textContent = "加载报名";
-    }
-  }
-
-  function renderFormsTable(items, cursor) {
+  function renderList(items, token) {
+    const root = $("list");
     if (!items.length) {
-      formsTableWrap.innerHTML = '<div class="empty">当前状态下暂无报名记录。</div>';
+      root.innerHTML = `<div class="muted">当前没有待审核内容。</div>`;
       return;
     }
 
-    let html = `
-      <table>
-        <thead>
-          <tr>
-            <th>孩子信息</th>
-            <th>联系方式</th>
-            <th>备注</th>
-            <th>状态 / 操作</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-
-    for (const f of items) {
-      const date = f.createdAt ? new Date(f.createdAt).toLocaleString() : "";
-      const status = f.status || "new";
-
-      html += `
-        <tr>
-          <td>
-            <div>${escapeHtml(f.childName || "未填姓名")}</div>
-            <div style="font-size:11px;color:#9ca3af;">年龄：${escapeHtml(f.childAge || "未知")}</div>
-            <div class="tag-id">${f.id}</div>
-          </td>
-          <td>
-            ${escapeHtml(f.contact || "未填联系方式")}
-            <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${date}</div>
-          </td>
-          <td class="td-content">${escapeHtml(f.message || "")}</td>
-          <td class="td-actions">
-            <div class="tag ${status}">${statusLabelForm(status)}</div>
-            <div style="margin-top:4px;">
-              <button class="small secondary" onclick="updateFormStatus('${f.id}','done')">标记已处理</button>
-              <button class="small secondary" onclick="updateFormStatus('${f.id}','new')" style="margin-left:4px;">标记为新</button>
+    root.innerHTML = items.map(it => {
+      const imgUrl = `${it.preview_url}?token=${encodeURIComponent(token)}`;
+      return `
+        <div class="card" data-receipt="${escapeHtml(it.receipt)}">
+          <div class="grid">
+            <div>
+              <img src="${imgUrl}" alt="preview" />
             </div>
-          </td>
-        </tr>
-      `;
-    }
+            <div>
+              <div style="margin-bottom:8px;">
+                <span class="tag">receipt: ${escapeHtml(it.receipt)}</span>
+                <span class="tag">${escapeHtml(it.mime || "")}</span>
+                <span class="tag">${escapeHtml(String(it.size || ""))} bytes</span>
+              </div>
+              <div class="muted">上传时间：${escapeHtml(it.createdAt || "")}</div>
+              <div style="margin:10px 0;">
+                <div class="muted">留言：</div>
+                <div>${escapeHtml(it.note || "")}</div>
+              </div>
 
-    html += `</tbody></table>`;
+              <div class="row" style="margin-top:12px;">
+                <button class="primary" onclick="approve('${encodeURIComponent(it.receipt)}')">通过</button>
+                <button class="danger" onclick="rejectOne('${encodeURIComponent(it.receipt)}')">拒绝</button>
+                <button onclick="copyText('${escapeHtml(it.receipt)}')">复制收据码</button>
+                <button onclick="openLookup('${encodeURIComponent(it.receipt)}')">打开公开查询</button>
+              </div>
 
-    if (cursor) {
-      html += `
-        <div style="margin-top:12px; text-align:center;">
-          <button class="secondary" onclick="loadForms('${cursor}')">加载更多...</button>
+              <div class="muted" style="margin-top:8px;">
+                公开查询：<span class="tag">/media/receipt/${escapeHtml(it.receipt)}</span>
+              </div>
+
+              <div id="msg-${escapeHtml(it.receipt)}" class="muted" style="margin-top:10px;"></div>
+            </div>
+          </div>
         </div>
       `;
-    }
-
-    formsTableWrap.innerHTML = html;
+    }).join("");
   }
 
-  function statusLabelForm(s) {
-    if (s === "done") return "已处理";
-    if (s === "new") return "新报名";
-    return s;
-  }
+  window.copyText = async (t) => {
+    try { await navigator.clipboard.writeText(t); alert("已复制：" + t); }
+    catch { prompt("复制失败，请手动复制：", t); }
+  };
 
-  window.updateFormStatus = async function(id, status) {
-    const token = getToken();
-    if (!token) return;
+  window.openLookup = (receiptEnc) => {
+    const receipt = decodeURIComponent(receiptEnc);
+    window.open(`/media/receipt/${encodeURIComponent(receipt)}`, "_blank");
+  };
 
-    const label = status === "done" ? "标记为已处理" : "标记为新报名";
-    if (!confirm(`确认${label}？`)) return;
+  window.approve = async (receiptEnc) => {
+    const token = $("token").value.trim();
+    const receipt = decodeURIComponent(receiptEnc);
+    const msgEl = $("msg-" + receipt);
+    msgEl.textContent = "提交通过中...";
 
     try {
-      const res = await fetch(`${FORMS_API_BASE}/admin/forms/update`, {
+      const res = await fetch("/media/admin/approve", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Admin-Token": token
-        },
-        body: JSON.stringify({ id, status })
+        headers: { "Content-Type":"application/json", "Authorization":"Bearer " + token },
+        body: JSON.stringify({ receipt })
       });
+      const data = await res.json().catch(() => ({}));
+      log(data);
 
-      const text = await res.text();
-      const data = JSON.parse(text);
-      if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      if (!res.ok) {
+        msgEl.innerHTML = `<span class="bad">通过失败：</span>${escapeHtml(data.error || res.status)}`;
+        return;
+      }
 
-      alert("操作成功，当前状态：" + data.status);
-      loadForms();
+      msgEl.innerHTML = `<span class="ok">已通过</span>，公开链接： <a href="${escapeHtml(data.public_url)}" target="_blank">${escapeHtml(data.public_url)}</a>`;
+      // 从列表移除
+      const card = document.querySelector(`[data-receipt="${cssEscape(receipt)}"]`);
+      if (card) card.remove();
     } catch (e) {
-      console.error(e);
-      alert("操作失败：" + e.message);
+      msgEl.innerHTML = `<span class="bad">通过失败：</span>${escapeHtml(String(e))}`;
     }
   };
 
-  function getToken() {
-    const t = tokenInput.value.trim();
-    if (!t) {
-      alert("请先输入管理密钥（ADMIN_TOKEN）");
-      tokenInput.focus();
-      return null;
-    }
-    sessionStorage.setItem("blast_admin_token", t);
-    return t;
-  }
+  window.rejectOne = async (receiptEnc) => {
+    const token = $("token").value.trim();
+    const receipt = decodeURIComponent(receiptEnc);
+    const reason = prompt("拒绝原因（可留空，<=30字）", "") || "";
+    const msgEl = $("msg-" + receipt);
+    msgEl.textContent = "提交拒绝中...";
 
-  function escapeHtml(str) {
-    return String(str || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+    try {
+      const res = await fetch("/media/admin/reject", {
+        method: "POST",
+        headers: { "Content-Type":"application/json", "Authorization":"Bearer " + token },
+        body: JSON.stringify({ receipt, reason })
+      });
+      const data = await res.json().catch(() => ({}));
+      log(data);
+
+      if (!res.ok) {
+        msgEl.innerHTML = `<span class="bad">拒绝失败：</span>${escapeHtml(data.error || res.status)}`;
+        return;
+      }
+
+      msgEl.innerHTML = `<span class="ok">已拒绝</span>`;
+      const card = document.querySelector(`[data-receipt="${cssEscape(receipt)}"]`);
+      if (card) card.remove();
+    } catch (e) {
+      msgEl.innerHTML = `<span class="bad">拒绝失败：</span>${escapeHtml(String(e))}`;
+    }
+  };
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function cssEscape(s){
+    // basic escape for attribute selector
+    return String(s).replace(/"/g, '\\"');
   }
 </script>
 </body>
