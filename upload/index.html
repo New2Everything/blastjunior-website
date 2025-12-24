@@ -3,68 +3,170 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>照片上传 - 兰星少年俱乐部</title>
+  <title>照片上传（生成收据码） - 兰星少年俱乐部</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;margin:22px;max-width:760px}
-    .card{border:1px solid #eee;border-radius:14px;padding:16px}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helveticaica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;margin:22px;max-width:860px}
+    h1{margin:0 0 10px}
+    .card{border:1px solid #eee;border-radius:14px;padding:18px}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    input[type="file"]{border:1px dashed #bbb;border-radius:10px;padding:14px;width:100%}
-    input[type="password"]{padding:10px 12px;border:1px solid #ddd;border-radius:10px;min-width:280px}
+    .muted{color:#666;font-size:13px;line-height:1.5}
+    input[type="file"]{border:1px dashed #bbb;border-radius:12px;padding:14px;width:100%}
+    input[type="text"],textarea{border:1px solid #ddd;border-radius:10px;padding:10px 12px;width:100%}
     button{padding:10px 14px;border-radius:10px;border:1px solid #2b6cb0;background:#fff;cursor:pointer}
-    pre{background:#0b1020;color:#e7e7e7;padding:12px;border-radius:12px;overflow:auto}
-    .small{color:#666;font-size:12px}
+    button.primary{background:#2b6cb0;color:#fff}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    pre{background:#0b1020;color:#e7e7e7;padding:12px;border-radius:12px;overflow:auto;white-space:pre-wrap}
+    .ok{color:#0a7b3b;font-weight:600}
+    .err{color:#b00020;font-weight:600}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid #ddd;font-size:12px;color:#333}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .divider{height:1px;background:#eee;margin:14px 0}
+    .receipt-box{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   </style>
 </head>
 <body>
-  <h2>照片上传（进入审核队列）</h2>
+  <h1>照片上传（进入审核队列）</h1>
+  <p class="muted">
+    上传后系统会立刻生成<strong>收据码</strong>（receipt），它会跟这张照片一辈子。<br/>
+    你可以用收据码随时查询：是否已进入审核、是否通过、对应展示链接（未来）。
+  </p>
+
   <div class="card">
-    <p class="small">当前版本：需要管理员口令（ADMIN_TOKEN）才能上传。后续我们可以改成公开上传 + Turnstile 防刷。</p>
-    <div class="row" style="margin:10px 0">
-      <label>管理员口令：</label>
-      <input id="token" type="password" placeholder="粘贴 ADMIN_TOKEN" />
+    <div class="row" style="width:100%">
+      <input id="file" type="file" accept="image/*" />
     </div>
 
-    <input id="file" type="file" accept="image/jpeg,image/png,image/webp" />
-    <div class="row" style="margin-top:12px">
-      <button onclick="doUpload()">上传到待审核</button>
-      <a href="/admin" class="small">去后台审核 →</a>
+    <div style="margin-top:12px">
+      <label class="muted">留言（可选，≤30字）</label>
+      <input id="note" type="text" maxlength="30" placeholder="比如：国毅 U15 半决赛" />
     </div>
 
-    <p id="msg" class="small"></p>
-    <pre id="out"></pre>
+    <div class="row" style="margin-top:14px">
+      <button id="btn" class="primary">提交审核并生成收据码</button>
+      <span id="status" class="pill">未提交</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="receiptArea" style="display:none">
+      <div class="muted">你的收据码（请保存）：</div>
+      <div class="receipt-box" style="margin-top:8px">
+        <span id="receipt" class="pill mono"></span>
+        <button id="copyBtn">复制收据码</button>
+        <button id="checkBtn">立刻查询状态</button>
+      </div>
+      <div class="muted" style="margin-top:8px">
+        查询接口：<span class="mono">/media/receipt/&lt;收据码&gt;</span>
+      </div>
+    </div>
+
+    <div style="margin-top:12px">
+      <pre id="out">{ }</pre>
+    </div>
+
+    <div style="margin-top:12px">
+      <div class="muted">本机收据记录（仅保存在你的浏览器）：</div>
+      <pre id="localOut">[]</pre>
+    </div>
   </div>
 
 <script>
-async function doUpload(){
-  const token = document.getElementById("token").value.trim();
-  const f = document.getElementById("file").files[0];
-  const msg = document.getElementById("msg");
-  const out = document.getElementById("out");
-  msg.textContent = "";
-  out.textContent = "";
+const $ = (id) => document.getElementById(id);
 
-  if (!token){ msg.textContent = "请先填写 ADMIN_TOKEN"; return; }
-  if (!f){ msg.textContent = "请先选择图片文件"; return; }
+function loadLocalReceipts() {
+  try { return JSON.parse(localStorage.getItem("blx_receipts") || "[]"); }
+  catch { return []; }
+}
+function saveLocalReceipt(item) {
+  const arr = loadLocalReceipts();
+  arr.unshift(item);
+  localStorage.setItem("blx_receipts", JSON.stringify(arr.slice(0, 50)));
+  $("localOut").textContent = JSON.stringify(loadLocalReceipts(), null, 2);
+}
+$("localOut").textContent = JSON.stringify(loadLocalReceipts(), null, 2);
 
-  const fd = new FormData();
-  fd.append("file", f);
+function setStatus(text, ok=null) {
+  $("status").textContent = text;
+  $("status").className = "pill " + (ok===true ? "ok" : ok===false ? "err" : "");
+}
 
-  msg.textContent = "上传中...";
-  const res = await fetch("/media/upload", {
-    method: "POST",
-    headers: { "Authorization": "Bearer " + token },
-    body: fd
-  });
+async function upload() {
+  const file = $("file").files?.[0];
+  const note = ($("note").value || "").trim().slice(0, 30);
 
-  const data = await res.json().catch(()=>null);
-  if (!res.ok){
-    msg.textContent = "上传失败";
-    out.textContent = JSON.stringify(data || {error:"unknown"}, null, 2);
+  if (!file) {
+    setStatus("请先选择图片", false);
     return;
   }
-  msg.textContent = "上传成功（已进入待审核）";
-  out.textContent = JSON.stringify(data, null, 2);
+
+  $("btn").disabled = true;
+  setStatus("上传中...", null);
+  $("out").textContent = "{ }";
+  $("receiptArea").style.display = "none";
+
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("note", note);
+
+  // 关键：走相对路径，保证在 www.blastjunior.com 下命中 /media 路由
+  const res = await fetch("/media/upload", { method: "POST", body: fd });
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = { raw: text }; }
+
+  $("out").textContent = JSON.stringify({ status: res.status, ...data }, null, 2);
+
+  if (!res.ok || !data.ok) {
+    setStatus("上传失败", false);
+    $("btn").disabled = false;
+    return;
+  }
+
+  // 成功：展示收据码
+  const receipt = data.receipt || data.id || "";
+  $("receipt").textContent = receipt;
+  $("receiptArea").style.display = "block";
+
+  // 记到本地（仅此浏览器）
+  saveLocalReceipt({
+    receipt,
+    note: data.note || note || "",
+    status: data.status || "pending",
+    time: new Date().toISOString(),
+    filename: file.name,
+    size: file.size
+  });
+
+  setStatus("上传成功（已生成收据码）", true);
+  $("btn").disabled = false;
 }
+
+$("btn").addEventListener("click", upload);
+
+$("copyBtn").addEventListener("click", async () => {
+  const txt = $("receipt").textContent || "";
+  try {
+    await navigator.clipboard.writeText(txt);
+    setStatus("已复制收据码", true);
+  } catch {
+    setStatus("复制失败（浏览器限制）", false);
+  }
+});
+
+$("checkBtn").addEventListener("click", async () => {
+  const receipt = $("receipt").textContent || "";
+  if (!receipt) return;
+  setStatus("查询中...", null);
+
+  const res = await fetch(`/media/receipt/${encodeURIComponent(receipt)}`, { method: "GET" });
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = { raw: text }; }
+
+  $("out").textContent = JSON.stringify({ status: res.status, ...data }, null, 2);
+  if (res.ok && data.ok) setStatus("查询成功", true);
+  else setStatus("查询失败", false);
+});
 </script>
 </body>
 </html>
