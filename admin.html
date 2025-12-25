@@ -273,21 +273,27 @@
   $("btnFormsRefresh").onclick = refreshForms;
 
   async function refreshForms() {
-    const t = token();
-    try {
-      // 下面 endpoint 按你原实现常见命名写的：
-      // 如果你原来是 /forms/admin/list /forms/admin/approve /forms/admin/reject
-      // 就无需改；否则你把这里改成你原来 admin.html 里那几条即可。
-      const r = await fetch(`${FORMS_BASE}/admin/forms?status=new&limit=50`, { headers: { "X-Admin-Token": t } });
-      const j = await r.json();
-      dbg($("formsDebug"), j);
-      if (!j.ok) throw new Error(j.error || "forms list failed");
-      $("formsCount").textContent = j.count || (j.items ? j.items.length : 0);
-      renderJsonList($("formsList"), j.items || []);
-    } catch (e) {
-      dbg($("formsDebug"), { ok:false, error:String(e) });
-    }
+  const t = token();
+  try {
+    // ✅ 正确接口：Worker 实现的是 /admin/forms （挂在 /forms 路由下就是 /forms/admin/forms）
+    const url = `${FORMS_BASE}/admin/forms?status=new&limit=50`;
+
+    const j = await fetchJson(url, {
+      headers: { "X-Admin-Token": t }
+    });
+
+    dbg($("formsDebug"), j);
+    if (!j.ok) throw new Error(j.error || "forms list failed");
+
+    $("formsCount").textContent = j.count || (j.items ? j.items.length : 0);
+
+    // ✅ 用增强渲染（带 new/done 按钮）
+    renderFormsList($("formsList"), j.items || []);
+  } catch (e) {
+    dbg($("formsDebug"), { ok: false, error: String(e) });
   }
+}
+
 
   // -------------------------
   // 评论审核（原逻辑：/comments）
@@ -324,6 +330,82 @@
       container.appendChild(div);
     });
   }
+
+  async function fetchJson(url, options = {}) {
+  const r = await fetch(url, options);
+
+  // 先读成 text，再判断是不是 JSON，避免你这次这种 “Not found” 解析炸裂
+  const ct = (r.headers.get("content-type") || "").toLowerCase();
+  const text = await r.text();
+
+  if (!ct.includes("application/json")) {
+    throw new Error(`HTTP ${r.status} 非JSON响应：${text.slice(0, 160)}`);
+  }
+  const j = JSON.parse(text);
+  return j;
+}
+
+function renderFormsList(container, items) {
+  container.innerHTML = "";
+  if (!items.length) {
+    container.innerHTML = `<div class="muted">暂无新报名</div>`;
+    return;
+  }
+
+  items.forEach((it) => {
+    const div = document.createElement("div");
+    div.className = "item";
+
+    const id = it.id || "";
+    const status = it.status || "unknown";
+    const title = `${it.childName || "未命名"}（${it.age || "?"}）`;
+    const contact = it.contact || "";
+    const createdAt = it.createdAt || "";
+
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px;">
+        <div>
+          <div style="font-weight:700">${escapeHtml(title)}</div>
+          <div class="muted" style="font-size:12px;word-break:break-all">
+            id: ${escapeHtml(id)} ｜ status: <b>${escapeHtml(status)}</b> ｜ ${escapeHtml(createdAt)}
+          </div>
+          <div class="muted" style="font-size:12px">联系方式：${escapeHtml(contact)}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+          <button class="btn" data-act="done">标记 done</button>
+          <button class="btn" data-act="new">还原 new</button>
+        </div>
+      </div>
+      <pre>${escapeHtml(JSON.stringify(it, null, 2))}</pre>
+    `;
+
+    div.querySelectorAll("button[data-act]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const next = btn.getAttribute("data-act");
+        await updateFormStatus(id, next);
+        // 更新完后刷新列表
+        await refreshForms();
+      });
+    });
+
+    container.appendChild(div);
+  });
+}
+
+async function updateFormStatus(id, status) {
+  const t = token();
+  const j = await fetchJson(`${FORMS_BASE}/admin/forms/update`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Admin-Token": t
+    },
+    body: JSON.stringify({ id, status })
+  });
+  if (!j.ok) throw new Error(j.error || "update failed");
+  return j;
+}
+
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({
