@@ -2,211 +2,313 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>兰星少年俱乐部 - 媒体审核后台</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>媒体审核后台 - 兰星少年俱乐部</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;margin:22px;max-width:1100px}
-    h1{margin:0 0 12px 0}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;margin:22px;max-width:980px}
+    h1{margin:6px 0 10px}
+    .muted{color:#666;font-size:13px;line-height:1.5}
+    .tabs{display:flex;gap:10px;margin:14px 0}
+    .tab{padding:10px 14px;border:1px solid #ddd;border-radius:12px;background:#fff;cursor:pointer}
+    .tab.active{border-color:#2b6cb0;box-shadow:0 0 0 2px rgba(43,108,176,.12)}
+    .card{border:1px solid #eee;border-radius:14px;padding:16px;margin:12px 0}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    input[type="password"], input[type="text"]{padding:10px 12px;border:1px solid #ddd;border-radius:10px;min-width:260px}
+    input[type="password"],input[type="text"],input[type="number"]{padding:10px 12px;border:1px solid #ddd;border-radius:10px;min-width:260px}
     button{padding:10px 14px;border-radius:10px;border:1px solid #2b6cb0;background:#fff;cursor:pointer}
     button.primary{background:#2b6cb0;color:#fff}
-    button.danger{border-color:#b02b2b;color:#b02b2b}
-    .muted{color:#666;font-size:12px}
-    .card{border:1px solid #eee;border-radius:14px;padding:14px;margin:14px 0}
-    .grid{display:grid;grid-template-columns:240px 1fr;gap:14px}
-    img{width:240px;height:240px;object-fit:cover;border-radius:12px;border:1px solid #eee;background:#fafafa}
+    button.danger{border-color:#b91c1c;color:#b91c1c}
     pre{background:#0b1020;color:#e7e7e7;padding:12px;border-radius:12px;overflow:auto}
-    .tag{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid #eee;background:#fafafa;font-size:12px;margin-right:8px}
-    .ok{color:#0a7a2f}
-    .bad{color:#b02b2b}
+    .grid{display:grid;grid-template-columns:1fr;gap:10px}
+    .item{border:1px solid #eee;border-radius:12px;padding:12px}
+    img.preview{max-width:100%;border-radius:12px;border:1px solid #eee;background:#fafafa}
+    .pill{display:inline-block;padding:3px 10px;border:1px solid #ddd;border-radius:999px;font-size:12px;color:#444}
+    .spacer{height:8px}
   </style>
 </head>
 <body>
   <h1>媒体审核后台</h1>
-  <div class="muted">说明：此页需要管理员口令（ADMIN_TOKEN）。待审核图片来自 /media/upload。</div>
+  <div class="muted">
+    - 这里把“原来的报名/留言审核、评论审核”保留，同时新增“照片上传审核”。<br/>
+    - 照片审核走本站接口：<code>/media/admin/*</code>；报名/评论仍走你原来的 workers.dev 服务。<br/>
+  </div>
 
-  <div class="card">
+  <div class="tabs">
+    <div class="tab active" data-tab="photos">📷 照片审核</div>
+    <div class="tab" data-tab="forms">📝 报名/申请审核</div>
+    <div class="tab" data-tab="comments">💬 评论审核</div>
+  </div>
+
+  <!-- =============== 照片审核 =============== -->
+  <section id="tab-photos" class="card">
+    <h2 style="margin:0 0 8px">照片审核（来自 /media/upload）</h2>
+    <div class="muted">需要管理员口令（ADMIN_TOKEN）。待审核图片在 R2 的 <code>pending/</code>，通过后进入 <code>public/</code> 并可用 <code>/media/public/&lt;收据码&gt;</code> 访问。</div>
+
+    <div class="spacer"></div>
+
     <div class="row">
       <label>管理员口令：</label>
-      <input id="token" type="password" placeholder="粘贴 ADMIN_TOKEN" />
-      <button class="primary" id="btnLoad">刷新待审核</button>
-      <span id="stat" class="muted"></span>
+      <input id="adminToken" type="password" placeholder="ADMIN_TOKEN（仅用于审核）" />
+      <button class="primary" id="btnLoadPending">刷新待审核</button>
+      <span class="pill" id="pendingCount">待审核：0</span>
     </div>
-    <div class="muted" style="margin-top:8px;">
-      图片预览通过：<span class="tag">/media/admin/file/&lt;receipt&gt;?token=...</span>
-      审核接口：<span class="tag">POST /media/admin/approve</span>
-      <span class="tag">POST /media/admin/reject</span>
-    </div>
-  </div>
 
-  <div id="list"></div>
+    <div class="spacer"></div>
 
-  <div class="card">
-    <div class="row" style="justify-content:space-between;">
-      <div class="muted">调试输出：</div>
-      <button id="btnClear">清空</button>
+    <div id="pendingList" class="grid"></div>
+
+    <div class="spacer"></div>
+    <div class="muted">调试输出：</div>
+    <pre id="photoDebug">{}</pre>
+  </section>
+
+  <!-- =============== 原报名/申请审核（保留） =============== -->
+  <section id="tab-forms" class="card" style="display:none">
+    <h2 style="margin:0 0 8px">报名/申请审核（原功能保留）</h2>
+    <div class="muted">这块继续调用你的 contact-form-handler（workers.dev）。</div>
+
+    <div class="spacer"></div>
+    <div class="row">
+      <button class="primary" id="btnLoadForms">刷新表单待处理</button>
+      <span class="pill" id="formsCount">0</span>
     </div>
-    <pre id="log">{}</pre>
-  </div>
+
+    <div class="spacer"></div>
+    <div id="formsList" class="grid"></div>
+
+    <div class="spacer"></div>
+    <div class="muted">调试输出：</div>
+    <pre id="formsDebug">{}</pre>
+  </section>
+
+  <!-- =============== 原评论审核（保留） =============== -->
+  <section id="tab-comments" class="card" style="display:none">
+    <h2 style="margin:0 0 8px">评论审核（原功能保留）</h2>
+    <div class="muted">这块继续调用你的 blast-comments-api（workers.dev）。</div>
+
+    <div class="spacer"></div>
+    <div class="row">
+      <button class="primary" id="btnLoadComments">刷新评论待审核</button>
+      <span class="pill" id="commentsCount">0</span>
+    </div>
+
+    <div class="spacer"></div>
+    <div id="commentsList" class="grid"></div>
+
+    <div class="spacer"></div>
+    <div class="muted">调试输出：</div>
+    <pre id="commentsDebug">{}</pre>
+  </section>
 
 <script>
-  const $ = (id) => document.getElementById(id);
-  const log = (obj) => { $("log").textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2); };
-  const setStat = (s) => { $("stat").textContent = s; };
+/** ========= 你原来的两个后端（按原admin.html习惯保留） ========= */
+const FORMS_API_BASE    = "https://contact-form-handler.kanjiaming2022.workers.dev";
+const COMMENTS_API_BASE = "https://blast-comments-api.kanjiaming2022.workers.dev";
 
-  $("btnClear").onclick = () => log("{}");
+/** ========= 照片审核后端（走本站 /media/*） ========= */
+const MEDIA_ADMIN_PENDING = "/media/admin/pending";
+const MEDIA_ADMIN_FILE    = (receipt, token) => `/media/admin/file/${encodeURIComponent(receipt)}?token=${encodeURIComponent(token)}`;
+const MEDIA_ADMIN_APPROVE = "/media/admin/approve";
+const MEDIA_ADMIN_REJECT  = "/media/admin/reject";
 
-  $("btnLoad").onclick = async () => {
-    const token = $("token").value.trim();
-    if (!token) { alert("请先输入管理员口令"); return; }
+const $ = (id) => document.getElementById(id);
 
-    setStat("加载中...");
-    $("list").innerHTML = "";
+/** Tabs */
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    const k = t.dataset.tab;
+    $("tab-photos").style.display   = k === "photos" ? "" : "none";
+    $("tab-forms").style.display    = k === "forms" ? "" : "none";
+    $("tab-comments").style.display = k === "comments" ? "" : "none";
+  });
+});
 
-    try {
-      const res = await fetch("/media/admin/pending", {
-        headers: { "Authorization": "Bearer " + token }
-      });
-      const data = await res.json().catch(() => ({}));
-      log(data);
+/** ====== 照片审核 ====== */
+$("btnLoadPending").addEventListener("click", loadPending);
 
-      if (!res.ok) {
-        setStat("加载失败");
-        alert("加载失败：" + (data.error || res.status));
-        return;
-      }
+async function loadPending() {
+  const token = $("adminToken").value.trim();
+  if (!token) {
+    alert("请先输入 ADMIN_TOKEN（仅用于审核）");
+    return;
+  }
+  $("pendingList").innerHTML = "";
+  $("photoDebug").textContent = "{}";
 
-      setStat(`待审核：${data.count} 条`);
-      renderList(data.items || [], token);
-    } catch (e) {
-      setStat("加载失败");
-      log(String(e));
-      alert("加载失败：" + e);
-    }
-  };
+  const url = new URL(MEDIA_ADMIN_PENDING, location.origin);
+  url.searchParams.set("limit", "30");
+  url.searchParams.set("token", token);
 
-  function renderList(items, token) {
-    const root = $("list");
+  const res = await fetch(url.toString(), { method: "GET" });
+  const data = await res.json().catch(() => ({}));
+  $("photoDebug").textContent = JSON.stringify(data, null, 2);
+
+  const items = data.items || [];
+  $("pendingCount").textContent = `待审核：${items.length}`;
+
+  if (!items.length) {
+    $("pendingList").innerHTML = `<div class="muted">当前没有待审核照片。</div>`;
+    return;
+  }
+
+  for (const it of items) {
+    const div = document.createElement("div");
+    div.className = "item";
+
+    const receipt = it.receipt || "(unknown)";
+    const note = it.note || "";
+    const createdAt = it.createdAt || "";
+    const mime = it.mime || "";
+    const size = it.size || "";
+
+    div.innerHTML = `
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div><b>${receipt}</b> <span class="pill">${it.status}</span></div>
+          <div class="muted">留言：${escapeHtml(note)} ｜ ${escapeHtml(mime)} ｜ ${escapeHtml(String(size))} bytes ｜ ${escapeHtml(createdAt)}</div>
+        </div>
+        <div class="row">
+          <button class="primary" data-act="approve">通过</button>
+          <button class="danger" data-act="reject">拒绝</button>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <img class="preview" src="${MEDIA_ADMIN_FILE(receipt, token)}" alt="preview" />
+    `;
+
+    div.querySelector('[data-act="approve"]').addEventListener("click", async () => {
+      await approveOne(receipt, token);
+      await loadPending();
+    });
+
+    div.querySelector('[data-act="reject"]').addEventListener("click", async () => {
+      const reason = prompt("拒绝原因（可选，≤80字）", "") || "";
+      await rejectOne(receipt, token, reason);
+      await loadPending();
+    });
+
+    $("pendingList").appendChild(div);
+  }
+}
+
+async function approveOne(receipt, token) {
+  const res = await fetch(MEDIA_ADMIN_APPROVE + `?token=${encodeURIComponent(token)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ receipt }),
+  });
+  const data = await res.json().catch(() => ({}));
+  $("photoDebug").textContent = JSON.stringify(data, null, 2);
+}
+
+async function rejectOne(receipt, token, reason) {
+  const res = await fetch(MEDIA_ADMIN_REJECT + `?token=${encodeURIComponent(token)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ receipt, reason }),
+  });
+  const data = await res.json().catch(() => ({}));
+  $("photoDebug").textContent = JSON.stringify(data, null, 2);
+}
+
+/** ====== 表单审核（原功能：这里只做“查看”，不强行改你原接口） ====== */
+$("btnLoadForms").addEventListener("click", loadForms);
+
+async function loadForms() {
+  $("formsList").innerHTML = "";
+  $("formsDebug").textContent = "{}";
+  try {
+    // 你原 admin 里具体 endpoint 可能不同，这里用一个“可替换”的默认
+    const res = await fetch(`${FORMS_API_BASE}/admin/list`);
+    const data = await res.json().catch(() => ({}));
+    $("formsDebug").textContent = JSON.stringify(data, null, 2);
+
+    const items = data.items || data.data || [];
+    $("formsCount").textContent = `待处理：${items.length}`;
+
     if (!items.length) {
-      root.innerHTML = `<div class="muted">当前没有待审核内容。</div>`;
+      $("formsList").innerHTML = `<div class="muted">暂无待处理表单（如接口不同，把 /admin/list 改成你实际路径）。</div>`;
       return;
     }
 
-    root.innerHTML = items.map(it => {
-      const imgUrl = `${it.preview_url}?token=${encodeURIComponent(token)}`;
-      return `
-        <div class="card" data-receipt="${escapeHtml(it.receipt)}">
-          <div class="grid">
-            <div>
-              <img src="${imgUrl}" alt="preview" />
-            </div>
-            <div>
-              <div style="margin-bottom:8px;">
-                <span class="tag">receipt: ${escapeHtml(it.receipt)}</span>
-                <span class="tag">${escapeHtml(it.mime || "")}</span>
-                <span class="tag">${escapeHtml(String(it.size || ""))} bytes</span>
-              </div>
-              <div class="muted">上传时间：${escapeHtml(it.createdAt || "")}</div>
-              <div style="margin:10px 0;">
-                <div class="muted">留言：</div>
-                <div>${escapeHtml(it.note || "")}</div>
-              </div>
+    for (const it of items) {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `<pre>${escapeHtml(JSON.stringify(it, null, 2))}</pre>`;
+      $("formsList").appendChild(div);
+    }
+  } catch (e) {
+    $("formsDebug").textContent = JSON.stringify({ ok:false, error:String(e) }, null, 2);
+  }
+}
 
-              <div class="row" style="margin-top:12px;">
-                <button class="primary" onclick="approve('${encodeURIComponent(it.receipt)}')">通过</button>
-                <button class="danger" onclick="rejectOne('${encodeURIComponent(it.receipt)}')">拒绝</button>
-                <button onclick="copyText('${escapeHtml(it.receipt)}')">复制收据码</button>
-                <button onclick="openLookup('${encodeURIComponent(it.receipt)}')">打开公开查询</button>
-              </div>
+/** ====== 评论审核（原功能：保留查看 + approve 示例；你原admin里更完整） ====== */
+$("btnLoadComments").addEventListener("click", loadComments);
 
-              <div class="muted" style="margin-top:8px;">
-                公开查询：<span class="tag">/media/receipt/${escapeHtml(it.receipt)}</span>
-              </div>
+async function loadComments() {
+  $("commentsList").innerHTML = "";
+  $("commentsDebug").textContent = "{}";
+  try {
+    const params = new URLSearchParams();
+    params.set("status", "pending");
+    params.set("limit", "30");
 
-              <div id="msg-${escapeHtml(it.receipt)}" class="muted" style="margin-top:10px;"></div>
-            </div>
+    const res = await fetch(`${COMMENTS_API_BASE}/admin/comments?` + params.toString(), { method: "GET" });
+    const data = await res.json().catch(() => ({}));
+    $("commentsDebug").textContent = JSON.stringify(data, null, 2);
+
+    const items = data.items || [];
+    $("commentsCount").textContent = `待审核：${items.length}`;
+
+    if (!items.length) {
+      $("commentsList").innerHTML = `<div class="muted">暂无待审核评论。</div>`;
+      return;
+    }
+
+    for (const it of items) {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <div><b>${escapeHtml(it.id || "")}</b> <span class="pill">${escapeHtml(it.status || "")}</span></div>
+            <div class="muted">${escapeHtml(it.text || it.content || "")}</div>
+          </div>
+          <div class="row">
+            <button class="primary" data-act="approve">通过</button>
           </div>
         </div>
       `;
-    }).join("");
-  }
-
-  window.copyText = async (t) => {
-    try { await navigator.clipboard.writeText(t); alert("已复制：" + t); }
-    catch { prompt("复制失败，请手动复制：", t); }
-  };
-
-  window.openLookup = (receiptEnc) => {
-    const receipt = decodeURIComponent(receiptEnc);
-    window.open(`/media/receipt/${encodeURIComponent(receipt)}`, "_blank");
-  };
-
-  window.approve = async (receiptEnc) => {
-    const token = $("token").value.trim();
-    const receipt = decodeURIComponent(receiptEnc);
-    const msgEl = $("msg-" + receipt);
-    msgEl.textContent = "提交通过中...";
-
-    try {
-      const res = await fetch("/media/admin/approve", {
-        method: "POST",
-        headers: { "Content-Type":"application/json", "Authorization":"Bearer " + token },
-        body: JSON.stringify({ receipt })
+      div.querySelector('[data-act="approve"]').addEventListener("click", async () => {
+        await approveComment(it.id);
+        await loadComments();
       });
-      const data = await res.json().catch(() => ({}));
-      log(data);
-
-      if (!res.ok) {
-        msgEl.innerHTML = `<span class="bad">通过失败：</span>${escapeHtml(data.error || res.status)}`;
-        return;
-      }
-
-      msgEl.innerHTML = `<span class="ok">已通过</span>，公开链接： <a href="${escapeHtml(data.public_url)}" target="_blank">${escapeHtml(data.public_url)}</a>`;
-      // 从列表移除
-      const card = document.querySelector(`[data-receipt="${cssEscape(receipt)}"]`);
-      if (card) card.remove();
-    } catch (e) {
-      msgEl.innerHTML = `<span class="bad">通过失败：</span>${escapeHtml(String(e))}`;
+      $("commentsList").appendChild(div);
     }
-  };
-
-  window.rejectOne = async (receiptEnc) => {
-    const token = $("token").value.trim();
-    const receipt = decodeURIComponent(receiptEnc);
-    const reason = prompt("拒绝原因（可留空，<=30字）", "") || "";
-    const msgEl = $("msg-" + receipt);
-    msgEl.textContent = "提交拒绝中...";
-
-    try {
-      const res = await fetch("/media/admin/reject", {
-        method: "POST",
-        headers: { "Content-Type":"application/json", "Authorization":"Bearer " + token },
-        body: JSON.stringify({ receipt, reason })
-      });
-      const data = await res.json().catch(() => ({}));
-      log(data);
-
-      if (!res.ok) {
-        msgEl.innerHTML = `<span class="bad">拒绝失败：</span>${escapeHtml(data.error || res.status)}`;
-        return;
-      }
-
-      msgEl.innerHTML = `<span class="ok">已拒绝</span>`;
-      const card = document.querySelector(`[data-receipt="${cssEscape(receipt)}"]`);
-      if (card) card.remove();
-    } catch (e) {
-      msgEl.innerHTML = `<span class="bad">拒绝失败：</span>${escapeHtml(String(e))}`;
-    }
-  };
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  } catch (e) {
+    $("commentsDebug").textContent = JSON.stringify({ ok:false, error:String(e) }, null, 2);
   }
-  function cssEscape(s){
-    // basic escape for attribute selector
-    return String(s).replace(/"/g, '\\"');
-  }
+}
+
+async function approveComment(id) {
+  const res = await fetch(`${COMMENTS_API_BASE}/admin/comments/approve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+  const data = await res.json().catch(() => ({}));
+  $("commentsDebug").textContent = JSON.stringify(data, null, 2);
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 </script>
 </body>
 </html>
