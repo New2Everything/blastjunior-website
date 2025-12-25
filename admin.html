@@ -278,7 +278,7 @@
       // 下面 endpoint 按你原实现常见命名写的：
       // 如果你原来是 /forms/admin/list /forms/admin/approve /forms/admin/reject
       // 就无需改；否则你把这里改成你原来 admin.html 里那几条即可。
-      const r = await fetch(`${FORMS_BASE}/admin/list`, { headers: { "X-Admin-Token": t } });
+      const r = await fetch(`${FORMS_BASE}/admin/forms?status=new&limit=50`, { headers: { "X-Admin-Token": t } });
       const j = await r.json();
       dbg($("formsDebug"), j);
       if (!j.ok) throw new Error(j.error || "forms list failed");
