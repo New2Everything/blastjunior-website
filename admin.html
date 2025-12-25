@@ -149,122 +149,143 @@
   $("btnPhotoRefresh").onclick = refreshPhotos;
 
   async function refreshPhotos() {
-    const t = token();
-    const url = `${MEDIA_BASE}/admin/list?token=${encodeURIComponent(t)}&limit=50`;
-    try {
-      const r = await fetch(url);
-      const j = await r.json();
-      dbg($("photoDebug"), j);
-      if (!j.ok) throw new Error(j.error || "list failed");
+  const t = token();
+  const url = `${MEDIA_BASE}/admin/list?limit=50`;
 
-      $("photoCount").textContent = j.count || 0;
-      renderPhotos(j.items || [], t);
-    } catch (e) {
-      dbg($("photoDebug"), { ok:false, error: String(e) });
-    }
+  try {
+    const j = await fetchJson(url, {
+      headers: { "X-Admin-Token": t }
+    });
+
+    dbg($("photoDebug"), j);
+    if (!j.ok) throw new Error(j.error || "list failed");
+
+    $("photoCount").textContent = j.count || 0;
+    renderPhotos(j.items || [], t);
+  } catch (e) {
+    dbg($("photoDebug"), { ok: false, error: String(e) });
   }
+}
+
 
   function renderPhotos(items, t) {
-    const box = $("photoList");
-    box.innerHTML = "";
-    if (!items.length) {
-      const div = document.createElement("div");
-      div.className = "muted";
-      div.textContent = "当前没有待审核照片。";
-      box.appendChild(div);
-      return;
+  const box = $("photoList");
+  box.innerHTML = "";
+  if (!items.length) {
+    const div = document.createElement("div");
+    div.className = "muted";
+    div.textContent = "当前没有待审核照片。";
+    box.appendChild(div);
+    return;
+  }
+
+  items.forEach(async (it) => {
+    const receipt = it.receipt;
+
+    const div = document.createElement("div");
+    div.className = "item";
+
+    const head = document.createElement("div");
+    head.className = "head";
+
+    const left = document.createElement("div");
+    left.innerHTML = `
+      <div style="font-weight:700">${escapeHtml(receipt)}</div>
+      <div class="muted">note：${escapeHtml(it.note || "")}</div>
+      <div class="muted">createdAt：${escapeHtml(it.createdAt || "")}</div>
+    `;
+
+    const right = document.createElement("div");
+    right.className = "right";
+
+    const btnOk = document.createElement("button");
+    btnOk.className = "btn";
+    btnOk.textContent = "通过";
+    btnOk.onclick = () => approvePhoto(receipt, t);
+
+    const btnNo = document.createElement("button");
+    btnNo.className = "btn danger";
+    btnNo.textContent = "拒绝";
+    btnNo.onclick = () => denyPhoto(receipt, t);
+
+    right.appendChild(btnOk);
+    right.appendChild(btnNo);
+
+    head.appendChild(left);
+    head.appendChild(right);
+
+    const body = document.createElement("div");
+    body.style.marginTop = "10px";
+    body.className = "grid2";
+
+    const img = document.createElement("img");
+    img.alt = "preview";
+    img.style.maxWidth = "100%";
+    img.style.borderRadius = "12px";
+
+    // ✅ 用 header 拉 preview，再转成 blob URL（img 标签无法带 header）
+    try {
+      const blobUrl = await fetchPreviewBlobUrl(it.previewUrl, t);
+      img.src = blobUrl;
+    } catch (e) {
+      img.alt = "preview failed";
     }
 
-    items.forEach(it => {
-      const div = document.createElement("div");
-      div.className = "item";
+    const info = document.createElement("div");
+    info.innerHTML = `
+      <div class="muted">状态：<b>${escapeHtml(it.status || "")}</b></div>
+      <div class="muted" style="margin-top:6px;">预览接口：<span class="mono">${escapeHtml(it.previewUrl || "")}</span></div>
+      <div class="muted" style="margin-top:6px;">通过后会发布到：<span class="mono">/media/public/HADO(xxx).jpg</span></div>
+    `;
 
-      const head = document.createElement("div");
-      head.className = "itemhead";
+    body.appendChild(img);
+    body.appendChild(info);
 
-      const left = document.createElement("div");
-      left.innerHTML = `
-        <div class="mono"><b>${it.receipt}</b> <span class="pill">${it.status}</span></div>
-        <div class="muted">留言：${escapeHtml(it.note || "") || "(空)"} ｜ ${it.mime} ｜ ${it.size} bytes ｜ ${it.createdAt || ""}</div>
-      `;
+    div.appendChild(head);
+    div.appendChild(body);
+    box.appendChild(div);
+  });
+}
 
-      const right = document.createElement("div");
-      right.className = "row";
-
-      const btnOk = document.createElement("button");
-      btnOk.className = "btn";
-      btnOk.textContent = "通过";
-      btnOk.onclick = () => approvePhoto(it.receipt, t);
-
-      const btnNo = document.createElement("button");
-      btnNo.className = "btn danger";
-      btnNo.textContent = "拒绝";
-      btnNo.onclick = () => rejectPhoto(it.receipt, t);
-
-      right.appendChild(btnOk);
-      right.appendChild(btnNo);
-
-      head.appendChild(left);
-      head.appendChild(right);
-
-      const body = document.createElement("div");
-      body.style.marginTop = "10px";
-      body.className = "grid2";
-
-      const img = document.createElement("img");
-      img.src = it.preview; // 已含 token 的预览 URL
-      img.alt = "preview";
-
-      const info = document.createElement("div");
-      info.innerHTML = `
-        <div class="muted">预览：<span class="mono">${escapeHtml(it.preview)}</span></div>
-        <div class="muted" style="margin-top:6px;">通过后会生成：<span class="mono">HADO(xxx).jpg</span> 并发布到 <span class="mono">/media/public/</span></div>
-      `;
-
-      body.appendChild(img);
-      body.appendChild(info);
-
-      div.appendChild(head);
-      div.appendChild(body);
-      box.appendChild(div);
-    });
-  }
 
   async function approvePhoto(receipt, t) {
-    if (!confirm(`确认通过：${receipt} ？`)) return;
-    try {
-      const r = await fetch(`${MEDIA_BASE}/admin/approve`, {
-        method: "POST",
-        headers: { "content-type":"application/json" },
-        body: JSON.stringify({ receipt, token: t })
-      });
-      const j = await r.json();
-      dbg($("photoDebug"), j);
-      if (!j.ok) throw new Error(j.error || "approve failed");
-      alert(`已通过：${j.photo_name}\n访问：${j.public_url}`);
-      await refreshPhotos();
-    } catch (e) {
-      dbg($("photoDebug"), { ok:false, error:String(e) });
-    }
-  }
+  if (!confirm(`确认通过：${receipt} ？`)) return;
 
-  async function rejectPhoto(receipt, t) {
-    if (!confirm(`确认拒绝并删除：${receipt} ？\n（会从 pending、KV、队列中彻底移除）`)) return;
-    try {
-      const r = await fetch(`${MEDIA_BASE}/admin/reject`, {
-        method: "POST",
-        headers: { "content-type":"application/json" },
-        body: JSON.stringify({ receipt, token: t })
-      });
-      const j = await r.json();
-      dbg($("photoDebug"), j);
-      if (!j.ok) throw new Error(j.error || "reject failed");
-      alert(`已拒绝并删除：${receipt}`);
-      await refreshPhotos();
-    } catch (e) {
-      dbg($("photoDebug"), { ok:false, error:String(e) });
-    }
+  try {
+    const j = await fetchJson(`${MEDIA_BASE}/admin/approve/${encodeURIComponent(receipt)}`, {
+      method: "POST",
+      headers: { "X-Admin-Token": t }
+    });
+
+    dbg($("photoDebug"), j);
+    if (!j.ok) throw new Error(j.error || "approve failed");
+
+    alert(`已通过：photoId=${j.photoId}\nphotoKey=${j.photoKey}\n访问：${j.publicUrl || ""}`);
+    await refreshPhotos();
+  } catch (e) {
+    dbg($("photoDebug"), { ok: false, error: String(e) });
   }
+}
+
+async function denyPhoto(receipt, t) {
+  if (!confirm(`确认拒绝并删除：${receipt} ？\n（会从 pending、KV、队列、DB 中移除）`)) return;
+
+  try {
+    const j = await fetchJson(`${MEDIA_BASE}/admin/deny/${encodeURIComponent(receipt)}`, {
+      method: "POST",
+      headers: { "X-Admin-Token": t }
+    });
+
+    dbg($("photoDebug"), j);
+    if (!j.ok) throw new Error(j.error || "deny failed");
+
+    alert(`已拒绝并删除：${receipt}`);
+    await refreshPhotos();
+  } catch (e) {
+    dbg($("photoDebug"), { ok: false, error: String(e) });
+  }
+}
+
 
   // -------------------------
   // 报名审核（原逻辑：/forms）
@@ -344,6 +365,18 @@
   const j = JSON.parse(text);
   return j;
 }
+
+async function fetchPreviewBlobUrl(previewUrl, adminToken) {
+  if (!previewUrl) throw new Error("missing previewUrl");
+  const r = await fetch(previewUrl, {
+    method: "GET",
+    headers: { "X-Admin-Token": adminToken }
+  });
+  if (!r.ok) throw new Error(`preview http ${r.status}`);
+  const blob = await r.blob();
+  return URL.createObjectURL(blob);
+}
+
 
 function renderFormsList(container, items) {
   container.innerHTML = "";
