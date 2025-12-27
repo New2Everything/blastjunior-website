@@ -1,453 +1,167 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>媒体审核后台 - 兰星少年俱乐部</title>
+  <title>媒体审核后台</title>
   <style>
-    :root { --blue:#2563eb; --gray:#6b7280; --bg:#f6f7fb; --card:#fff; --bd:#e5e7eb; }
-    body{ font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      margin:0; background:var(--bg); color:#111827; }
-    .wrap{ max-width:1100px; margin:28px auto; padding:0 16px; }
-    h1{ margin:0 0 10px; font-size:40px; }
-    .hint{ color:var(--gray); margin:0 0 16px; line-height:1.5; }
-    .tabs{ display:flex; gap:10px; margin:16px 0; }
-    .tabbtn{
-      border:1px solid var(--bd); background:#fff; padding:10px 14px; border-radius:12px; cursor:pointer;
-      display:flex; align-items:center; gap:8px; font-size:16px;
-    }
-    .tabbtn.active{ outline:2px solid rgba(37,99,235,.25); border-color:rgba(37,99,235,.45); }
-    .card{ background:var(--card); border:1px solid var(--bd); border-radius:16px; padding:16px; }
-    .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    .input{ border:1px solid var(--bd); border-radius:12px; padding:10px 12px; min-width:280px; font-size:16px; }
-    .btn{ background:var(--blue); color:#fff; border:none; padding:10px 14px; border-radius:12px; cursor:pointer; font-size:16px; }
-    .btn.ghost{ background:#fff; color:#111827; border:1px solid var(--bd); }
-    .btn.danger{ background:#ef4444; }
-    .pill{ border:1px solid var(--bd); padding:6px 10px; border-radius:999px; color:#111827; background:#fff; }
-    .list{ display:flex; flex-direction:column; gap:12px; margin-top:14px; }
-    .item{ border:1px solid var(--bd); border-radius:14px; padding:12px; background:#fff; }
-    .itemhead{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
-    .muted{ color:var(--gray); }
-    pre{ background:#0b1220; color:#e5e7eb; padding:14px; border-radius:14px; overflow:auto; }
-    img{ max-width:240px; border-radius:12px; border:1px solid var(--bd); background:#fff; }
-    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-    @media (max-width: 900px){ .grid2{ grid-template-columns:1fr; } img{ max-width:100%; } }
+    body { font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; margin: 24px; background:#f6f7fb;}
+    h1 { margin: 0 0 8px; font-size: 40px; }
+    .sub { color:#666; margin-bottom: 18px; }
+    .bar { display:flex; gap:10px; align-items:center; margin: 14px 0 18px; }
+    input { width: 360px; padding: 10px 12px; border-radius: 10px; border:1px solid #ddd; }
+    button { padding: 10px 14px; border-radius: 10px; border:1px solid #ddd; background:#fff; cursor:pointer;}
+    button.primary { background:#2563eb; color:#fff; border-color:#2563eb;}
+    .grid { display:grid; grid-template-columns: 1fr; gap: 14px; }
+    .card { background:#fff; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.06); padding: 14px; display:grid; grid-template-columns: 280px 1fr; gap:14px; }
+    .thumb { width: 280px; height: 280px; border-radius: 14px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .meta { color:#333; }
+    .meta .id { font-weight: 800; font-size: 18px; margin-bottom: 6px; }
+    .meta .line { color:#666; margin: 4px 0; }
+    .actions { margin-top: 10px; display:flex; gap:10px; }
+    .ok { background:#16a34a; color:#fff; border-color:#16a34a;}
+    .bad { background:#ef4444; color:#fff; border-color:#ef4444;}
+    pre { background:#0b1220; color:#e5e7eb; padding: 12px; border-radius: 12px; overflow:auto; }
   </style>
 </head>
 <body>
-<div class="wrap">
   <h1>媒体审核后台</h1>
-  <p class="hint">
-    - 报名/申请审核走 <span class="mono">/forms</span>（原 contact-form-handler）；
-    评论审核走 <span class="mono">/comments</span>（原 blast-comments-api）；
-    照片审核走 <span class="mono">/media</span>（新增）。
-  </p>
+  <div class="sub">照片审核走 <code>/media</code>（pending → approve/deny）。approve 后只生成 <code>web/</code> 和 <code>thumb/</code>。</div>
 
-  <div class="tabs">
-    <button class="tabbtn active" data-tab="photo">📷 照片审核</button>
-    <button class="tabbtn" data-tab="forms">📝 报名/申请审核</button>
-    <button class="tabbtn" data-tab="comments">💬 评论审核</button>
+  <div class="bar">
+    <div>管理员口令：</div>
+    <input id="token" type="password" placeholder="输入 ADMIN_TOKEN" />
+    <button id="save">保存到本机</button>
+    <button id="load">本机记忆</button>
+    <button id="refresh" class="primary">刷新待审核</button>
+    <div id="count" style="color:#666;"></div>
   </div>
 
-  <!-- 通用 Token -->
-  <div class="card">
-    <div class="row">
-      <div><b>管理员口令：</b></div>
-      <input id="token" class="input" type="password" placeholder="ADMIN_TOKEN / X-Admin-Token" />
-      <button class="btn ghost" id="btnSave">保存到本机</button>
-      <span class="pill">本机记忆</span>
-    </div>
-  </div>
-
-  <div style="height:14px;"></div>
-
-  <!-- 照片审核 -->
-  <div id="tab-photo" class="card">
-    <h2 style="margin:0 0 8px;">照片审核（来自 /media/upload）</h2>
-    <p class="hint" style="margin-top:0;">
-      待审核在 R2 的 <span class="mono">pending/</span>，通过后发布到 <span class="mono">public/HADO(xxx).jpg</span> 并可用
-      <span class="mono">/media/public/HADO(xxx).jpg</span> 访问。
-    </p>
-
-    <div class="row">
-      <button class="btn" id="btnPhotoRefresh">刷新待审核</button>
-      <span class="pill">待审核：<span id="photoCount">0</span></span>
-    </div>
-
-    <div id="photoList" class="list"></div>
-
-    <div class="hint" style="margin-top:12px;">调试输出：</div>
-    <pre id="photoDebug">{}</pre>
-  </div>
-
-  <!-- 报名审核 -->
-  <div id="tab-forms" class="card" style="display:none;">
-    <h2 style="margin:0 0 8px;">报名/申请审核（原功能保留）</h2>
-    <p class="hint" style="margin-top:0;">继续调用你的 <span class="mono">contact-form-handler</span>（同域 <span class="mono">/forms</span> 路由）。</p>
-
-    <div class="row">
-      <button class="btn" id="btnFormsRefresh">刷新表单待处理</button>
-      <span class="pill">数量：<span id="formsCount">0</span></span>
-    </div>
-
-    <div id="formsList" class="list"></div>
-    <div class="hint" style="margin-top:12px;">调试输出：</div>
-    <pre id="formsDebug">{}</pre>
-  </div>
-
-  <!-- 评论审核 -->
-  <div id="tab-comments" class="card" style="display:none;">
-    <h2 style="margin:0 0 8px;">评论审核（原功能保留）</h2>
-    <p class="hint" style="margin-top:0;">继续调用你的 <span class="mono">blast-comments-api</span>（同域 <span class="mono">/comments</span> 路由）。</p>
-
-    <div class="row">
-      <button class="btn" id="btnCommentsRefresh">刷新评论待审核</button>
-      <span class="pill">待审核：<span id="commentsCount">0</span></span>
-    </div>
-
-    <div id="commentsList" class="list"></div>
-    <div class="hint" style="margin-top:12px;">调试输出：</div>
-    <pre id="commentsDebug">{}</pre>
-  </div>
-</div>
+  <div id="out"></div>
+  <div class="grid" id="list"></div>
 
 <script>
-  // 同域 base（避免 workers.dev CORS / Failed to fetch）
-  const MEDIA_BASE = "/media";
-  const FORMS_BASE = "/forms";
-  const COMMENTS_BASE = "/comments";
+  const $ = (id)=>document.getElementById(id);
+  const tokenEl = $("token");
+  const outEl = $("out");
+  const listEl = $("list");
+  const countEl = $("count");
 
-  const $ = (id) => document.getElementById(id);
-
-  // token 本机保存
-  const saved = localStorage.getItem("ADMIN_TOKEN") || "";
-  $("token").value = saved;
-  $("btnSave").onclick = () => {
-    localStorage.setItem("ADMIN_TOKEN", $("token").value.trim());
-    alert("已保存到本机浏览器");
+  $("save").onclick = ()=> {
+    localStorage.setItem("admin_token", tokenEl.value || "");
+    alert("已保存");
   };
+  $("load").onclick = ()=> {
+    tokenEl.value = localStorage.getItem("admin_token") || "";
+    alert("已载入");
+  };
+  $("refresh").onclick = ()=> loadList();
 
-  // tabs
-  document.querySelectorAll(".tabbtn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tabbtn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      const tab = btn.dataset.tab;
-      $("tab-photo").style.display = tab === "photo" ? "" : "none";
-      $("tab-forms").style.display = tab === "forms" ? "" : "none";
-      $("tab-comments").style.display = tab === "comments" ? "" : "none";
-    });
-  });
-
-  function token() { return $("token").value.trim(); }
-  function dbg(el, obj) { el.textContent = JSON.stringify(obj, null, 2); }
-
-  // -------------------------
-  // 照片审核（blast-media-api）
-  // -------------------------
-  $("btnPhotoRefresh").onclick = refreshPhotos;
-
-  async function refreshPhotos() {
-  const t = token();
-  const url = `${MEDIA_BASE}/admin/list?limit=50`;
-
-  try {
-    const j = await fetchJson(url, {
-      headers: { "X-Admin-Token": t }
-    });
-
-    dbg($("photoDebug"), j);
-    if (!j.ok) throw new Error(j.error || "list failed");
-
-    $("photoCount").textContent = j.count || 0;
-    renderPhotos(j.items || [], t);
-  } catch (e) {
-    dbg($("photoDebug"), { ok: false, error: String(e) });
-  }
-}
-
-
-  function renderPhotos(items, t) {
-  const box = $("photoList");
-  box.innerHTML = "";
-  if (!items.length) {
-    const div = document.createElement("div");
-    div.className = "muted";
-    div.textContent = "当前没有待审核照片。";
-    box.appendChild(div);
-    return;
+  function authHeaders() {
+    const t = tokenEl.value || "";
+    return t ? { "Authorization": "Bearer " + t } : {};
   }
 
-  items.forEach(async (it) => {
-    const receipt = it.receipt;
+  function showOut(obj) {
+    outEl.innerHTML = "<pre>"+escapeHtml(JSON.stringify(obj, null, 2))+"</pre>";
+  }
 
-    const div = document.createElement("div");
-    div.className = "item";
+  async function loadList() {
+    outEl.innerHTML = "";
+    listEl.innerHTML = "";
+    countEl.textContent = "";
 
-    const head = document.createElement("div");
-    head.className = "head";
+    const r = await fetch("/media/admin/list", { headers: { ...authHeaders() } });
+    const j = await r.json();
+    showOut(j);
+    if (!j.ok) return;
 
-    const left = document.createElement("div");
-    left.innerHTML = `
-      <div style="font-weight:700">${escapeHtml(receipt)}</div>
-      <div class="muted">note：${escapeHtml(it.note || "")}</div>
-      <div class="muted">createdAt：${escapeHtml(it.createdAt || "")}</div>
-    `;
+    const items = j.items || [];
+    countEl.textContent = `待审核：${items.length}`;
+    if (!items.length) return;
 
-    const right = document.createElement("div");
-    right.className = "right";
+    for (const it of items) {
+      listEl.appendChild(renderCard(it));
+    }
+  }
 
-    const btnOk = document.createElement("button");
-    btnOk.className = "btn";
-    btnOk.textContent = "通过";
-    btnOk.onclick = () => approvePhoto(receipt, t);
+  function renderCard(it) {
+    const card = document.createElement("div");
+    card.className = "card";
 
-    const btnNo = document.createElement("button");
-    btnNo.className = "btn danger";
-    btnNo.textContent = "拒绝";
-    btnNo.onclick = () => denyPhoto(receipt, t);
-
-    right.appendChild(btnOk);
-    right.appendChild(btnNo);
-
-    head.appendChild(left);
-    head.appendChild(right);
-
-    const body = document.createElement("div");
-    body.style.marginTop = "10px";
-    body.className = "grid2";
+    const thumb = document.createElement("div");
+    thumb.className = "thumb";
 
     const img = document.createElement("img");
     img.alt = "preview";
-    img.style.maxWidth = "100%";
-    img.style.borderRadius = "12px";
+    img.src = `/media/admin/preview/${encodeURIComponent(it.upload_id)}`;
+    thumb.appendChild(img);
 
-    // ✅ 用 header 拉 preview，再转成 blob URL（img 标签无法带 header）
-    try {
-      const blobUrl = await fetchPreviewBlobUrl(it.previewUrl, t);
-      img.src = blobUrl;
-    } catch (e) {
-      img.alt = "preview failed";
-    }
-
-    const info = document.createElement("div");
-    info.innerHTML = `
-      <div class="muted">状态：<b>${escapeHtml(it.status || "")}</b></div>
-      <div class="muted" style="margin-top:6px;">预览接口：<span class="mono">${escapeHtml(it.previewUrl || "")}</span></div>
-      <div class="muted" style="margin-top:6px;">通过后会发布到：<span class="mono">/media/public/HADO(xxx).jpg</span></div>
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = `
+      <div class="id">${escapeHtml(it.upload_id)}</div>
+      <div class="line">note：${escapeHtml(it.note || "")}</div>
+      <div class="line">createdAt：${escapeHtml(it.created_at || "")}</div>
+      <div class="line">status：${escapeHtml(it.status || "")}</div>
+      <div class="line">预览接口：<code>/media/admin/preview/${escapeHtml(it.upload_id)}</code></div>
     `;
 
-    body.appendChild(img);
-    body.appendChild(info);
+    const actions = document.createElement("div");
+    actions.className = "actions";
 
-    div.appendChild(head);
-    div.appendChild(body);
-    box.appendChild(div);
-  });
-}
+    const okBtn = document.createElement("button");
+    okBtn.className = "ok";
+    okBtn.textContent = "通过";
+    okBtn.onclick = ()=>approve(it.upload_id);
 
+    const badBtn = document.createElement("button");
+    badBtn.className = "bad";
+    badBtn.textContent = "拒绝";
+    badBtn.onclick = ()=>deny(it.upload_id);
 
-  async function approvePhoto(receipt, t) {
-  if (!confirm(`确认通过：${receipt} ？`)) return;
+    actions.appendChild(okBtn);
+    actions.appendChild(badBtn);
+    meta.appendChild(actions);
 
-  try {
-    const j = await fetchJson(`${MEDIA_BASE}/admin/approve/${encodeURIComponent(receipt)}`, {
+    card.appendChild(thumb);
+    card.appendChild(meta);
+    return card;
+  }
+
+  async function approve(receipt) {
+    if (!confirm(`确认通过：${receipt} ?`)) return;
+    const r = await fetch(`/media/admin/approve/${encodeURIComponent(receipt)}`, {
       method: "POST",
-      headers: { "X-Admin-Token": t }
+      headers: { ...authHeaders() }
     });
-
-    dbg($("photoDebug"), j);
-    if (!j.ok) throw new Error(j.error || "approve failed");
-
-    alert(`已通过：photoId=${j.photoId}\nphotoKey=${j.photoKey}\n访问：${j.publicUrl || ""}`);
-    await refreshPhotos();
-  } catch (e) {
-    dbg($("photoDebug"), { ok: false, error: String(e) });
+    const j = await r.json();
+    alert(j.ok
+      ? `已通过：photoId=${j.photoId}\nphotoKey=${j.photoKey}\nweb=${j.web}\nthumb=${j.thumb}`
+      : `失败：${j.error || "unknown"}`
+    );
+    await loadList();
   }
-}
 
-async function denyPhoto(receipt, t) {
-  if (!confirm(`确认拒绝并删除：${receipt} ？\n（会从 pending、KV、队列、DB 中移除）`)) return;
-
-  try {
-    const j = await fetchJson(`${MEDIA_BASE}/admin/deny/${encodeURIComponent(receipt)}`, {
+  async function deny(receipt) {
+    if (!confirm(`确认拒绝并删除：${receipt} ?`)) return;
+    const r = await fetch(`/media/admin/deny/${encodeURIComponent(receipt)}`, {
       method: "POST",
-      headers: { "X-Admin-Token": t }
+      headers: { ...authHeaders() }
     });
-
-    dbg($("photoDebug"), j);
-    if (!j.ok) throw new Error(j.error || "deny failed");
-
-    alert(`已拒绝并删除：${receipt}`);
-    await refreshPhotos();
-  } catch (e) {
-    dbg($("photoDebug"), { ok: false, error: String(e) });
+    const j = await r.json();
+    alert(j.ok ? "已拒绝" : `失败：${j.error || "unknown"}`);
+    await loadList();
   }
-}
-
-
-  // -------------------------
-  // 报名审核（原逻辑：/forms）
-  // 你原 worker 的 API 路由如果不同，把这三处 endpoint 改成你真实的即可
-  // -------------------------
-  $("btnFormsRefresh").onclick = refreshForms;
-
-  async function refreshForms() {
-  const t = token();
-  try {
-    // ✅ 正确接口：Worker 实现的是 /admin/forms （挂在 /forms 路由下就是 /forms/admin/forms）
-    const url = `${FORMS_BASE}/admin/forms?status=new&limit=50`;
-
-    const j = await fetchJson(url, {
-      headers: { "X-Admin-Token": t }
-    });
-
-    dbg($("formsDebug"), j);
-    if (!j.ok) throw new Error(j.error || "forms list failed");
-
-    $("formsCount").textContent = j.count || (j.items ? j.items.length : 0);
-
-    // ✅ 用增强渲染（带 new/done 按钮）
-    renderFormsList($("formsList"), j.items || []);
-  } catch (e) {
-    dbg($("formsDebug"), { ok: false, error: String(e) });
-  }
-}
-
-
-  // -------------------------
-  // 评论审核（原逻辑：/comments）
-  // -------------------------
-  $("btnCommentsRefresh").onclick = refreshComments;
-
-  async function refreshComments() {
-    const t = token();
-    try {
-      const r = await fetch(`${COMMENTS_BASE}/admin/list`, { headers: { "X-Admin-Token": t } });
-      const j = await r.json();
-      dbg($("commentsDebug"), j);
-      if (!j.ok) throw new Error(j.error || "comments list failed");
-      $("commentsCount").textContent = j.count || (j.items ? j.items.length : 0);
-      renderJsonList($("commentsList"), j.items || []);
-    } catch (e) {
-      dbg($("commentsDebug"), { ok:false, error:String(e) });
-    }
-  }
-
-  function renderJsonList(container, items) {
-    container.innerHTML = "";
-    if (!items.length) {
-      const d = document.createElement("div");
-      d.className = "muted";
-      d.textContent = "暂无内容。";
-      container.appendChild(d);
-      return;
-    }
-    items.forEach(it => {
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML = `<pre>${escapeHtml(JSON.stringify(it, null, 2))}</pre>`;
-      container.appendChild(div);
-    });
-  }
-
-  async function fetchJson(url, options = {}) {
-  const r = await fetch(url, options);
-
-  // 先读成 text，再判断是不是 JSON，避免你这次这种 “Not found” 解析炸裂
-  const ct = (r.headers.get("content-type") || "").toLowerCase();
-  const text = await r.text();
-
-  if (!ct.includes("application/json")) {
-    throw new Error(`HTTP ${r.status} 非JSON响应：${text.slice(0, 160)}`);
-  }
-  const j = JSON.parse(text);
-  return j;
-}
-
-async function fetchPreviewBlobUrl(previewUrl, adminToken) {
-  if (!previewUrl) throw new Error("missing previewUrl");
-  const r = await fetch(previewUrl, {
-    method: "GET",
-    headers: { "X-Admin-Token": adminToken }
-  });
-  if (!r.ok) throw new Error(`preview http ${r.status}`);
-  const blob = await r.blob();
-  return URL.createObjectURL(blob);
-}
-
-
-function renderFormsList(container, items) {
-  container.innerHTML = "";
-  if (!items.length) {
-    container.innerHTML = `<div class="muted">暂无新报名</div>`;
-    return;
-  }
-
-  items.forEach((it) => {
-    const div = document.createElement("div");
-    div.className = "item";
-
-    const id = it.id || "";
-    const status = it.status || "unknown";
-    const title = `${it.childName || "未命名"}（${it.age || "?"}）`;
-    const contact = it.contact || "";
-    const createdAt = it.createdAt || "";
-
-    div.innerHTML = `
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px;">
-        <div>
-          <div style="font-weight:700">${escapeHtml(title)}</div>
-          <div class="muted" style="font-size:12px;word-break:break-all">
-            id: ${escapeHtml(id)} ｜ status: <b>${escapeHtml(status)}</b> ｜ ${escapeHtml(createdAt)}
-          </div>
-          <div class="muted" style="font-size:12px">联系方式：${escapeHtml(contact)}</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-          <button class="btn" data-act="done">标记 done</button>
-          <button class="btn" data-act="new">还原 new</button>
-        </div>
-      </div>
-      <pre>${escapeHtml(JSON.stringify(it, null, 2))}</pre>
-    `;
-
-    div.querySelectorAll("button[data-act]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const next = btn.getAttribute("data-act");
-        await updateFormStatus(id, next);
-        // 更新完后刷新列表
-        await refreshForms();
-      });
-    });
-
-    container.appendChild(div);
-  });
-}
-
-async function updateFormStatus(id, status) {
-  const t = token();
-  const j = await fetchJson(`${FORMS_BASE}/admin/forms/update`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Admin-Token": t
-    },
-    body: JSON.stringify({ id, status })
-  });
-  if (!j.ok) throw new Error(j.error || "update failed");
-  return j;
-}
-
 
   function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, (c) => ({
+    return String(s).replace(/[&<>"']/g, (m)=>({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
+    }[m]));
   }
 
-  // 页面加载时默认刷新照片队列
-  refreshPhotos();
+  loadList();
 </script>
 </body>
 </html>
