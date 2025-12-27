@@ -620,27 +620,51 @@ function encodeFile(name) {
 function normalizeListJson(data) {
   // 兼容：
   // 1) ["HADO (1).jpg", ...]
-  // 2) { version: 2, items: [{id, file, uploadedAt, tags, ...}, ...] }
+  // 2) { items: [{id, file/name/filename, thumb, web, uploadedAt, tags, caption...}, ...] }
   if (Array.isArray(data)) {
     return data.map((file, index) => {
       const m = String(file).match(/\((\d+)\)/);
       const id = m ? parseInt(m[1], 10) : index + 1;
-      return { id, file };
+      const safe = String(file);
+      return {
+        id,
+        file: safe,
+        thumb: `/media/thumb/${encodeURIComponent(safe)}`,
+        web: `/media/web/${encodeURIComponent(safe)}`
+      };
     });
   }
 
   if (data && Array.isArray(data.items)) {
     return data.items
       .map((it, index) => {
-        const file = it.file || it.name; // 兼容你可能用 file/name 两种写法
-        if (!file) return null;
-        const id = Number.isFinite(it.id) ? it.id : (index + 1);
+        // ✅ 关键：把 filename 也认进来
+        const file = it.file || it.name || it.filename || null;
+
+        // id：优先用 it.id，否则从文件名括号里抽
+        let id = Number.isFinite(it.id) ? it.id : null;
+        if (id == null && file) {
+          const m = String(file).match(/\((\d+)\)/);
+          id = m ? parseInt(m[1], 10) : (index + 1);
+        }
+        if (id == null) id = index + 1;
+
+        // ✅ 关键：thumb/web 优先用 worker 给的；没有再按 file 兜底拼
+        const thumb = it.thumb || (file ? `/media/thumb/${encodeURIComponent(file)}` : null);
+        const web = it.web || (file ? `/media/web/${encodeURIComponent(file)}` : null);
+
+        // 没有任何可用图片路径就丢弃
+        if (!thumb && !web) return null;
+
         return {
           id,
-          file,
+          file: file || null,
+          filename: it.filename || file || null,
+          thumb,
+          web,
           uploadedAt: it.uploadedAt || null,
           tags: Array.isArray(it.tags) ? it.tags : null,
-          caption: it.caption || null,
+          caption: it.caption || null
         };
       })
       .filter(Boolean);
