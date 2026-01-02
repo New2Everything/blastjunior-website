@@ -72,7 +72,9 @@
     listEl.innerHTML = "";
     countEl.textContent = "";
 
-    const r = await fetch("/media/admin/list", { headers: { ...authHeaders() } });
+    const r = await fetch("/media/admin/list", { headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ receipt })
+    });
     const j = await r.json();
     showOut(j);
     if (!j.ok) return;
@@ -131,41 +133,39 @@
   }
 
   async function approve(receipt) {
-  if (!confirm("确认通过该图片？")) return;
-  try {
-    const res = await fetch("/media/admin/approve", {
+    if (!confirm(`确认通过：${receipt} ?`)) return;
+    const r = await fetch(`/media/admin/approve`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + getToken(),
-      },
-      body: JSON.stringify({ receipt }),
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ receipt })
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data.detail || data.error || ("HTTP " + res.status));
-    await load();
-  } catch (e) {
-    alert("Approve 失败： " + (e?.message || e));
+    const j = await r.json();
+    alert(j.ok
+      ? `已通过：photoId=${j.photoId}\nphotoKey=${j.photoKey}\nweb=${j.web}\nthumb=${j.thumb}`
+      : `失败：${j.error || "unknown"}`
+    );
+    await loadList();
   }
-}
 
-async function deny(receipt) {
-  if (!confirm("确认拒绝该图片？")) return;
-  try {
-    const res = await fetch("/media/admin/deny", {
+  async function deny(receipt) {
+    if (!confirm(`确认拒绝并删除：${receipt} ?`)) return;
+    const r = await fetch(`/media/admin/deny`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + getToken(),
-      },
-      body: JSON.stringify({ receipt }),
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ receipt })
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data.detail || data.error || ("HTTP " + res.status));
-    await load();
-  } catch (e) {
-    alert("Deny 失败： " + (e?.message || e));
+    const j = await r.json();
+    alert(j.ok ? "已拒绝" : `失败：${j.error || "unknown"}`);
+    await loadList();
   }
-}
 
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (m)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
 
+  loadList();
+</script>
+</body>
+</html>
