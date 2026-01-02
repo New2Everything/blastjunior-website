@@ -1,0 +1,154 @@
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const path = normalizePath(url.pathname);
+
+    if (request.method === "OPTIONS") return cors204(request);
+
+    try {
+      if (path === "/media/upload" && request.method === "POST") {
+        return await handleUpload(request, env);
+      }
+
+      if (path.startsWith("/media/receipt/") && request.method === "GET") {
+        const receipt = path.slice("/media/receipt/".length);
+        return await handleReceiptStatus(request, env, receipt);
+      }
+
+      return json({ ok: false, status: 404, error: "Not found" }, 404, request);
+    } catch (err) {
+      return json({ ok: false, error: String(err?.message || err) }, 500, request);
+    }
+  }
+};
+
+function normalizePath(p) {
+  let s = p.replace(/\/{2,}/g, "/");
+  if (s.length > 1 && s.endsWith("/")) s = s.slice(0, -1);
+  return s;
+}
+
+function corsHeaders(request) {
+  const origin = request.headers.get("Origin") || "*";
+  return {
+    "Access-Control-Allow-Origin": origin === "null" ? "*" : origin,
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin"
+  };
+}
+
+function cors204(request) {
+  return new Response(null, { status: 204, headers: corsHeaders(request) });
+}
+
+function json(obj, status, request) {
+  const headers = { "Content-Type": "application/json; charset=utf-8", ...corsHeaders(request) };
+  return new Response(JSON.stringify(obj, null, 2), { status, headers });
+}
+
+function safeExtFromFilename(name) {
+  const m = String(name || "").toLowerCase().match(/\.([a-z0-9]{1,8})$/);
+  const ext = m ? m[1] : "";
+  const ok = ["jpg", "jpeg", "png", "webp", "gif"].includes(ext);
+  return ok ? (ext === "jpeg" ? "jpg" : ext) : "";
+}
+
+function mimeFromExt(ext) {
+  switch (ext) {
+    case "jpg": return "image/jpeg";
+    case "png": return "image/png";
+    case "webp": return "image/webp";
+    case "gif": return "image/gif";
+    default: return "application/octet-stream";
+  }
+}
+
+function genReceipt() {
+  const rnd = crypto.getRandomValues(new Uint32Array(3));
+  return (
+    "R" +
+    rnd[0].toString(16).padStart(8, "0") +
+    rnd[1].toString(16).padStart(8, "0") +
+    rnd[2].toString(16).padStart(8, "0")
+  ).toUpperCase();
+}
+
+async function writeMeta(env, receipt, meta) {
+  await env.PHOTO_META.put(`meta:${receipt}`, JSON.stringify(meta));
+}
+
+async function readMeta(env, receipt) {
+  const raw = await env.PHOTO_META.get(`meta:${receipt}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+async function handleUpload(request, env) {
+  const ct = request.headers.get("Content-Type") || "";
+  if (!ct.includes("multipart/form-data")) {
+    return json({ ok: false, error: "Expected multipart/form-data" }, 400, request);
+  }
+
+  const form = await request.formData();
+  const file = form.get("file");
+  const note = String(form.get("note") || "").trim();
+
+  if (!file || typeof file === "string") return json({ ok: false, error: "Missing file" }, 400, request);
+  if (note.length > 30) return json({ ok: false, error: "Note too long (<=30 chars)" }, 400, request);
+
+  const ext = safeExtFromFilename(file.name || "");
+  if (!ext) return json({ ok: false, error: "Unsupported file type" }, 400, request);
+
+  const receipt = genReceipt();
+  const contentType = file.type || mimeFromExt(ext);
+  const pendingKey = `pending/${receipt}.${ext}`;
+
+  const buf = await file.arrayBuffer();
+  await env.MEDIA_BUCKET.put(pendingKey, buf, {
+    httpMetadata: { contentType },
+    customMetadata: { receipt, status: "pending" }
+  });
+
+  const createdAt = new Date().toISOString();
+
+  await env.DB.prepare(
+    `INSERT INTO uploads (upload_id, ext, content_type, status, created_at, approved_at, photo_id, photo_key)
+     VALUES (?, ?, ?, 'pending', ?, NULL, NULL, NULL)`
+  ).bind(receipt, ext, contentType, createdAt).run();
+
+  await writeMeta(env, receipt, { receipt, status: "pending", ext, contentType, note, createdAt });
+
+  await env.UPLOAD_QUEUE.put(`pending:${receipt}`, "1");
+
+  return json({ ok: true, receipt, status: "pending", note, createdAt }, 200, request);
+}
+
+async function handleReceiptStatus(request, env, receipt) {
+  const row = await env.DB
+    .prepare(`SELECT status, created_at, approved_at, photo_id, photo_key FROM uploads WHERE upload_id = ? LIMIT 1`)
+    .bind(receipt)
+    .first();
+
+  if (!row) return json({ ok: false, error: "Not found" }, 404, request);
+
+  const meta = await readMeta(env, receipt);
+  const publicUrl = row.photo_key ? `/media/public/${encodeURIComponent(row.photo_key)}` : null;
+
+  return json(
+    {
+      ok: true,
+      receipt,
+      status: row.status,
+      createdAt: row.created_at,
+      approvedAt: row.approved_at,
+      photoId: row.photo_id ?? null,
+      photoKey: row.photo_key ?? null,
+      publicUrl,
+      note: meta?.note || ""
+    },
+    200,
+    request
+  );
+}

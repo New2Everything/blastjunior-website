@@ -1,57 +1,99 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const { pathname, searchParams } = url;
 
-    // 表单提交
-    if (request.method === "POST" && pathname === "/contact-submit") {
-      return handleContactSubmit(request, env);
-    }
-
-    // 管理员：查看报名列表
-    if (request.method === "GET" && pathname === "/admin/forms") {
-      return adminListForms(request, env, searchParams);
-    }
-
-    // 管理员：更新报名状态
-    if (request.method === "POST" && pathname === "/admin/forms/update") {
-      return adminUpdateForm(request, env);
-    }
-
-    // 预检
+    // CORS preflight
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, X-Admin-Token",
-        },
-      });
+      return new Response(null, { status: 204, headers: corsHeaders() });
     }
 
-    return new Response("Not found", { status: 404 });
+    // 兼容：既支持 /contact-submit，也支持被路由到 /forms/* 时的 /forms/contact-submit
+    const path = normalizePath(url.pathname, ["/forms"]);
+
+    try {
+      // 前台报名表单
+      if (request.method === "POST" && path === "/contact-submit") {
+        return withCors(await handleContactSubmit(request, env));
+      }
+
+      // 管理员：查看报名列表
+      if (request.method === "GET" && path === "/admin/forms") {
+        return withCors(await adminListForms(request, env, url.searchParams));
+      }
+
+      // 管理员：更新报名状态
+      if (request.method === "POST" && path === "/admin/forms/update") {
+        return withCors(await adminUpdateForm(request, env));
+      }
+
+      return withCors(textResponse("Not found", 404));
+    } catch (err) {
+      return withCors(
+        jsonResponse(
+          { ok: false, error: "Worker error", detail: String(err?.message || err) },
+          500
+        )
+      );
+    }
   },
 };
 
-// ====== 处理前台报名表单 ======
+// ---------- helpers ----------
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Token",
+  };
+}
+function withCors(resp) {
+  const h = new Headers(resp.headers);
+  const ch = corsHeaders();
+  for (const [k, v] of Object.entries(ch)) h.set(k, v);
+  return new Response(resp.body, { status: resp.status, headers: h });
+}
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data, null, 2), {
+    status,
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+  });
+}
+function textResponse(text, status = 200) {
+  return new Response(text, {
+    status,
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
+}
 
+/**
+ * 把 /forms/contact-submit 这种 path 统一归一成 /contact-submit
+ * prefixes: ["/forms"] 也可以扩展更多前缀
+ */
+function normalizePath(pathname, prefixes = []) {
+  for (const p of prefixes) {
+    if (pathname === p) return "/";
+    if (pathname.startsWith(p + "/")) return pathname.slice(p.length);
+  }
+  return pathname;
+}
+
+// ---------- business ----------
 async function handleContactSubmit(request, env) {
   const formData = await request.formData();
 
   const childName = (formData.get("childName") || "").toString().trim();
-  const age       = (formData.get("age") || "").toString().trim();
-  const contact   = (formData.get("contact") || "").toString().trim();
-  const message   = (formData.get("message") || "").toString().trim();
-  const subject   = (formData.get("_subject") || "").toString().trim();
+  const age = (formData.get("age") || "").toString().trim();
+  const contact = (formData.get("contact") || "").toString().trim();
+  const message = (formData.get("message") || "").toString().trim();
+  const subject = (formData.get("_subject") || "").toString().trim();
 
-  // 简单防呆
   if (!childName || !age || !contact) {
-    return new Response("缺少必填字段", { status: 400 });
+    return textResponse("缺少必填字段", 400);
   }
 
-  // 写入 KV
-  const id = "signup:" + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36));
+  const id =
+    "signup:" +
+    (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36));
 
   const record = {
     id,
@@ -60,166 +102,113 @@ async function handleContactSubmit(request, env) {
     contact,
     message,
     subject,
-    status: "new",  // new=新报名, done=已处理
+    status: "new", // new=新报名, done=已处理
     createdAt: new Date().toISOString(),
     source: "blastjunior.com",
   };
 
   await env.REGISTRATIONS.put(id, JSON.stringify(record));
 
-  // 下面是成功页（你可以继续用自己的版本）
-  const successHtml = `
-<!DOCTYPE html>
+  // 成功页（保持你原来的“HTML跳转式提交”体验，不破坏 index.html 的 form action）
+  const successHtml = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <title>报名已提交</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .page {
-      max-width: 480px;
-      padding: 32px 24px;
-      background: #020617;
-      border-radius: 16px;
-      box-shadow: 0 18px 45px rgba(15,23,42,0.6);
-      border: 1px solid rgba(148,163,184,0.4);
-      text-align: center;
-    }
-    .title {
-      font-size: 20px;
-      margin-bottom: 10px;
-    }
-    p {
-      font-size: 14px;
-      line-height: 1.6;
-      margin: 6px 0;
-    }
-    .ok {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      background: #22c55e33;
-      color: #4ade80;
-      margin-left: 6px;
-      font-size: 18px;
-    }
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0f172a;color:#e5e7eb;margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .page{max-width:520px;padding:28px 22px;background:#020617;border-radius:16px;border:1px solid #1f2937}
+    h1{font-size:18px;margin:0 0 8px}
+    p{margin:8px 0;color:#cbd5e1;line-height:1.6}
+    a{color:#60a5fa;text-decoration:none}
+    .btn{display:inline-block;margin-top:12px;padding:10px 14px;border-radius:10px;background:#2563eb;color:#fff}
+    .muted{color:#94a3b8;font-size:13px}
   </style>
 </head>
 <body>
   <div class="page">
-    <div class="title">
-      报名信息已提交
-      <span class="ok">✔</span>
-    </div>
-    <p>感谢您对 <strong>兰星少年俱乐部</strong> 的信任，我们已经收到本次报名 / 咨询信息。</p>
-    <p>工作人员会尽快通过您填写的联系方式与您联络。</p>
-    <p style="margin-top:10px;">页面将在 <strong id="sec">5</strong> 秒后自动跳回首页。</p>
-    <p>如未跳转，请点击这里：<a href="/" style="color:#60a5fa;">返回首页</a></p>
+    <h1>报名已提交 ✅</h1>
+    <p>我们已收到你的报名/咨询信息，稍后会与您联系。</p>
+    <p class="muted">（此信息已写入后台 REGISTRATIONS KV，可在管理后台查看与标记处理状态）</p>
+    <a class="btn" href="https://blastjunior.com/">返回首页</a>
   </div>
-  <script>
-    let left = 5;
-    const span = document.getElementById('sec');
-    const timer = setInterval(() => {
-      left--;
-      if (left <= 0) {
-        clearInterval(timer);
-        window.location.href = '/';
-      } else {
-        span.textContent = left;
-      }
-    }, 1000);
-  </script>
 </body>
 </html>`;
 
   return new Response(successHtml, {
     status: 200,
-    headers: { "content-type": "text/html; charset=utf-8" },
+    headers: { "Content-Type": "text/html; charset=utf-8" },
   });
 }
 
-// ====== 管理员：列表 ======
-
-function jsonResponse(obj, status = 200) {
-  return new Response(JSON.stringify(obj), {
-    status,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, X-Admin-Token",
-    },
-  });
+function getAdminTokenFromRequest(request, searchParams, bodyToken) {
+  const h = request.headers.get("X-Admin-Token") || "";
+  const q = searchParams?.get("token") || "";
+  return (h || q || bodyToken || "").trim();
 }
 
 async function adminListForms(request, env, searchParams) {
-  const token = request.headers.get("X-Admin-Token");
-  if (!token || token !== env.ADMIN_TOKEN) {
+  const token = getAdminTokenFromRequest(request, searchParams);
+  if (!env.ADMIN_TOKEN) {
+    return jsonResponse({ ok: false, error: "ADMIN_TOKEN not set in Worker env" }, 500);
+  }
+  if (token !== env.ADMIN_TOKEN) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
 
-  const statusFilter = searchParams.get("status") || "";  // new / done / 空=全部
-  const limit  = Number(searchParams.get("limit") || 50);
-  const cursor = searchParams.get("cursor") || undefined;
+  const status = (searchParams.get("status") || "").trim(); // new/done/""(all)
+  const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10) || 50, 200);
 
-  const list = await env.REGISTRATIONS.list({
-    prefix: "signup:",
-    limit,
-    cursor,
-  });
+  // KV list (prefix signup:)
+  const listed = await env.REGISTRATIONS.list({ prefix: "signup:" });
 
   const items = [];
-  for (const key of list.keys) {
-    const raw = await env.REGISTRATIONS.get(key.name);
+  for (const k of listed.keys) {
+    const raw = await env.REGISTRATIONS.get(k.name);
     if (!raw) continue;
-    const rec = JSON.parse(raw);
-    if (!statusFilter || rec.status === statusFilter) {
-      items.push(rec);
-    }
+    try {
+      const obj = JSON.parse(raw);
+      if (status && obj.status !== status) continue;
+      items.push(obj);
+    } catch {}
   }
 
-  return jsonResponse({
-    ok: true,
-    items,
-    cursor: list.list_complete ? null : list.cursor,
-  });
+  // newest first
+  items.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+
+  return jsonResponse({ ok: true, count: items.length, items: items.slice(0, limit) }, 200);
 }
 
-// ====== 管理员：更新状态 ======
-
 async function adminUpdateForm(request, env) {
-  const token = request.headers.get("X-Admin-Token");
-  if (!token || token !== env.ADMIN_TOKEN) {
+  let body = {};
+  try {
+    body = await request.json();
+  } catch {
+    return jsonResponse({ ok: false, error: "Invalid JSON" }, 400);
+  }
+
+  const token = getAdminTokenFromRequest(request, new URL(request.url).searchParams, body.token);
+  if (!env.ADMIN_TOKEN) {
+    return jsonResponse({ ok: false, error: "ADMIN_TOKEN not set in Worker env" }, 500);
+  }
+  if (token !== env.ADMIN_TOKEN) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
 
-  const data = await request.json().catch(() => null);
-  if (!data || !data.id || !data.status) {
-    return jsonResponse({ ok: false, error: "id & status required" }, 400);
+  const id = (body.id || "").toString().trim();
+  const status = (body.status || "").toString().trim(); // new/done
+  if (!id || (status !== "new" && status !== "done")) {
+    return jsonResponse({ ok: false, error: "Missing id or invalid status" }, 400);
   }
 
-  const raw = await env.REGISTRATIONS.get(data.id);
-  if (!raw) {
-    return jsonResponse({ ok: false, error: "Not found" }, 404);
-  }
+  const raw = await env.REGISTRATIONS.get(id);
+  if (!raw) return jsonResponse({ ok: false, error: "Not found" }, 404);
 
-  const rec = JSON.parse(raw);
-  rec.status = data.status;    // "new" / "done"
-  await env.REGISTRATIONS.put(data.id, JSON.stringify(rec));
+  const obj = JSON.parse(raw);
+  obj.status = status;
+  obj.updatedAt = new Date().toISOString();
+  await env.REGISTRATIONS.put(id, JSON.stringify(obj));
 
-  return jsonResponse({ ok: true, status: rec.status }, 200);
+  return jsonResponse({ ok: true, item: obj }, 200);
 }

@@ -1,167 +1,161 @@
 <!doctype html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>媒体审核后台</title>
+  <title>Media Admin</title>
   <style>
-    body { font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; margin: 24px; background:#f6f7fb;}
-    h1 { margin: 0 0 8px; font-size: 40px; }
-    .sub { color:#666; margin-bottom: 18px; }
-    .bar { display:flex; gap:10px; align-items:center; margin: 14px 0 18px; }
-    input { width: 360px; padding: 10px 12px; border-radius: 10px; border:1px solid #ddd; }
-    button { padding: 10px 14px; border-radius: 10px; border:1px solid #ddd; background:#fff; cursor:pointer;}
-    button.primary { background:#2563eb; color:#fff; border-color:#2563eb;}
-    .grid { display:grid; grid-template-columns: 1fr; gap: 14px; }
-    .card { background:#fff; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.06); padding: 14px; display:grid; grid-template-columns: 280px 1fr; gap:14px; }
-    .thumb { width: 280px; height: 280px; border-radius: 14px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-    .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-    .meta { color:#333; }
-    .meta .id { font-weight: 800; font-size: 18px; margin-bottom: 6px; }
-    .meta .line { color:#666; margin: 4px 0; }
-    .actions { margin-top: 10px; display:flex; gap:10px; }
-    .ok { background:#16a34a; color:#fff; border-color:#16a34a;}
-    .bad { background:#ef4444; color:#fff; border-color:#ef4444;}
-    pre { background:#0b1220; color:#e5e7eb; padding: 12px; border-radius: 12px; overflow:auto; }
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;margin:20px;background:#f6f7fb}
+    header{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    input,button{padding:10px 12px;border:1px solid #d0d5dd;border-radius:10px}
+    button{cursor:pointer;background:#111827;color:#fff;border:none}
+    button.secondary{background:#fff;color:#111827;border:1px solid #d0d5dd}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-top:16px}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+    .card .top{display:flex;justify-content:space-between;gap:10px;padding:12px 12px 8px}
+    .meta{font-size:12px;color:#6b7280;line-height:1.4}
+    .note{font-size:13px;color:#111827;margin-top:6px}
+    .actions{display:flex;gap:10px;padding:12px}
+    .actions button{flex:1}
+    .imgwrap{background:#111827;display:flex;align-items:center;justify-content:center;aspect-ratio:16/10}
+    .imgwrap img{max-width:100%;max-height:100%;object-fit:contain}
+    .status{margin-left:auto;font-size:12px;color:#6b7280}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px}
+    .err{color:#b91c1c;font-size:13px;margin-top:10px}
   </style>
 </head>
 <body>
-  <h1>媒体审核后台</h1>
-  <div class="sub">照片审核走 <code>/media</code>（pending → approve/deny）。approve 后只生成 <code>web/</code> 和 <code>thumb/</code>。</div>
+  <header>
+    <h2 style="margin:0">媒体审核后台</h2>
+    <input id="token" placeholder="粘贴 ADMIN_TOKEN（Bearer token 的值）" style="min-width:340px" />
+    <button id="refresh">刷新列表</button>
+    <span class="status" id="status"></span>
+  </header>
 
-  <div class="bar">
-    <div>管理员口令：</div>
-    <input id="token" type="password" placeholder="输入 ADMIN_TOKEN" />
-    <button id="save">保存到本机</button>
-    <button id="load">本机记忆</button>
-    <button id="refresh" class="primary">刷新待审核</button>
-    <div id="count" style="color:#666;"></div>
-  </div>
+  <div id="err" class="err"></div>
+  <div id="grid" class="grid"></div>
 
-  <div id="out"></div>
-  <div class="grid" id="list"></div>
+  <script>
+    const $ = (id) => document.getElementById(id);
 
-<script>
-  const $ = (id)=>document.getElementById(id);
-  const tokenEl = $("token");
-  const outEl = $("out");
-  const listEl = $("list");
-  const countEl = $("count");
+    function setStatus(t){ $("status").textContent = t || ""; }
+    function setErr(t){ $("err").textContent = t || ""; }
 
-  $("save").onclick = ()=> {
-    localStorage.setItem("admin_token", tokenEl.value || "");
-    alert("已保存");
-  };
-  $("load").onclick = ()=> {
-    tokenEl.value = localStorage.getItem("admin_token") || "";
-    alert("已载入");
-  };
-  $("refresh").onclick = ()=> loadList();
-
-  function authHeaders() {
-    const t = tokenEl.value || "";
-    return t ? { "Authorization": "Bearer " + t } : {};
-  }
-
-  function showOut(obj) {
-    outEl.innerHTML = "<pre>"+escapeHtml(JSON.stringify(obj, null, 2))+"</pre>";
-  }
-
-  async function loadList() {
-    outEl.innerHTML = "";
-    listEl.innerHTML = "";
-    countEl.textContent = "";
-
-    const r = await fetch("/media/admin/list", { headers: { ...authHeaders() } });
-    const j = await r.json();
-    showOut(j);
-    if (!j.ok) return;
-
-    const items = j.items || [];
-    countEl.textContent = `待审核：${items.length}`;
-    if (!items.length) return;
-
-    for (const it of items) {
-      listEl.appendChild(renderCard(it));
+    function authHeaders(){
+      const t = ($("token").value || "").trim();
+      return { "Authorization": "Bearer " + t };
     }
-  }
 
-  function renderCard(it) {
-    const card = document.createElement("div");
-    card.className = "card";
+    async function api(path, opts={}){
+      const headers = Object.assign({}, authHeaders(), opts.headers || {});
+      const res = await fetch(path, Object.assign({}, opts, { headers }));
+      const ct = res.headers.get("content-type") || "";
+      const data = ct.includes("application/json") ? await res.json() : await res.text();
+      if(!res.ok) throw new Error(typeof data === "string" ? data : (data.detail || data.error || "request failed"));
+      return data;
+    }
 
-    const thumb = document.createElement("div");
-    thumb.className = "thumb";
+    function card(it){
+      const div = document.createElement("div");
+      div.className = "card";
 
-    const img = document.createElement("img");
-    img.alt = "preview";
-    img.src = `/media/admin/preview/${encodeURIComponent(it.upload_id)}`;
-    thumb.appendChild(img);
+      const img = document.createElement("img");
+      img.alt = it.upload_id;
+      img.src = `/media/admin/preview/${encodeURIComponent(it.upload_id)}`;
+      img.loading = "lazy";
 
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.innerHTML = `
-      <div class="id">${escapeHtml(it.upload_id)}</div>
-      <div class="line">note：${escapeHtml(it.note || "")}</div>
-      <div class="line">createdAt：${escapeHtml(it.created_at || "")}</div>
-      <div class="line">status：${escapeHtml(it.status || "")}</div>
-      <div class="line">预览接口：<code>/media/admin/preview/${escapeHtml(it.upload_id)}</code></div>
-    `;
+      const imgwrap = document.createElement("div");
+      imgwrap.className = "imgwrap";
+      imgwrap.appendChild(img);
 
-    const actions = document.createElement("div");
-    actions.className = "actions";
+      const top = document.createElement("div");
+      top.className = "top";
+      top.innerHTML = `
+        <div>
+          <div class="meta"><span class="pill">pending</span> ${it.upload_id}</div>
+          <div class="meta">文件：${it.filename || "-"}</div>
+          <div class="meta">时间：${it.created_at || "-"}</div>
+          <div class="note">备注：${(it.note || "").replace(/</g,"&lt;")}</div>
+        </div>
+      `;
 
-    const okBtn = document.createElement("button");
-    okBtn.className = "ok";
-    okBtn.textContent = "通过";
-    okBtn.onclick = ()=>approve(it.upload_id);
+      const actions = document.createElement("div");
+      actions.className = "actions";
 
-    const badBtn = document.createElement("button");
-    badBtn.className = "bad";
-    badBtn.textContent = "拒绝";
-    badBtn.onclick = ()=>deny(it.upload_id);
+      const approve = document.createElement("button");
+      approve.textContent = "Approve";
+      approve.onclick = async () => {
+        approve.disabled = true; deny.disabled = true;
+        try{
+          setStatus("Approving...");
+          const r = await api(`/media/admin/approve/${encodeURIComponent(it.upload_id)}`, { method:"POST" });
+          setStatus(`Approved -> photo_id=${r.photo_id}`);
+          await load();
+        }catch(e){
+          setErr(String(e.message||e));
+          setStatus("");
+        }finally{
+          approve.disabled = false; deny.disabled = false;
+        }
+      };
 
-    actions.appendChild(okBtn);
-    actions.appendChild(badBtn);
-    meta.appendChild(actions);
+      const deny = document.createElement("button");
+      deny.textContent = "Deny";
+      deny.className = "secondary";
+      deny.onclick = async () => {
+        deny.disabled = true; approve.disabled = true;
+        try{
+          setStatus("Denying...");
+          await api(`/media/admin/deny/${encodeURIComponent(it.upload_id)}`, { method:"POST" });
+          setStatus("Denied");
+          await load();
+        }catch(e){
+          setErr(String(e.message||e));
+          setStatus("");
+        }finally{
+          deny.disabled = false; approve.disabled = false;
+        }
+      };
 
-    card.appendChild(thumb);
-    card.appendChild(meta);
-    return card;
-  }
+      actions.appendChild(approve);
+      actions.appendChild(deny);
 
-  async function approve(receipt) {
-    if (!confirm(`确认通过：${receipt} ?`)) return;
-    const r = await fetch(`/media/admin/approve/${encodeURIComponent(receipt)}`, {
-      method: "POST",
-      headers: { ...authHeaders() }
+      div.appendChild(imgwrap);
+      div.appendChild(top);
+      div.appendChild(actions);
+      return div;
+    }
+
+    async function load(){
+      setErr("");
+      setStatus("Loading...");
+      const grid = $("grid");
+      grid.innerHTML = "";
+
+      const data = await api("/media/admin/list");
+      const items = data.items || [];
+      if(items.length === 0){
+        setStatus("没有待审核图片");
+        return;
+      }
+      setStatus(`待审核：${items.length} 张`);
+      for(const it of items){
+        grid.appendChild(card(it));
+      }
+    }
+
+    $("refresh").onclick = () => load().catch(e => setErr(String(e.message||e)));
+
+    // auto load if token saved
+    try{
+      const saved = localStorage.getItem("ADMIN_TOKEN_VALUE");
+      if(saved) $("token").value = saved;
+    }catch{}
+    $("token").addEventListener("change", () => {
+      try{ localStorage.setItem("ADMIN_TOKEN_VALUE", ($("token").value||"").trim()); }catch{}
     });
-    const j = await r.json();
-    alert(j.ok
-      ? `已通过：photoId=${j.photoId}\nphotoKey=${j.photoKey}\nweb=${j.web}\nthumb=${j.thumb}`
-      : `失败：${j.error || "unknown"}`
-    );
-    await loadList();
-  }
 
-  async function deny(receipt) {
-    if (!confirm(`确认拒绝并删除：${receipt} ?`)) return;
-    const r = await fetch(`/media/admin/deny/${encodeURIComponent(receipt)}`, {
-      method: "POST",
-      headers: { ...authHeaders() }
-    });
-    const j = await r.json();
-    alert(j.ok ? "已拒绝" : `失败：${j.error || "unknown"}`);
-    await loadList();
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, (m)=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[m]));
-  }
-
-  loadList();
-</script>
+    load().catch(e => setErr(String(e.message||e)));
+  </script>
 </body>
 </html>
