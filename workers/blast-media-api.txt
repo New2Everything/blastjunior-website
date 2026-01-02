@@ -1,174 +1,459 @@
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const path = url.pathname;
 
-    // CORS preflight
+    // ---- CORS / Preflight ----
     if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders() });
+      return cors(new Response("", { status: 204 }), request);
     }
 
     try {
-      const pathname = normalizePath(url.pathname, ["/media"]);
-
-      // ---------- Public ----------
-      // GET /media/list
-      if (request.method === "GET" && (pathname === "/list" || pathname === "/media/list")) {
-        return withCors(await handleList(env));
+      // ===== Public endpoints =====
+      if (request.method === "GET" && path === "/media/list") {
+        const res = await handleList(request, env);
+        return cors(res, request);
       }
 
-      // Serve images:
-      // GET /media/web/<filename>
-      // GET /media/thumb/<filename>
-      if (request.method === "GET" && (pathname.startsWith("/web/") || pathname.startsWith("/thumb/"))) {
-        return withCors(await handleServeR2(request, env, pathname));
+      if (request.method === "GET" && path.startsWith("/media/raw/")) {
+        const key = decodeURIComponent(path.slice("/media/raw/".length));
+        const res = await handleRawGet(env, key);
+        return cors(res, request);
       }
 
-      // ---------- Admin ----------
-      // POST /media/admin/rebuild
-      if (request.method === "POST" && (pathname === "/admin/rebuild" || pathname === "/media/admin/rebuild")) {
-        requireAdmin(request, env);
-        return withCors(await handleRebuild(env));
+      if (request.method === "POST" && path === "/media/upload") {
+        const res = await handleUpload(request, env);
+        return cors(res, request);
       }
 
-      return withCors(json({ ok: false, error: "Not found" }, 404));
+      if (request.method === "GET" && path.startsWith("/media/receipt/")) {
+        const receipt = decodeURIComponent(path.slice("/media/receipt/".length));
+        const res = await handleReceipt(env, receipt);
+        return cors(res, request);
+      }
+
+      // ===== Admin endpoints (Bearer token) =====
+      if (path.startsWith("/media/admin/")) {
+        if (!isAdmin(request, env)) {
+          return cors(json({ ok: false, error: "unauthorized" }, 401), request);
+        }
+
+        if (request.method === "GET" && path === "/media/admin/list") {
+          const res = await handleAdminList(request, env);
+          return cors(res, request);
+        }
+
+        if (request.method === "POST" && path === "/media/admin/approve") {
+          const res = await handleAdminApprove(request, env);
+          return cors(res, request);
+        }
+
+        if (request.method === "POST" && path === "/media/admin/deny") {
+          const res = await handleAdminDeny(request, env);
+          return cors(res, request);
+        }
+
+        if (request.method === "POST" && path === "/media/admin/rebuild") {
+          const res = await handleRebuild(request, env);
+          return cors(res, request);
+        }
+      }
+
+      return cors(json({ ok: false, error: "not_found", path }, 404), request);
     } catch (err) {
-      return withCors(
-        json(
-          {
-            ok: false,
-            error: "Worker error",
-            detail: err?.message || String(err),
-          },
-          500
-        )
-      );
+      // 统一兜底：保证不会再出现 “reading 'duration'” 这种无上下文的崩溃
+      const detail = (err && (err.stack || err.message)) ? String(err.stack || err.message) : "unknown_error";
+      return cors(json({ ok: false, error: "worker_error", detail }, 500), request);
     }
   },
 };
 
-/* ------------------------- Core Handlers ------------------------- */
+// -------------------- helpers --------------------
+function json(obj, status = 200, extraHeaders = {}) {
+  return new Response(JSON.stringify(obj, null, 2), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      ...extraHeaders,
+    },
+  });
+}
 
-async function handleList(env) {
-  const db = getDB(env);
+function cors(res, request) {
+  const origin = request.headers.get("Origin") || "";
+  const allowOrigin = origin && origin.includes("blastjunior.com")
+    ? origin
+    : "https://www.blastjunior.com";
 
-  // 只输出已批准
-  const rows = await db
+  const headers = new Headers(res.headers);
+  headers.set("Access-Control-Allow-Origin", allowOrigin);
+  headers.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Internal-Token");
+  headers.set("Access-Control-Max-Age", "86400");
+  return new Response(res.body, { status: res.status, headers });
+}
+
+function isAdmin(request, env) {
+  const auth = request.headers.get("Authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  // 你现在是固定 token；如果你也在 Worker secrets 里配了 ADMIN_TOKEN，也支持那种方式
+  const expected = env.ADMIN_TOKEN || "blx-admin-2025-super-secret";
+  return token && token === expected;
+}
+
+function nowISO() {
+  return new Date().toISOString();
+}
+
+function guessExt(filename, contentType) {
+  const lower = (filename || "").toLowerCase();
+  const m = lower.match(/\.([a-z0-9]+)$/);
+  if (m) return m[1];
+  if (contentType === "image/jpeg") return "jpg";
+  if (contentType === "image/png") return "png";
+  if (contentType === "image/webp") return "webp";
+  return "jpg";
+}
+
+function safeOriginalName(name) {
+  // 保留 HADO (n).jpg 这种空格与括号
+  // 只去掉路径分隔和控制字符
+  return String(name || "upload.jpg")
+    .replace(/[\/\\]/g, "_")
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .trim();
+}
+
+function normalizeHadoName(photoId, ext) {
+  // 你要求的正确格式：HADO (99).jpg
+  return `HADO (${photoId}).${ext}`;
+}
+
+async function handleRawGet(env, key) {
+  const obj = await env.MEDIA_BUCKET.get(key);
+  if (!obj) return json({ ok: false, error: "not_found", key }, 404);
+
+  const headers = new Headers();
+  headers.set("Content-Type", obj.httpMetadata?.contentType || "application/octet-stream");
+  headers.set("Cache-Control", "public, max-age=31536000, immutable");
+  return new Response(obj.body, { status: 200, headers });
+}
+
+// -------------------- public: /media/list --------------------
+async function handleList(request, env) {
+  // 从 photos 表读 gallery 列表
+  // 字段按你截图：photo_id / photo_key / ext / content_type / created_at / approved_at / status
+  const limit = Math.min(parseInt(new URL(request.url).searchParams.get("limit") || "400", 10), 1000);
+
+  const q = await env.DB
     .prepare(
-      `SELECT photo_id, ext, content_type, created_at, approved_at, photo_key
+      `SELECT photo_id, photo_key, ext, content_type, created_at, approved_at, status
        FROM photos
        WHERE status='approved'
-       ORDER BY photo_id ASC`
+       ORDER BY photo_id ASC
+       LIMIT ?`
     )
+    .bind(limit)
     .all();
 
-  const items = (rows.results || []).map((r) => {
-    const name = r.photo_key || `HADO (${r.photo_id}).${r.ext || "jpg"}`;
-
-    // 关键：对文件名做 encode，避免空格导致 URL 与 R2 key 不一致
-    const encName = encodeURIComponent(name);
-
+  const rows = q?.results || [];
+  const items = rows.map((r) => {
+    // photo_key 里是 "HADO (234).jpg" 这种；web/thumb 里同名
+    const name = r.photo_key;
+    const safe = encodeURIComponent(name);
     return {
       id: r.photo_id,
       name,
-      web: `/media/web/${encName}`,
-      thumb: `/media/thumb/${encName}`,
-      created_at: r.created_at || null,
-      approved_at: r.approved_at || null,
+      web: `/media/web/${name}`,
+      thumb: `/media/thumb/${name}`,
+      created_at: r.created_at,
+      approved_at: r.approved_at,
     };
   });
 
   return json({ ok: true, count: items.length, items });
 }
 
-async function handleServeR2(request, env, pathname) {
-  const bucket = getBucket(env);
-
-  // pathname: "/web/<encodedName>" or "/thumb/<encodedName>"
-  // R2 key: "web/<decodedName>" or "thumb/<decodedName>"
-  const parts = pathname.split("/");
-  // ["", "web", "<encodedName...>"]
-  if (parts.length < 3) return json({ ok: false, error: "Bad path" }, 400);
-
-  const folder = parts[1]; // "web" or "thumb"
-  const encodedName = parts.slice(2).join("/"); // 防御性
-  const decodedName = decodeURIComponent(encodedName);
-
-  const key = `${folder}/${decodedName}`;
-
-  const obj = await bucket.get(key);
-  if (!obj) {
-    return json({ ok: false, error: "Not found", key }, 404);
+// -------------------- public: POST /media/upload --------------------
+async function handleUpload(request, env) {
+  const ct = request.headers.get("Content-Type") || "";
+  if (!ct.includes("multipart/form-data")) {
+    return json({ ok: false, error: "invalid_content_type", detail: "multipart/form-data required" }, 400);
   }
 
-  const headers = new Headers();
-  headers.set("ETag", obj.httpEtag || obj.etag || "");
-  headers.set("Cache-Control", "public, max-age=31536000, immutable");
-  headers.set("Content-Type", obj.httpMetadata?.contentType || guessContentType(decodedName));
+  const form = await request.formData();
+  const file = form.get("file");
+  const note = String(form.get("note") || "").slice(0, 120);
 
-  // 支持 Range（视频/大文件也更稳；图片也不坏）
-  const range = request.headers.get("Range");
-  if (range) {
-    const r = obj.range;
-    if (r) {
-      const res = await obj.body?.getReader?.(); // 有些环境不需要，保留
-    }
+  if (!file || typeof file === "string") {
+    return json({ ok: false, error: "missing_file" }, 400);
   }
 
-  return new Response(obj.body, { status: 200, headers });
+  // 基本校验
+  const contentType = file.type || "application/octet-stream";
+  if (!contentType.startsWith("image/")) {
+    return json({ ok: false, error: "not_image", detail: contentType }, 400);
+  }
+
+  // receipt：BLX-YYMMDD-随机
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const rand = crypto.randomUUID().slice(0, 6).toUpperCase();
+  const receipt = `BLX-${yy}${mm}${dd}-${rand}`;
+
+  const originalName = safeOriginalName(file.name);
+  const ext = guessExt(originalName, contentType);
+
+  // incoming key：incoming/<receipt>/<originalName>
+  const incomingKey = `incoming/${receipt}/${originalName}`;
+
+  // 存 R2
+  await env.MEDIA_BUCKET.put(incomingKey, file.stream(), {
+    httpMetadata: { contentType },
+  });
+
+  // D1：只写最小字段，避免 schema 不一致导致失败
+  // uploads 表你截图有：upload_id / status / photo_id / photo_key / created_at / approved_at
+  await env.DB
+    .prepare(`INSERT INTO uploads (upload_id, status, created_at) VALUES (?, ?, ?)`)
+    .bind(receipt, "pending", nowISO())
+    .run();
+
+  // KV：保存额外信息（note / incomingKey / contentType / ext）
+  await env.UPLOAD_QUEUE.put(
+    receipt,
+    JSON.stringify({
+      receipt,
+      note,
+      incomingKey,
+      originalName,
+      contentType,
+      ext,
+      createdAt: nowISO(),
+    })
+  );
+
+  return json({ ok: true, receipt });
 }
 
-async function handleRebuild(env) {
-  const t0 = Date.now();
-  const db = getDB(env);
-  const bucket = getBucket(env);
+// -------------------- public: GET /media/receipt/:id --------------------
+async function handleReceipt(env, receipt) {
+  const row = await env.DB
+    .prepare(`SELECT upload_id, status, photo_id, photo_key, created_at, approved_at FROM uploads WHERE upload_id=? LIMIT 1`)
+    .bind(receipt)
+    .first();
 
-  // 备份 uploads（如果存在）
-  await safeExec(db, `DROP TABLE IF EXISTS uploads_backup_t0_5`);
-  await safeExec(db, `CREATE TABLE IF NOT EXISTS uploads_backup_t0_5 AS SELECT * FROM uploads`);
+  if (!row) return json({ ok: false, error: "not_found" }, 404);
 
-  // 清空 photos 并重建（路线1：R2 -> D1 photos）
-  await safeExec(db, `DELETE FROM photos`);
+  return json({
+    ok: true,
+    receipt: row.upload_id,
+    status: row.status,
+    photo_id: row.photo_id ?? null,
+    photo_key: row.photo_key ?? null,
+    created_at: row.created_at ?? null,
+    approved_at: row.approved_at ?? null,
+  });
+}
+
+// -------------------- admin: GET /media/admin/list --------------------
+async function handleAdminList(request, env) {
+  const limit = Math.min(parseInt(new URL(request.url).searchParams.get("limit") || "50", 10), 200);
+
+  const q = await env.DB
+    .prepare(
+      `SELECT upload_id, status, created_at
+       FROM uploads
+       WHERE status='pending'
+       ORDER BY created_at ASC
+       LIMIT ?`
+    )
+    .bind(limit)
+    .all();
+
+  const rows = q?.results || [];
+  const items = [];
+
+  for (const r of rows) {
+    const metaRaw = await env.UPLOAD_QUEUE.get(r.upload_id);
+    const meta = metaRaw ? JSON.parse(metaRaw) : {};
+
+    // preview 直接指向 incoming 原图
+    const incomingKey = meta.incomingKey || "";
+    const thumb_url = incomingKey ? `/media/raw/${encodeURIComponent(incomingKey)}` : "";
+    const full_url = thumb_url;
+
+    items.push({
+      receipt: r.upload_id,
+      status: r.status,
+      created_at: r.created_at,
+      note: meta.note || "",
+      original_name: meta.originalName || "",
+      content_type: meta.contentType || "",
+      ext: meta.ext || "",
+      thumb_url,
+      full_url,
+    });
+  }
+
+  return json({ ok: true, count: items.length, items });
+}
+
+// -------------------- admin: POST /media/admin/approve --------------------
+async function handleAdminApprove(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const receipt = String(body.receipt || "").trim();
+  if (!receipt) return json({ ok: false, error: "missing_receipt" }, 400);
+
+  const row = await env.DB
+    .prepare(`SELECT upload_id, status FROM uploads WHERE upload_id=? LIMIT 1`)
+    .bind(receipt)
+    .first();
+
+  if (!row) return json({ ok: false, error: "not_found" }, 404);
+  if (row.status !== "pending") return json({ ok: false, error: "not_pending", status: row.status }, 400);
+
+  const metaRaw = await env.UPLOAD_QUEUE.get(receipt);
+  if (!metaRaw) return json({ ok: false, error: "missing_meta_in_kv" }, 500);
+
+  const meta = JSON.parse(metaRaw);
+  const incomingKey = meta.incomingKey;
+  const ext = meta.ext || "jpg";
+  const contentType = meta.contentType || "image/jpeg";
+
+  const incomingObj = await env.MEDIA_BUCKET.get(incomingKey);
+  if (!incomingObj) return json({ ok: false, error: "incoming_not_found", incomingKey }, 404);
+
+  // 分配 photo_id：MAX(photo_id)+1
+  const maxRow = await env.DB
+    .prepare(`SELECT MAX(photo_id) AS m FROM photos`)
+    .first();
+
+  const nextId = (maxRow?.m ? Number(maxRow.m) : 0) + 1;
+  const photoKey = normalizeHadoName(nextId, ext);
+
+  const webKey = `web/${photoKey}`;
+  const thumbKey = `thumb/${photoKey}`;
+
+  // 写 web / thumb
+  // 现在先同文件写入；下一步我们再加真正的缩略图生成逻辑
+  const buf = await incomingObj.arrayBuffer();
+  await env.MEDIA_BUCKET.put(webKey, buf, { httpMetadata: { contentType } });
+  await env.MEDIA_BUCKET.put(thumbKey, buf, { httpMetadata: { contentType } });
+
+  const t = nowISO();
+
+  // 写入 photos 表（与你现有 rebuild 写法保持一致）
+  await env.DB
+    .prepare(
+      `INSERT INTO photos (receipt, ext, content_type, status, created_at, approved_at, photo_id, photo_key)
+       VALUES (?, ?, ?, 'approved', ?, ?, ?, ?)`
+    )
+    .bind(receipt, ext, contentType, t, t, nextId, photoKey)
+    .run();
+
+  // 更新 uploads
+  await env.DB
+    .prepare(
+      `UPDATE uploads
+       SET status='approved', approved_at=?, photo_id=?, photo_key=?
+       WHERE upload_id=?`
+    )
+    .bind(t, nextId, photoKey, receipt)
+    .run();
+
+  // PHOTO_META：给 gallery/未来分析留钩子
+  await env.PHOTO_META.put(
+    String(nextId),
+    JSON.stringify({
+      photo_id: nextId,
+      photo_key: photoKey,
+      receipt,
+      note: meta.note || "",
+      original: meta.originalName || "",
+      contentType,
+      ext,
+      approvedAt: t,
+    })
+  );
+
+  return json({
+    ok: true,
+    receipt,
+    photo_id: nextId,
+    photo_key: photoKey,
+    web: `/media/web/${photoKey}`,
+    thumb: `/media/thumb/${photoKey}`,
+  });
+}
+
+// -------------------- admin: POST /media/admin/deny --------------------
+async function handleAdminDeny(request, env) {
+  const body = await request.json().catch(() => ({}));
+  const receipt = String(body.receipt || "").trim();
+  if (!receipt) return json({ ok: false, error: "missing_receipt" }, 400);
+
+  const row = await env.DB
+    .prepare(`SELECT upload_id, status FROM uploads WHERE upload_id=? LIMIT 1`)
+    .bind(receipt)
+    .first();
+
+  if (!row) return json({ ok: false, error: "not_found" }, 404);
+  if (row.status !== "pending") return json({ ok: false, error: "not_pending", status: row.status }, 400);
+
+  await env.DB
+    .prepare(`UPDATE uploads SET status='denied' WHERE upload_id=?`)
+    .bind(receipt)
+    .run();
+
+  return json({ ok: true, receipt, status: "denied" });
+}
+
+// -------------------- admin: POST /media/admin/rebuild --------------------
+// 这是你 route1 用的“R2 -> D1 photos”批量重建（保留）
+// 这里不再读取任何 result.meta.duration 之类字段，避免 undefined 崩溃
+async function handleRebuild(request, env) {
+  // 扫描 R2 的 web/ 前缀，以文件名解析 photo_id，然后写入 photos 表（先清空再写入）
+  const mode = "route1_r2_to_d1_photos";
+
+  // 清空 photos
+  await env.DB.prepare(`DELETE FROM photos`).run();
 
   let cursor = undefined;
   let inserted = 0;
 
-  // 我们以 thumb/ 为准：它最稳定且数量与你说的 255 一致
   while (true) {
-    const listed = await bucket.list({ prefix: "thumb/", cursor, limit: 1000 });
-    const objects = listed.objects || [];
+    const listed = await env.MEDIA_BUCKET.list({
+      prefix: "web/",
+      cursor,
+      limit: 1000,
+    });
 
-    if (objects.length) {
-      const batch = [];
-      for (const o of objects) {
-        const key = o.key; // "thumb/HADO (12).jpg"
-        const parsed = parseHadoKey(key);
-        if (!parsed) continue;
+    for (const obj of listed.objects) {
+      const key = obj.key;              // web/HADO (123).jpg
+      const name = key.slice(4);        // HADO (123).jpg
+      const m = name.match(/^HADO\s*\((\d+)\)\.([a-z0-9]+)$/i);
+      if (!m) continue;
 
-        batch.push(parsed);
-      }
+      const photoId = Number(m[1]);
+      const ext = String(m[2]).toLowerCase();
+      const contentType =
+        ext === "png" ? "image/png" :
+        ext === "webp" ? "image/webp" :
+        "image/jpeg";
 
-      // 批量写入 photos
-      if (batch.length) {
-        const stmts = batch.map((p) =>
-          db
-            .prepare(
-              `INSERT INTO photos (receipt, ext, content_type, status, created_at, approved_at, photo_id, photo_key)
-               VALUES (NULL, ?, ?, 'approved', ?, ?, ?, ?)`
-            )
-            .bind(
-              p.ext,
-              guessContentType(p.name),
-              new Date().toISOString(),
-              new Date().toISOString(),
-              p.photo_id,
-              p.name
-            )
-        );
+      const t = nowISO();
+      await env.DB
+        .prepare(
+          `INSERT INTO photos (receipt, ext, content_type, status, created_at, approved_at, photo_id, photo_key)
+           VALUES (?, ?, ?, 'approved', ?, ?, ?, ?)`
+        )
+        .bind(null, ext, contentType, t, t, photoId, name)
+        .run();
 
-        // D1 batch
-        const res = await db.batch(stmts);
-        inserted += batch.length;
-      }
+      inserted++;
     }
 
     if (listed.truncated) {
@@ -178,109 +463,5 @@ async function handleRebuild(env) {
     }
   }
 
-  const elapsed_ms = Date.now() - t0;
-  return json({
-    ok: true,
-    mode: "route1_r2_to_d1_photos",
-    inserted,
-    elapsed_ms,
-  });
-}
-
-/* ------------------------- Helpers ------------------------- */
-
-function parseHadoKey(key) {
-  // key: "thumb/HADO (12).jpg" or "web/HADO (12).png"
-  // 只接受 web/ 或 thumb/
-  if (!key.startsWith("thumb/") && !key.startsWith("web/")) return null;
-
-  const name = key.split("/").slice(1).join("/"); // "HADO (12).jpg"
-  // 允许 "HADO(12).jpg" 和 "HADO (12).jpg"
-  const m = name.match(/^HADO\s*\((\d+)\)\.(\w+)$/i);
-  if (!m) return null;
-
-  const photo_id = Number(m[1]);
-  const ext = m[2].toLowerCase();
-
-  // 统一为带空格的标准名：HADO (n).ext
-  const normalizedName = `HADO (${photo_id}).${ext}`;
-
-  return {
-    photo_id,
-    ext,
-    name: normalizedName,
-  };
-}
-
-function getBucket(env) {
-  // 兼容 BUCKET / MEDIA_BUCKET
-  const b = env.BUCKET || env.MEDIA_BUCKET;
-  if (!b) throw new Error("Missing R2 binding: BUCKET (or MEDIA_BUCKET)");
-  return b;
-}
-
-function getDB(env) {
-  if (!env.DB) throw new Error("Missing D1 binding: DB");
-  return env.DB;
-}
-
-function requireAdmin(request, env) {
-  const auth = request.headers.get("Authorization") || "";
-  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  if (!env.ADMIN_TOKEN) throw new Error("Missing ADMIN_TOKEN in env");
-  if (token !== env.ADMIN_TOKEN) {
-    const e = new Error("Unauthorized");
-    e.status = 401;
-    throw e;
-  }
-}
-
-async function safeExec(db, sql) {
-  try {
-    await db.prepare(sql).run();
-  } catch (_) {
-    // ignore
-  }
-}
-
-function normalizePath(pathname, stripPrefixes = []) {
-  let p = pathname || "/";
-  for (const pref of stripPrefixes) {
-    if (p === pref) return "/";
-    if (p.startsWith(pref + "/")) p = p.slice(pref.length);
-  }
-  return p;
-}
-
-function json(obj, status = 200) {
-  return new Response(JSON.stringify(obj, null, 2), {
-    status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      ...corsHeaders(),
-    },
-  });
-}
-
-function withCors(resp) {
-  const h = new Headers(resp.headers);
-  const cors = corsHeaders();
-  Object.entries(cors).forEach(([k, v]) => h.set(k, v));
-  return new Response(resp.body, { status: resp.status, headers: h });
-}
-
-function corsHeaders() {
-  return {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Internal-Token",
-  };
-}
-
-function guessContentType(name) {
-  const lower = (name || "").toLowerCase();
-  if (lower.endsWith(".png")) return "image/png";
-  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
-  if (lower.endsWith(".webp")) return "image/webp";
-  return "application/octet-stream";
+  return json({ ok: true, mode, inserted });
 }
