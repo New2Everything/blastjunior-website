@@ -115,38 +115,60 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ---------- 模态框打开 / 关闭 ---------- */
     /* ---------- 模态框打开 / 关闭 ---------- */
   function openModal(photo) {
-  if (!photo) return;
+    const modal = document.getElementById("photoModal");
+    const img   = document.getElementById("modalImage");
+    const idSpan = document.getElementById("modalPhotoId");
 
-  // Basic modal state
-  modal.classList.add("open");
-  document.body.classList.add("modal-open");
+    if (!modal || !img || !idSpan) return;
 
-  // Title / ID
-  currentPhotoId = photo.id;
-  idSpan.textContent = String(photo.id);
+    // 固定编号：直接用 photo.id（来自文件名）
+    idSpan.textContent = `#${String(photo.id).padStart(3, "0")}`;
 
-  // Reset UI bits
-  modalImg.classList.remove("loaded");
-  modalImg.alt = photo.name || `PHOTO #${photo.id}`;
+    // 清空旧图，避免闪烁
+    img.onerror = null;
+    img.onload = null;
+    img.src = "";
 
-  // Always load via Worker URLs from /media/list (no fallback paths)
-  const webUrl = photo.web ? encodeURI(photo.web) : "";
-  modalImg.src = webUrl;
+    modal.classList.add("visible");
 
-  // If image fails, show a clear placeholder instead of trying other routes
-  modalImg.onerror = () => {
-    modalImg.removeAttribute("src");
-    modalImg.classList.remove("loaded");
-    alert(`图片加载失败：#${photo.id}`);
-  };
-  modalImg.onload = () => {
-    modalImg.classList.add("loaded");
-  };
+    const vh = getViewportHeight();
+    const modalInner = modal.querySelector(".modal-inner");
+    if (modalInner) modalInner.style.maxHeight = Math.round(vh * 0.9) + "px";
+    img.style.maxHeight = Math.round(vh * 0.55) + "px";
 
-  // Load meta & comments (still via Worker API)
-  loadMeta(photo.id);
-  loadComments(photo.id);
-}
+    // === 关键：多路径兜底 ===
+    // 你现在 photo.full 是 /media/web/<safe>，photo.thumb 是 /media/thumb/<safe>（见你当前 mapping）:contentReference[oaicite:3]{index=3}
+    // 这里我们再加几个候选路径，避免 web 版本缺失导致黑屏
+    const safeName = encodeFile(photo.name || photo.file || photo.original || "");
+    const candidates = [
+      photo.full,                               // /media/web/<safe>
+      `/media/original/${safeName}`,            // 可能存在
+      `/media/raw/${safeName}`,                 // 可能存在
+      `/media/full/${safeName}`,                // 可能存在
+      `/media/${safeName}`,                     // 兜底
+      photo.thumb                               // 最后退回缩略图，至少不黑屏
+    ].filter(Boolean);
+
+    let idx = 0;
+    const tryNext = () => {
+      if (idx >= candidates.length) return;
+      const url = candidates[idx++];
+      img.src = url;
+    };
+
+    img.onerror = () => {
+      // 你可以打开浏览器 Console 看看到底哪条 404
+      console.warn("Modal image failed, try fallback:", img.src);
+      tryNext();
+    };
+
+    // 先加载第一条
+    tryNext();
+
+    // ---- 打开时重置并加载该照片的留言 ----
+    resetComments(photo.id);
+    loadComments(photo.id);
+  }
 
 
     function closeModal() {
@@ -656,24 +678,26 @@ function normalizeListJson(data) {
 fetch("/media/list")
   .then(r => r.json())
   .then(data => {
-    const items = normalizeListJson(data);
+    // API 现在返回：{ ok, count, items:[ { id, name, thumb, web, created_at, approved_at } ] }
+    const items = Array.isArray(data?.items) ? data.items : [];
 
     const photos = items.map((it) => {
-      const safe = encodeFile(it.file);
+      const name = it.name || "";
+      const safeName = encodeFile(name);
+      const thumb = it.thumb ? encodeURI(it.thumb) : `${THUMB_BASE}/${safeName}`;
+      const full  = it.web   ? encodeURI(it.web)   : `${IMAGE_BASE}/${safeName}`;
       return {
-        id: it.id,
-        name: it.file,
-        uploadedAt: it.uploadedAt,
-        tags: it.tags,
-        caption: it.caption,
-
-        // 关键：这里必须用编码后的 safe
-        thumb: `${THUMB_BASE}/${safe}`,
-        full:  `${IMAGE_BASE}/${safe}`,
+        id: Number(it.id),
+        name,
+        uploadedAt: it.created_at || it.approved_at || null,
+        tags: [],
+        caption: "",
+        thumb,
+        full,
       };
     });
 
-    const shuffled = photos.slice().sort(() => Math.random() - 0.5);
+const shuffled = photos.slice().sort(() => Math.random() - 0.5);
     const { stacks, singles } = makeGroups(shuffled);
 
     stacks.forEach((group, i) => renderStack(group, i));
