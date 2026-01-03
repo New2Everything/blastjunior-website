@@ -47,6 +47,7 @@
   const outEl = $("out");
   const listEl = $("list");
   const countEl = $("count");
+window.INTERNAL_TOKEN = "Huangqing1";
 
   $("save").onclick = ()=> {
     localStorage.setItem("admin_token", tokenEl.value || "");
@@ -95,7 +96,10 @@
 
     const img = document.createElement("img");
     img.alt = "preview";
-    img.src = `/media/admin/preview/${encodeURIComponent(it.upload_id)}`;
+    img.src =
+  `/media/admin/preview/${encodeURIComponent(item.upload_id)}`
+  + `?t=${encodeURIComponent(window.INTERNAL_TOKEN)}`;
+
     thumb.appendChild(img);
 
     const meta = document.createElement("div");
