@@ -47,9 +47,7 @@
   const outEl = $("out");
   const listEl = $("list");
   const countEl = $("count");
-
-  // 给 <img src> 用的 query token（必须等于 Worker 里 env.INTERNAL_TOKEN）
-  window.INTERNAL_TOKEN = "Huangqing1";
+window.INTERNAL_TOKEN = "Huangqing1";
 
   $("save").onclick = ()=> {
     localStorage.setItem("admin_token", tokenEl.value || "");
@@ -62,13 +60,13 @@
   $("refresh").onclick = ()=> loadList();
 
   function authHeaders() {
-    const t = tokenEl.value || "";
-    return t ? { "Authorization": "Bearer " + t } : {};
-  }
+  const t = (tokenEl.value || "").trim();
+  return t ? { "Authorization": "Bearer " + t } : {};
+}
 
-  function showOut(objOrText, isText=false) {
-    const payload = isText ? String(objOrText) : JSON.stringify(objOrText, null, 2);
-    outEl.innerHTML = "<pre>"+escapeHtml(payload)+"</pre>";
+
+  function showOut(obj) {
+    outEl.innerHTML = "<pre>"+escapeHtml(JSON.stringify(obj, null, 2))+"</pre>";
   }
 
   async function loadList() {
@@ -76,30 +74,8 @@
     listEl.innerHTML = "";
     countEl.textContent = "";
 
-    let r;
-    try {
-      r = await fetch("/media/admin/list", { headers: authHeaders() });
-    } catch (e) {
-      showOut("Network error: " + e.message, true);
-      return;
-    }
-
-    // 处理 401/非 JSON
-    if (!r.ok) {
-      const t = await r.text().catch(()=>"(no body)");
-      showOut(`HTTP ${r.status}\n${t}`, true);
-      return;
-    }
-
-    let j;
-    try {
-      j = await r.json();
-    } catch (e) {
-      const t = await r.text().catch(()=>"(no body)");
-      showOut("Bad JSON:\n" + t, true);
-      return;
-    }
-
+    const r = await fetch("/media/admin/list", { headers: { ...authHeaders() } });
+    const j = await r.json();
     showOut(j);
     if (!j.ok) return;
 
@@ -121,14 +97,10 @@
 
     const img = document.createElement("img");
     img.alt = "preview";
+   img.src =
+  `/media/admin/preview/${encodeURIComponent(it.upload_id)}`
+  + `?t=${encodeURIComponent(window.INTERNAL_TOKEN)}`;
 
-    // ✅ 关键修复：用 it，不是 item；并且带 ?t=INTERNAL_TOKEN
-    img.src = `/media/admin/preview/${encodeURIComponent(it.upload_id)}?t=${encodeURIComponent(window.INTERNAL_TOKEN)}`;
-
-    // 预览失败时给提示（方便你排查）
-    img.onerror = () => {
-      img.alt = "preview failed";
-    };
 
     thumb.appendChild(img);
 
@@ -139,7 +111,7 @@
       <div class="line">note：${escapeHtml(it.note || "")}</div>
       <div class="line">createdAt：${escapeHtml(it.created_at || "")}</div>
       <div class="line">status：${escapeHtml(it.status || "")}</div>
-      <div class="line">预览接口：<code>/media/admin/preview/${escapeHtml(it.upload_id)}?t=***</code></div>
+      <div class="line">预览接口：<code>/media/admin/preview/${escapeHtml(it.upload_id)}</code></div>
     `;
 
     const actions = document.createElement("div");
@@ -166,36 +138,25 @@
 
   async function approve(receipt) {
     if (!confirm(`确认通过：${receipt} ?`)) return;
-
     const r = await fetch(`/media/admin/approve/${encodeURIComponent(receipt)}`, {
       method: "POST",
-      headers: authHeaders(),
+      headers: { ...authHeaders() }
     });
-
-    const t = await r.text();
-    let j;
-    try { j = JSON.parse(t); } catch { j = { ok:false, error:t }; }
-
+    const j = await r.json();
     alert(j.ok
       ? `已通过：photoId=${j.photoId}\nphotoKey=${j.photoKey}\nweb=${j.web}\nthumb=${j.thumb}`
       : `失败：${j.error || "unknown"}`
     );
-
     await loadList();
   }
 
   async function deny(receipt) {
-    if (!confirm(`确认拒绝：${receipt} ?`)) return;
-
+    if (!confirm(`确认拒绝并删除：${receipt} ?`)) return;
     const r = await fetch(`/media/admin/deny/${encodeURIComponent(receipt)}`, {
       method: "POST",
-      headers: authHeaders(),
+      headers: { ...authHeaders() }
     });
-
-    const t = await r.text();
-    let j;
-    try { j = JSON.parse(t); } catch { j = { ok:false, error:t }; }
-
+    const j = await r.json();
     alert(j.ok ? "已拒绝" : `失败：${j.error || "unknown"}`);
     await loadList();
   }
@@ -208,6 +169,5 @@
 
   loadList();
 </script>
-
 </body>
 </html>
