@@ -678,26 +678,24 @@ function normalizeListJson(data) {
 fetch("/media/list")
   .then(r => r.json())
   .then(data => {
-    // API 现在返回：{ ok, count, items:[ { id, name, thumb, web, created_at, approved_at } ] }
-    const items = Array.isArray(data?.items) ? data.items : [];
+    const items = normalizeListJson(data);
 
     const photos = items.map((it) => {
-      const name = it.name || "";
-      const safeName = encodeFile(name);
-      const thumb = it.thumb ? encodeURI(it.thumb) : `${THUMB_BASE}/${safeName}`;
-      const full  = it.web   ? encodeURI(it.web)   : `${IMAGE_BASE}/${safeName}`;
+      const safe = encodeFile(it.file);
       return {
-        id: Number(it.id),
-        name,
-        uploadedAt: it.created_at || it.approved_at || null,
-        tags: [],
-        caption: "",
-        thumb,
-        full,
+        id: it.id,
+        name: it.file,
+        uploadedAt: it.uploadedAt,
+        tags: it.tags,
+        caption: it.caption,
+
+        // 关键：这里必须用编码后的 safe
+        thumb: `${THUMB_BASE}/${safe}`,
+        full:  `${IMAGE_BASE}/${safe}`,
       };
     });
 
-const shuffled = photos.slice().sort(() => Math.random() - 0.5);
+    const shuffled = photos.slice().sort(() => Math.random() - 0.5);
     const { stacks, singles } = makeGroups(shuffled);
 
     stacks.forEach((group, i) => renderStack(group, i));
