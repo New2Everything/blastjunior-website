@@ -30,16 +30,66 @@ export default {
         return withCors(await handleRebuild(env));
       }
 
+      // NEW: GET /media/admin/list
+      if (request.method === "GET" && (pathname === "/admin/list" || pathname === "/media/admin/list")) {
+        requireAdmin(request, env);
+        return withCors(await handleAdminList(env));
+      }
+
+      // NEW: GET /media/admin/preview/:upload_id
+if (
+  request.method === "GET" &&
+  (pathname.startsWith("/admin/preview/") ||
+   pathname.startsWith("/media/admin/preview/"))
+) {
+  requireAdminOrQueryToken(request, env);   // ← 就是这里
+  const uploadId = decodeURIComponent(
+    pathname.split("/").slice(3).join("/")
+  );
+  return withCors(
+    await handleAdminPreview(request, env, url, uploadId)
+  );
+}
+
+
+      // NEW: GET /media/admin/original/:upload_id
+      if (request.method === "GET" && (pathname.startsWith("/admin/original/") || pathname.startsWith("/media/admin/original/"))) {
+        requireAdminOrQueryToken(request, env);
+        const uploadId = decodeURIComponent(pathname.split("/").slice(3).join("/")); // /admin/original/<id>
+        return withCors(await handleAdminOriginal(env, uploadId));
+      }
+
+      // NEW: POST /media/admin/approve/:upload_id
+      if (request.method === "POST" && (pathname.startsWith("/admin/approve/") || pathname.startsWith("/media/admin/approve/"))) {
+        requireAdmin(request, env);
+        const uploadId = decodeURIComponent(pathname.split("/").slice(3).join("/"));
+        return withCors(await handleAdminApprove(request, env, url, uploadId));
+      }
+
+      // NEW: POST /media/admin/deny/:upload_id
+      if (request.method === "POST" && (pathname.startsWith("/admin/deny/") || pathname.startsWith("/media/admin/deny/"))) {
+        requireAdmin(request, env);
+        const uploadId = decodeURIComponent(pathname.split("/").slice(3).join("/"));
+        return withCors(await handleAdminDeny(env, uploadId));
+      }
+
+      // NEW: POST /media/upload  (user upload -> pending queue)
+if (request.method === "POST" && (pathname === "/upload" || pathname === "/media/upload")) {
+  return withCors(await handleUpload(request, env));
+}
+
+
       return withCors(json({ ok: false, error: "Not found" }, 404));
     } catch (err) {
+      const status = err?.status || 500;
       return withCors(
         json(
           {
             ok: false,
-            error: "Worker error",
-            detail: err?.message || String(err),
+            error: status === 401 ? "Unauthorized" : "Worker error",
+            detail: String(err?.message || err),
           },
-          500
+          status
         )
       );
     }
@@ -70,6 +120,8 @@ async function handleList(env) {
     return {
       id: r.photo_id,
       name,
+      ext: r.ext || null,
+      content_type: r.content_type || guessContentType(name),
       web: `/media/web/${encName}`,
       thumb: `/media/thumb/${encName}`,
       created_at: r.created_at || null,
@@ -104,19 +156,13 @@ async function handleServeR2(request, env, pathname) {
   headers.set("ETag", obj.httpEtag || obj.etag || "");
   headers.set("Cache-Control", "public, max-age=31536000, immutable");
   headers.set("Content-Type", obj.httpMetadata?.contentType || guessContentType(decodedName));
-
-  // 支持 Range（视频/大文件也更稳；图片也不坏）
-  const range = request.headers.get("Range");
-  if (range) {
-    const r = obj.range;
-    if (r) {
-      const res = await obj.body?.getReader?.(); // 有些环境不需要，保留
-    }
-  }
-
   return new Response(obj.body, { status: 200, headers });
 }
 
+/**
+ * 路线1：R2 -> D1 photos 重建
+ * 你原来的功能：保持不动
+ */
 async function handleRebuild(env) {
   const t0 = Date.now();
   const db = getDB(env);
@@ -132,7 +178,7 @@ async function handleRebuild(env) {
   let cursor = undefined;
   let inserted = 0;
 
-  // 我们以 thumb/ 为准：它最稳定且数量与你说的 255 一致
+  // 我们以 thumb/ 为准
   while (true) {
     const listed = await bucket.list({ prefix: "thumb/", cursor, limit: 1000 });
     const objects = listed.objects || [];
@@ -144,30 +190,24 @@ async function handleRebuild(env) {
         const parsed = parseHadoKey(key);
         if (!parsed) continue;
 
-        batch.push(parsed);
+        batch.push(
+          db.prepare(
+            `INSERT INTO photos (photo_id, ext, content_type, status, created_at, approved_at, photo_key)
+             VALUES (?1, ?2, ?3, 'approved', COALESCE(?4, CURRENT_TIMESTAMP), COALESCE(?5, CURRENT_TIMESTAMP), ?6)`
+          ).bind(
+            parsed.photo_id,
+            parsed.ext,
+            parsed.content_type,
+            null,
+            null,
+            parsed.photo_key
+          )
+        );
       }
 
-      // 批量写入 photos
       if (batch.length) {
-        const stmts = batch.map((p) =>
-          db
-            .prepare(
-              `INSERT INTO photos (receipt, ext, content_type, status, created_at, approved_at, photo_id, photo_key)
-               VALUES (NULL, ?, ?, 'approved', ?, ?, ?, ?)`
-            )
-            .bind(
-              p.ext,
-              guessContentType(p.name),
-              new Date().toISOString(),
-              new Date().toISOString(),
-              p.photo_id,
-              p.name
-            )
-        );
-
-        // D1 batch
-        const res = await db.batch(stmts);
-        inserted += batch.length;
+        const res = await db.batch(batch);
+        inserted += res.length;
       }
     }
 
@@ -187,6 +227,232 @@ async function handleRebuild(env) {
   });
 }
 
+/* ------------------------- NEW: Admin Handlers ------------------------- */
+
+async function handleAdminList(env) {
+  const db = getDB(env);
+
+  // admin 页面只要 pending
+  const rows = await db
+    .prepare(
+      `SELECT upload_id, ext, content_type, status, created_at, approved_at, photo_id, photo_key, note
+       FROM uploads
+       WHERE status='pending'
+       ORDER BY created_at ASC`
+    )
+    .all();
+
+  return json({ ok: true, count: (rows.results || []).length, items: rows.results || [] });
+}
+
+/**
+ * 原图输出（用于 preview/approve 内部 fetch + cf.image）
+ * - 需要上传流程把原图存进 R2（见 findOriginalKeyCandidates）
+ */
+async function handleAdminOriginal(env, uploadId) {
+  const db = getDB(env);
+  const bucket = getBucket(env);
+
+  const row = await db
+    .prepare(`SELECT upload_id, ext, content_type, status FROM uploads WHERE upload_id=?1 LIMIT 1`)
+    .bind(uploadId)
+    .first();
+
+  if (!row) return json({ ok: false, error: "Upload not found" }, 404);
+
+  const ext = (row.ext || "jpg").toLowerCase();
+  const ctype = row.content_type || guessContentType(`x.${ext}`);
+
+  // 找原图 key（多候选）
+  const candidates = findOriginalKeyCandidates(uploadId, ext);
+  let found = null;
+  for (const key of candidates) {
+    const obj = await bucket.get(key);
+    if (obj) {
+      found = { key, obj };
+      break;
+    }
+  }
+
+  if (!found) {
+    return json(
+      {
+        ok: false,
+        error: "Original image not found in R2",
+        tried: candidates,
+        hint: "请确认上传流程是否把原图写入 R2，并核对 key 前缀（uploads/upload/pending 等）。",
+      },
+      404
+    );
+  }
+
+  const headers = new Headers();
+  headers.set("Content-Type", found.obj.httpMetadata?.contentType || ctype);
+  headers.set("Cache-Control", "no-store");
+  headers.set("X-R2-Key", found.key);
+  return new Response(found.obj.body, { status: 200, headers });
+}
+
+/**
+ * preview：直接返回一张缩略预览（不写入 R2）
+ * - 使用 cf.image 对 original 做缩放（如果你账户没开 image resizing，则会返回原图）
+ */
+async function handleAdminPreview(request, env, url, uploadId) {
+  const auth = request.headers.get("Authorization") || "";
+  const originUrl =
+  `${url.origin}/media/admin/original/${encodeURIComponent(uploadId)}`
+  + `?t=${encodeURIComponent(env.INTERNAL_TOKEN)}`;
+
+const resp = await fetch(originUrl, {
+  cf: { image: { width: 720, fit: "scale-down", quality: 80 } }
+});
+
+
+  // 如果没开 image resizing，这里也能正常回图（只是没缩）
+  return resp;
+}
+
+/**
+ * approve：
+ * 1) uploads: status -> approved，写 photo_id/photo_key/approved_at
+ * 2) photos: 插入 approved 索引
+ * 3) 从 original 生成并写入 R2：web/ 与 thumb/
+ */
+async function handleAdminApprove(request, env, url, uploadId) {
+  const db = getDB(env);
+  const bucket = getBucket(env);
+
+  const u = await db
+    .prepare(`SELECT upload_id, ext, content_type, status, created_at, note FROM uploads WHERE upload_id=?1 LIMIT 1`)
+    .bind(uploadId)
+    .first();
+
+  if (!u) return json({ ok: false, error: "Upload not found" }, 404);
+  if (String(u.status || "").toLowerCase() !== "pending") {
+    return json({ ok: false, error: `Upload status is not pending (${u.status})` }, 400);
+  }
+
+  // next photo id（简单方式：MAX+1）
+  const maxRow = await db.prepare(`SELECT COALESCE(MAX(photo_id),0) AS m FROM photos`).first();
+  const nextId = Number(maxRow?.m || 0) + 1;
+
+  const ext = (u.ext || "jpg").toLowerCase();
+  const photoKey = `HADO (${nextId}).${ext}`;
+  const contentType = u.content_type || guessContentType(photoKey);
+
+  // 生成 web/thumb：通过内部 original endpoint + cf.image
+  const auth = request.headers.get("Authorization") || "";
+  const originalUrl =
+  `${url.origin}/media/admin/original/${encodeURIComponent(uploadId)}`
+  + `?t=${encodeURIComponent(env.INTERNAL_TOKEN)}`;
+
+
+  const webResp = await fetch(originalUrl, {
+    headers: { Authorization: auth },
+    cf: {
+      image: {
+        width: 2000,
+        fit: "scale-down",
+        quality: 85,
+      },
+    },
+  });
+
+  if (!webResp.ok) {
+    const txt = await safeReadText(webResp);
+    return json({ ok: false, error: "Failed to read original for web", status: webResp.status, detail: txt }, 400);
+
+  }
+
+  const thumbResp = await fetch(originalUrl, {
+    headers: { Authorization: auth },
+    cf: {
+      image: {
+        width: 480,
+        height: 480,
+        fit: "cover",
+        quality: 80,
+      },
+    },
+  });
+
+  if (!thumbResp.ok) {
+    const txt = await safeReadText(thumbResp);
+    return json({ ok: false, error: "Failed to read original for thumb", detail: txt }, 400);
+  }
+
+  // 写入 R2
+  const webKey = `web/${photoKey}`;
+  const thumbKey = `thumb/${photoKey}`;
+
+  // 注意：用 arrayBuffer 读入（简单可靠）
+  const webBuf = await webResp.arrayBuffer();
+  const thumbBuf = await thumbResp.arrayBuffer();
+
+  await bucket.put(webKey, webBuf, { httpMetadata: { contentType } });
+  await bucket.put(thumbKey, thumbBuf, { httpMetadata: { contentType } });
+
+  // 写 D1：uploads + photos
+  const nowIso = new Date().toISOString();
+
+  // uploads 更新
+  await db
+    .prepare(
+      `UPDATE uploads
+       SET status='approved',
+           approved_at=?2,
+           photo_id=?3,
+           photo_key=?4
+       WHERE upload_id=?1`
+    )
+    .bind(uploadId, nowIso, nextId, photoKey)
+    .run();
+
+  // photos 插入（公开 list 用）
+  await db
+    .prepare(
+      `INSERT INTO photos (photo_id, ext, content_type, status, created_at, approved_at, photo_key)
+       VALUES (?1, ?2, ?3, 'approved', COALESCE(?4, ?6), ?5, ?6)`
+    )
+    .bind(nextId, ext, contentType, u.created_at || null, nowIso, photoKey)
+    .run();
+
+  const encName = encodeURIComponent(photoKey);
+
+  return json({
+    ok: true,
+    uploadId,
+    photoId: nextId,
+    photoKey,
+    webKey,
+    thumbKey,
+    web: `/media/web/${encName}`,
+    thumb: `/media/thumb/${encName}`,
+  });
+}
+
+/**
+ * deny：只改 uploads.status=denied
+ *（不写 photos，不写 R2 web/thumb）
+ */
+async function handleAdminDeny(env, uploadId) {
+  const db = getDB(env);
+
+  const u = await db
+    .prepare(`SELECT upload_id, status FROM uploads WHERE upload_id=?1 LIMIT 1`)
+    .bind(uploadId)
+    .first();
+
+  if (!u) return json({ ok: false, error: "Upload not found" }, 404);
+
+  await db
+    .prepare(`UPDATE uploads SET status='denied' WHERE upload_id=?1`)
+    .bind(uploadId)
+    .run();
+
+  return json({ ok: true, uploadId, status: "denied" });
+}
+
 /* ------------------------- Helpers ------------------------- */
 
 function parseHadoKey(key) {
@@ -200,28 +466,33 @@ function parseHadoKey(key) {
   if (!m) return null;
 
   const photo_id = Number(m[1]);
-  const ext = m[2].toLowerCase();
-
-  // 统一为带空格的标准名：HADO (n).ext
-  const normalizedName = `HADO (${photo_id}).${ext}`;
+  const ext = (m[2] || "jpg").toLowerCase();
+  const photo_key = `HADO (${photo_id}).${ext}`;
 
   return {
     photo_id,
     ext,
-    name: normalizedName,
+    content_type: guessContentType(photo_key),
+    photo_key,
   };
 }
 
-function getBucket(env) {
-  // 兼容 BUCKET / MEDIA_BUCKET
-  const b = env.BUCKET || env.MEDIA_BUCKET;
-  if (!b) throw new Error("Missing R2 binding: BUCKET (or MEDIA_BUCKET)");
-  return b;
+function findOriginalKeyCandidates(uploadId, ext) {
+  const e = (ext || "jpg").toLowerCase();
+  return [
+    `uploads/${uploadId}.${e}`,
+    `upload/${uploadId}.${e}`,
+    `pending/${uploadId}.${e}`,
+    `${uploadId}.${e}`,
+  ];
 }
 
-function getDB(env) {
-  if (!env.DB) throw new Error("Missing D1 binding: DB");
-  return env.DB;
+async function safeReadText(resp) {
+  try {
+    return await resp.text();
+  } catch {
+    return "(no body)";
+  }
 }
 
 function requireAdmin(request, env) {
@@ -235,30 +506,31 @@ function requireAdmin(request, env) {
   }
 }
 
+function getDB(env) {
+  const db = env.DB;
+  if (!db) throw new Error("Missing D1 binding: DB");
+  return db;
+}
+
+function getBucket(env) {
+  // 兼容 BUCKET / MEDIA_BUCKET
+  const b = env.BUCKET || env.MEDIA_BUCKET;
+  if (!b) throw new Error("Missing R2 binding: BUCKET (or MEDIA_BUCKET)");
+  return b;
+}
+
 async function safeExec(db, sql) {
   try {
-    await db.prepare(sql).run();
+    await db.exec(sql);
   } catch (_) {
     // ignore
   }
 }
 
-function normalizePath(pathname, stripPrefixes = []) {
-  let p = pathname || "/";
-  for (const pref of stripPrefixes) {
-    if (p === pref) return "/";
-    if (p.startsWith(pref + "/")) p = p.slice(pref.length);
-  }
-  return p;
-}
-
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj, null, 2), {
     status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      ...corsHeaders(),
-    },
+    headers: { "Content-Type": "application/json; charset=utf-8" },
   });
 }
 
@@ -277,6 +549,15 @@ function corsHeaders() {
   };
 }
 
+function normalizePath(pathname, stripPrefixes = []) {
+  let p = pathname || "/";
+  for (const pref of stripPrefixes) {
+    if (p === pref) return "/";
+    if (p.startsWith(pref + "/")) p = p.slice(pref.length);
+  }
+  return p;
+}
+
 function guessContentType(name) {
   const lower = (name || "").toLowerCase();
   if (lower.endsWith(".png")) return "image/png";
@@ -284,3 +565,122 @@ function guessContentType(name) {
   if (lower.endsWith(".webp")) return "image/webp";
   return "application/octet-stream";
 }
+
+async function handleUpload(request, env) {
+  const bucket = getBucket(env);
+  const db = getDB(env);
+
+  // 允许表单 multipart/form-data 或者直接 body（二进制）
+  const ct = request.headers.get("Content-Type") || "";
+
+  let fileBuf, contentType, filename, note;
+
+  if (ct.includes("multipart/form-data")) {
+    const form = await request.formData();
+
+    // 兼容常见字段名：file / photo / image
+    const f =
+      form.get("file") ||
+      form.get("photo") ||
+      form.get("image");
+
+    if (!f || typeof f === "string") {
+      return json({ ok: false, error: "Missing file (field: file/photo/image)" }, 400);
+    }
+
+    note = String(form.get("note") || "").slice(0, 30);
+
+    // File object
+    filename = f.name || "upload.jpg";
+    contentType = f.type || guessContentType(filename);
+    fileBuf = await f.arrayBuffer();
+  } else {
+    // 非 multipart：直接把 body 当成图片
+    fileBuf = await request.arrayBuffer();
+    contentType = request.headers.get("Content-Type") || "application/octet-stream";
+    filename = request.headers.get("X-Filename") || "upload.jpg";
+    note = "";
+  }
+
+  const ext = extFrom(filename, contentType);
+  const uploadId = makeReceipt();
+
+  // ✅ 原图存放位置：uploads/<uploadId>.<ext>
+  const originalKey = `uploads/${uploadId}.${ext}`;
+
+  await bucket.put(originalKey, fileBuf, {
+    httpMetadata: { contentType: contentType || guessContentType(`x.${ext}`) },
+  });
+
+  const nowIso = new Date().toISOString();
+
+  // ✅ 写入 D1 uploads 队列
+  // 字段以你截图为准：upload_id/ext/content_type/status/created_at/approved_at/photo_id/photo_key/note
+  await db
+    .prepare(
+      `INSERT INTO uploads (upload_id, ext, content_type, status, created_at, approved_at, photo_id, photo_key, note)
+       VALUES (?1, ?2, ?3, 'pending', ?4, NULL, NULL, NULL, ?5)`
+    )
+    .bind(uploadId, ext, contentType, nowIso, note || null)
+    .run();
+
+  return json({
+    ok: true,
+    receipt: uploadId,
+    stored: { key: originalKey, content_type: contentType, ext },
+    next: "Go to admin to approve/deny",
+  });
+}
+
+function makeReceipt() {
+  // 生成类似 BLX-250103-ABC12
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const rand = randomBase32(5);
+  return `BLX-${yy}${mm}${dd}-${rand}`;
+}
+
+function randomBase32(n) {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 去掉易混淆字符
+  const bytes = new Uint8Array(n);
+  crypto.getRandomValues(bytes);
+  let out = "";
+  for (let i = 0; i < n; i++) out += alphabet[bytes[i] % alphabet.length];
+  return out;
+}
+
+function extFrom(filename, contentType) {
+  const m = (filename || "").toLowerCase().match(/\.([a-z0-9]+)$/);
+  if (m) return m[1];
+  if ((contentType || "").includes("png")) return "png";
+  if ((contentType || "").includes("webp")) return "webp";
+  return "jpg";
+}
+
+function requireAdminOrQueryToken(request, env) {
+  // 1️⃣ 先允许标准 ADMIN_TOKEN（给 fetch / approve 用）
+  const auth = request.headers.get("Authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (token && env.ADMIN_TOKEN && token === env.ADMIN_TOKEN) {
+    return;
+  }
+
+  // 2️⃣ 再允许 URL ?t=INTERNAL_TOKEN（给 <img src> 用）
+  const url = new URL(request.url);
+  const t = url.searchParams.get("t") || "";
+
+  if (!env.INTERNAL_TOKEN) {
+    const e = new Error("Missing INTERNAL_TOKEN");
+    e.status = 500;
+    throw e;
+  }
+
+  if (t !== env.INTERNAL_TOKEN) {
+    const e = new Error("Unauthorized");
+    e.status = 401;
+    throw e;
+  }
+}
+

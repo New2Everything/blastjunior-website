@@ -74,6 +74,9 @@ window.INTERNAL_TOKEN = "Huangqing1";
     listEl.innerHTML = "";
     countEl.textContent = "";
 
+    if (!(tokenEl.value || "").trim()) return;
+
+
     const r = await fetch("/media/admin/list", { headers: { ...authHeaders() } });
     const j = await r.json();
     showOut(j);
