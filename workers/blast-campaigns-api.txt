@@ -585,13 +585,19 @@ function corsPreflight() {
   return new Response(null, { status: 204, headers: corsHeaders() });
 }
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data, null, 2), {
-    status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      "Cache-Control": "no-store",
-      ...corsHeaders(),
-    },
-  });
+function json(data, status = 200, extraHeaders = {}) {
+  const headers = {
+    "Content-Type": "application/json; charset=utf-8",
+    "X-Content-Type-Options": "nosniff",
+
+    // ✅ 建议：public API 用短缓存（消掉你截图里 cache-control 相关“错误/警告”）
+    // 如果你怕缓存影响调试：临时改成 "no-store" 也行，但会继续出现“不推荐”的提示
+    "Cache-Control": "public, max-age=60",
+
+    ...corsHeaders(),
+    ...extraHeaders,
+  };
+
+  return new Response(JSON.stringify(data, null, 2), { status, headers });
 }
+
