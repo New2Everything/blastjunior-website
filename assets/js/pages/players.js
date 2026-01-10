@@ -1,145 +1,112 @@
-import { api } from "../api.js";
-import { qs } from "../utils.js";
-import { escapeHtml } from "../utils.js";
-import { openDrawer, closeDrawer } from "../ui.js";
+(function(){
+  function el(id){ return document.getElementById(id); }
+  function escapeHtml(s){
+    return String(s)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+  }
 
-const qInput = qs("#q");
-const tbody = qs("#tbody");
-const subtitle = qs("#subtitle");
-const countPill = qs("#countPill");
-const metaPill = qs("#metaPill");
-const statusPill = qs("#statusPill");
+  var statusEl, qEl, listEl, detailEl;
 
-const drawer = qs("#playerDrawer");
-const closeBtn = qs("#closeDrawer");
-const dTitle = qs("#dTitle");
-const dSub = qs("#dSub");
-const drawerBody = qs("#drawerBody");
+  function renderList(players){
+    listEl.innerHTML = "";
+    if (!players || !players.length){
+      listEl.innerHTML = "<div class='muted'>没有匹配到球员</div>";
+      return;
+    }
+    var ul = document.createElement("ul");
+    ul.className = "list";
+    for (var i=0;i<players.length;i++){
+      (function(p){
+        var li = document.createElement("li");
+        var name = p.display_name || p.player_id || "";
+        li.innerHTML =
+          "<strong>" + escapeHtml(name) + "</strong>" +
+          "<div class='small'>player_id = " + escapeHtml(p.player_id || "") + (p.alias ? (" · alias = " + escapeHtml(p.alias)) : "") + "</div>";
+        li.addEventListener("click", function(){
+          loadPlayer(p.player_id);
+        });
+        ul.appendChild(li);
+      })(players[i]);
+    }
+    listEl.appendChild(ul);
+  }
 
-closeBtn.addEventListener("click", () => closeDrawer(drawer));
+  function renderDetail(data){
+    var rosters = data.rosters || [];
+    var html = "";
 
-let allPlayers = [];
+    html += "<div class='kpi' style='margin-bottom:12px;'>" +
+      "<div><strong>" + escapeHtml(data.display_name || data.player_id || "") + "</strong>" +
+      "<div class='small'>player_id = " + escapeHtml(data.player_id || "") + "</div></div>" +
+      "<div class='small'>" + (data.alias ? ("alias = " + escapeHtml(data.alias)) : "") + "</div>" +
+    "</div>";
 
-function norm(s) {
-  return String(s ?? "").trim().toLowerCase();
-}
+    html += "<h3 style='margin:12px 0 8px;'>Rosters</h3>";
+    if (!rosters.length){
+      html += "<div class='muted'>该球员暂无 rosters 记录</div>";
+    } else {
+      html += "<ul class='list'>";
+      for (var i=0;i<rosters.length;i++){
+        var r = rosters[i];
+        html += "<li><strong>" + escapeHtml(r.team_name || r.team_id || "") + "</strong>" +
+                "<div class='small'>team_id = " + escapeHtml(r.team_id || "") +
+                (r.season_id ? (" · season_id = " + escapeHtml(r.season_id)) : "") +
+                "</div></li>";
+      }
+      html += "</ul>";
+    }
 
-function matchPlayer(p, q) {
-  if (!q) return true;
-  const hay = [
-    p.player_id,
-    p.nickname,
-    p.display_name,
-    p.real_name,
-    p.club_name,
-  ].map(norm).join(" | ");
-  return hay.includes(q);
-}
+    detailEl.innerHTML = html;
+  }
 
-function renderList(players) {
-  tbody.innerHTML = players.map(p => `
-    <tr data-player-id="${escapeHtml(p.player_id)}">
-      <td>${escapeHtml(p.nickname || "")}</td>
-      <td>${escapeHtml(p.display_name || "")}</td>
-      <td>${escapeHtml(p.real_name || "")}</td>
-      <td class="col-points">${escapeHtml(p.player_id)}</td>
-    </tr>
-  `).join("");
-
-  tbody.querySelectorAll("tr").forEach(tr => {
-    tr.addEventListener("click", async () => {
-      const playerId = tr.getAttribute("data-player-id");
-      await openPlayer(playerId);
+  function loadPlayer(playerId){
+    if (!playerId) return;
+    Api.setStatus(statusEl, true, "Loading player…");
+    Api.fetchJson("/api/public/player", { player_id: playerId }).then(function(data){
+      Api.setStatus(statusEl, true, "OK");
+      renderDetail(data);
+    }).catch(function(err){
+      console.error(err);
+      Api.setStatus(statusEl, false, "ERROR");
+      detailEl.innerHTML = "<div class='muted'>加载失败：" + escapeHtml(err.message || err) + "</div>";
     });
-  });
-}
+  }
 
-async function openPlayer(playerId) {
-  openDrawer(drawer);
-  drawerBody.textContent = "加载中…";
-  statusPill.textContent = "Loading player…";
+  function search(){
+    var q = (qEl.value || "").trim();
+    Api.setStatus(statusEl, true, "Searching…");
 
-  const data = await api.player(playerId);
-  const p = data.player;
+    // 你 Worker 里已有 GET /api/public/players
+    // 我这里用 query 参数，如果你那边参数名不是 query，而是 q/name，也能很容易改
+    Api.fetchJson("/api/public/players", { query: q }).then(function(data){
+      Api.setStatus(statusEl, true, "OK");
+      renderList(data.players || []);
+    }).catch(function(err){
+      console.error(err);
+      Api.setStatus(statusEl, false, "ERROR");
+      listEl.innerHTML = "<div class='muted'>搜索失败：" + escapeHtml(err.message || err) + "</div>";
+    });
+  }
 
-  dTitle.textContent = p.nickname || p.display_name || p.player_id;
-  dSub.textContent = `player_id = ${p.player_id}`;
+  function init(){
+    statusEl = el("statusBadge");
+    qEl = el("q");
+    listEl = el("list");
+    detailEl = el("detail");
 
-  const profile = `
-    <div class="kv">
-      <div class="k">Nickname</div><div>${escapeHtml(p.nickname || "")}</div>
-      <div class="k">Display</div><div>${escapeHtml(p.display_name || "")}</div>
-      <div class="k">Real name</div><div>${escapeHtml(p.real_name || "")}</div>
-      <div class="k">Gender</div><div>${escapeHtml(p.gender || "")}</div>
-      <div class="k">Birth year</div><div>${escapeHtml(p.birth_year || "")}</div>
-      <div class="k">Club</div><div>${escapeHtml(p.club_name || "")}</div>
-      <div class="k">Active</div><div>${escapeHtml(String(p.is_active ?? ""))}</div>
-    </div>
-  `;
+    el("backBtn").addEventListener("click", function(){ location.href="/campaigns"; });
+    el("searchBtn").addEventListener("click", search);
+    qEl.addEventListener("keydown", function(e){
+      if (e.key === "Enter") search();
+    });
 
-  const rosters = (data.rosters || []);
-  const rosterHtml = rosters.length
-    ? `
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Season</th>
-            <th>Team</th>
-            <th>Role</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rosters.map(r => `
-            <tr>
-              <td>${escapeHtml(r.season_id || "")}</td>
-              <td>
-                <a href="./team.html?team_id=${encodeURIComponent(r.team_id)}&season_id=${encodeURIComponent(r.season_id || "")}">
-                  ${escapeHtml(r.team_name || r.team_id)}
-                </a>
-              </td>
-              <td>${escapeHtml(r.role || "")}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    `
-    : `<div class="pill">暂无 rosters 记录</div>`;
+    // 初次拉一遍全量（或空 query）
+    search();
+  }
 
-  drawerBody.innerHTML = `
-    <div class="pill">Profile</div>
-    <div style="margin-top:10px;">${profile}</div>
-    <hr/>
-    <div class="pill">Rosters (历史参赛轨迹)</div>
-    <div style="margin-top:10px;">${rosterHtml}</div>
-  `;
-
-  statusPill.textContent = "OK";
-}
-
-function applyFilter() {
-  const q = norm(qInput.value);
-  const filtered = allPlayers.filter(p => matchPlayer(p, q));
-  renderList(filtered);
-  countPill.textContent = `${filtered.length} / ${allPlayers.length}`;
-}
-
-async function init() {
-  statusPill.textContent = "Loading…";
-  subtitle.textContent = "从 /api/public/players 拉取中…";
-
-  const data = await api.players();
-  allPlayers = data.players || [];
-
-  metaPill.textContent = `Total: ${allPlayers.length}`;
-  subtitle.textContent = "输入关键词筛选，点击行查看详情";
-  qInput.addEventListener("input", applyFilter);
-
-  applyFilter();
-  statusPill.textContent = "OK";
-}
-
-init().catch(err => {
-  statusPill.textContent = "ERROR";
-  subtitle.textContent = err.message;
-  console.error(err);
-});
+  document.addEventListener("DOMContentLoaded", init);
+})();

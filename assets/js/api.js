@@ -1,41 +1,60 @@
-import { API_BASE } from "./config.js";
+(function(){
+  function normalizeBase(base) {
+    if (!base) return "";
+    if (base.endsWith("/")) return base.slice(0, -1);
+    return base;
+  }
 
-async function getJson(path) {
-  const res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error || data?.message || `HTTP ${res.status}`);
-  return data;
-}
+  function getBase() {
+    // 你可以在每个页面用 window.API_BASE 覆盖（推荐）
+    // 比如：window.API_BASE = "https://blast-campaigns-api.kanjiaming2022.workers.dev";
+    var b = window.API_BASE || "";
+    return normalizeBase(b);
+  }
 
-export const api = {
-  health: () => getJson("/api/public/health"),
+  function buildUrl(path, params) {
+    var base = getBase();
+    var url = base + path;
+    if (params) {
+      var q = [];
+      for (var k in params) {
+        if (!Object.prototype.hasOwnProperty.call(params, k)) continue;
+        var v = params[k];
+        if (v === undefined || v === null || v === "") continue;
+        q.push(encodeURIComponent(k) + "=" + encodeURIComponent(String(v)));
+      }
+      if (q.length) url += "?" + q.join("&");
+    }
+    return url;
+  }
 
-  seasons: () => getJson("/api/public/seasons"),
+  function fetchJson(path, params) {
+    var url = buildUrl(path, params);
+    return fetch(url, {
+      method: "GET",
+      headers: { "accept": "application/json" }
+    }).then(function(res){
+      if (!res.ok) {
+        return res.text().then(function(t){
+          throw new Error("HTTP " + res.status + " " + res.statusText + " @ " + url + " :: " + t);
+        });
+      }
+      return res.json();
+    });
+  }
 
-  leaderboards: (seasonId) =>
-    getJson(`/api/public/leaderboards?season_id=${encodeURIComponent(seasonId)}`),
+  function setStatus(el, ok, text){
+    if (!el) return;
+    el.className = "badge " + (ok ? "ok" : "err");
+    var dot = el.querySelector(".badge-dot");
+    var msg = el.querySelector(".badge-msg");
+    if (dot) { /* class controls color */ }
+    if (msg) msg.textContent = text || (ok ? "OK" : "ERROR");
+  }
 
-  leaderboard: (seasonId, leaderboardKey) =>
-    getJson(`/api/public/leaderboard?season_id=${encodeURIComponent(seasonId)}&leaderboard_key=${encodeURIComponent(leaderboardKey)}`),
-
-  teams: (seasonId) =>
-    getJson(`/api/public/teams?season_id=${encodeURIComponent(seasonId)}`),
-
-  team: (teamId, seasonId) => {
-    const s = seasonId ? `&season_id=${encodeURIComponent(seasonId)}` : "";
-    return getJson(`/api/public/team?team_id=${encodeURIComponent(teamId)}${s}`);
-  },
-
-  rounds: (seasonId, leaderboardKey) => {
-    const k = leaderboardKey ? `&leaderboard_key=${encodeURIComponent(leaderboardKey)}` : "";
-    return getJson(`/api/public/rounds?season_id=${encodeURIComponent(seasonId)}${k}`);
-  },
-
-  round: (componentId) =>
-    getJson(`/api/public/round?component_id=${encodeURIComponent(componentId)}`),
-
-  players: () => getJson(`/api/public/players`),
-
-  player: (playerId) =>
-    getJson(`/api/public/player?player_id=${encodeURIComponent(playerId)}`),
-};
+  window.Api = {
+    buildUrl: buildUrl,
+    fetchJson: fetchJson,
+    setStatus: setStatus
+  };
+})();

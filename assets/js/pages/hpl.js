@@ -1,168 +1,209 @@
-import { api } from "../api.js";
-import { qs } from "../utils.js";
-import { renderSeasonOptions, renderLeaderboardOptions, renderTable, openDrawer, closeDrawer } from "../ui.js";
-import { escapeHtml, fmtDate } from "../utils.js";
+(function(){
+  function el(id){ return document.getElementById(id); }
 
-const seasonSelect = qs("#seasonSelect");
-const lbSelect = qs("#lbSelect");
-const refreshBtn = qs("#refreshBtn");
-const subtitle = qs("#subtitle");
-const metaPill = qs("#metaPill");
-const roundMeta = qs("#roundMeta");
-const statusPill = qs("#statusPill");
+  var statusEl, seasonSelect, leaderboardSelect, tableBody, seasonMetaEl;
+  var drawerBackdrop, drawerTitle, drawerBody;
 
-const tableBody = qs("#tableBody");
-const roundBody = qs("#roundBody");
+  function qs(name){
+    var m = new RegExp("[?&]" + name + "=([^&]+)").exec(location.search);
+    return m ? decodeURIComponent(m[1]) : "";
+  }
 
-const teamDrawer = qs("#teamDrawer");
-const closeTeamDrawer = qs("#closeTeamDrawer");
-const teamDrawerBody = qs("#teamDrawerBody");
-const dTeamName = qs("#dTeamName");
-const dTeamSub = qs("#dTeamSub");
-closeTeamDrawer.addEventListener("click", () => closeDrawer(teamDrawer));
+  function setDrawer(open){
+    drawerBackdrop.style.display = open ? "flex" : "none";
+  }
 
-const roundDrawer = qs("#roundDrawer");
-const closeRoundDrawer = qs("#closeRoundDrawer");
-const roundDrawerBody = qs("#roundDrawerBody");
-const dRoundName = qs("#dRoundName");
-const dRoundSub = qs("#dRoundSub");
-closeRoundDrawer.addEventListener("click", () => closeDrawer(roundDrawer));
+  function openDrawer(title, html){
+    drawerTitle.textContent = title;
+    drawerBody.innerHTML = html;
+    setDrawer(true);
+  }
 
-let seasonsData = null;
-let currentSeasonId = null;
-let currentLbKey = null;
+  function closeDrawer(){ setDrawer(false); }
 
-async function init() {
-  statusPill.textContent = "Loading…";
-  seasonsData = await api.seasons();
-  currentSeasonId = seasonsData.current_season_id || seasonsData.seasons?.[0]?.season_id;
-  renderSeasonOptions(seasonSelect, seasonsData.seasons, currentSeasonId);
+  function renderSeasons(seasons, selectedId){
+    seasonSelect.innerHTML = "";
+    for (var i=0;i<seasons.length;i++){
+      var s = seasons[i];
+      var opt = document.createElement("option");
+      opt.value = s.season_id;
+      opt.textContent = (s.name || s.season_id) + (s.start_date ? (" · " + s.start_date) : "") + (s.status ? (" · " + s.status) : "");
+      if (s.season_id === selectedId) opt.selected = true;
+      seasonSelect.appendChild(opt);
+    }
+  }
 
-  seasonSelect.addEventListener("change", async () => {
-    currentSeasonId = seasonSelect.value;
-    await loadLeaderboards();
-    await refreshAll();
-  });
+  function renderLeaderboards(items, selectedKey){
+    leaderboardSelect.innerHTML = "";
+    for (var i=0;i<items.length;i++){
+      var it = items[i];
+      var opt = document.createElement("option");
+      opt.value = it.leaderboard_key;
+      opt.textContent = (it.name || it.leaderboard_key) + (it.round_count ? (" (" + it.round_count + ")") : "");
+      if (it.leaderboard_key === selectedKey) opt.selected = true;
+      leaderboardSelect.appendChild(opt);
+    }
+  }
 
-  refreshBtn.addEventListener("click", () => refreshAll());
+  function renderRows(rows){
+    tableBody.innerHTML = "";
+    for (var i=0;i<rows.length;i++){
+      var r = rows[i];
+      var tr = document.createElement("tr");
+      tr.setAttribute("data-team-id", r.team_id || "");
+      tr.setAttribute("data-team-name", r.team_name || "");
+      tr.innerHTML =
+        "<td>" + String(r.rank || "") + "</td>" +
+        "<td>" + escapeHtml(r.team_name || r.team_id || "") + "</td>" +
+        "<td>" + String(r.points || 0) + "</td>";
+      tr.addEventListener("click", function(){
+        var teamId = this.getAttribute("data-team-id");
+        var teamName = this.getAttribute("data-team-name");
+        if (!teamId) return;
+        loadTeam(teamId, teamName);
+      });
+      tableBody.appendChild(tr);
+    }
+  }
 
-  await loadLeaderboards();
-  await refreshAll();
-  statusPill.textContent = "OK";
-}
+  function escapeHtml(s){
+    return String(s)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+  }
 
-async function loadLeaderboards() {
-  subtitle.textContent = `season_id = ${currentSeasonId}`;
-  const lbs = await api.leaderboards(currentSeasonId);
-  currentLbKey = lbs.leaderboards?.[0]?.leaderboard_key || null;
-  renderLeaderboardOptions(lbSelect, lbs.leaderboards || [], currentLbKey);
+  function selectedSeason(){ return seasonSelect.value; }
+  function selectedLeaderboard(){ return leaderboardSelect.value; }
 
-  lbSelect.addEventListener("change", async () => {
-    currentLbKey = lbSelect.value;
-    await refreshAll();
-  }, { once: true });
-}
+  function loadTeam(teamId, teamName){
+    var sid = selectedSeason();
+    Api.setStatus(statusEl, true, "Loading team…");
+    Api.fetchJson("/api/public/team", { team_id: teamId, season_id: sid }).then(function(data){
+      Api.setStatus(statusEl, true, "OK");
+      var roster = data.roster || [];
+      var html = "";
 
-async function refreshAll() {
-  statusPill.textContent = "Loading…";
-  await loadBoard();
-  await loadRounds();
-  statusPill.textContent = "OK";
-}
+      html += '<div class="kpi" style="margin-bottom:12px;">' +
+        '<div><strong>' + escapeHtml(teamName || data.team_name || teamId) + '</strong><div class="small">team_id = ' + escapeHtml(teamId) + '</div></div>' +
+        '<div class="small">season_id = ' + escapeHtml(sid) + '</div>' +
+      '</div>';
 
-async function loadBoard() {
-  const data = await api.leaderboard(currentSeasonId, currentLbKey);
-  metaPill.textContent = `${data.rows?.length ?? 0} teams`;
-  renderTable(tableBody, data.rows || []);
+      html += '<div class="btn-row" style="margin-bottom:12px;">' +
+        '<a class="btn primary" href="/team?team_id=' + encodeURIComponent(teamId) + '&season_id=' + encodeURIComponent(sid) + '">打开队伍页</a>' +
+      '</div>';
 
-  tableBody.querySelectorAll("tr").forEach(tr => {
-    tr.addEventListener("click", async () => {
-      const teamId = tr.getAttribute("data-team-id");
-      await openTeam(teamId);
+      html += "<h3 style='margin:12px 0 8px;'>Roster</h3>";
+      if (!roster.length) {
+        html += "<div class='muted'>无 roster 记录</div>";
+      } else {
+        html += "<ul class='list'>";
+        for (var i=0;i<roster.length;i++){
+          var p = roster[i];
+          html += "<li><strong>" + escapeHtml(p.display_name || p.player_id) + "</strong>" +
+                  "<div class='small'>player_id = " + escapeHtml(p.player_id) + (p.alias ? (" · alias = " + escapeHtml(p.alias)) : "") + "</div>" +
+                  "</li>";
+        }
+        html += "</ul>";
+      }
+
+      openDrawer("队伍详情", html);
+    }).catch(function(err){
+      console.error(err);
+      Api.setStatus(statusEl, false, "ERROR");
+      openDrawer("队伍详情（加载失败）", "<div class='muted'>" + escapeHtml(err.message || err) + "</div>");
     });
-  });
-}
+  }
 
-async function openTeam(teamId) {
-  openDrawer(teamDrawer);
-  teamDrawerBody.textContent = "加载中…";
-  const data = await api.team(teamId, currentSeasonId);
+  function loadLeaderboard(){
+    var sid = selectedSeason();
+    var key = selectedLeaderboard();
+    if (!sid || !key) return;
 
-  dTeamName.textContent = data.team?.canonical_name || data.team?.name || teamId;
-  dTeamSub.textContent = `team_id = ${teamId} · season = ${currentSeasonId}`;
-
-  const roster = (data.roster || []).map(x => `<div>${escapeHtml(x.nickname || x.display_name || x.player_id)}${x.role ? ` <span class="pill">${escapeHtml(x.role)}</span>` : ""}</div>`).join("") || "<div class='pill'>暂无</div>";
-  const comps = (data.component_points || []).filter(x => x.leaderboard_key === currentLbKey).map(x => `<div>${escapeHtml(x.name || x.component_id)}：<b>${Number(x.points || 0)}</b></div>`).join("") || "<div class='pill'>暂无</div>";
-
-  teamDrawerBody.innerHTML = `
-    <div class="kv"><div class="k">Roster</div><div></div></div>
-    ${roster}
-    <hr/>
-    <div class="kv"><div class="k">This leaderboard breakdown</div><div></div></div>
-    ${comps}
-    <hr/>
-    <a class="btn primary" href="./team.html?team_id=${encodeURIComponent(teamId)}&season_id=${encodeURIComponent(currentSeasonId)}">打开独立队伍页</a>
-  `;
-}
-
-async function loadRounds() {
-  const data = await api.rounds(currentSeasonId, currentLbKey);
-  roundMeta.textContent = `${data.rounds?.length ?? 0} rounds`;
-
-  roundBody.innerHTML = (data.rounds || []).map(r => `
-    <tr data-component-id="${escapeHtml(r.component_id)}">
-      <td>${escapeHtml(r.name || r.component_id)}</td>
-      <td>${escapeHtml(fmtDate(r.start_date || r.end_date || ""))}</td>
-      <td><span class="pill">${escapeHtml(r.component_type || "")}</span></td>
-      <td class="col-points"><button class="btn">查看</button></td>
-    </tr>
-  `).join("");
-
-  roundBody.querySelectorAll("tr").forEach(tr => {
-    tr.addEventListener("click", async () => {
-      const componentId = tr.getAttribute("data-component-id");
-      await openRound(componentId);
+    Api.setStatus(statusEl, true, "Loading leaderboard…");
+    Api.fetchJson("/api/public/leaderboard", { season_id: sid, leaderboard_key: key }).then(function(data){
+      var rows = data.rows || [];
+      el("teamCount").textContent = (data.team_count || rows.length || 0) + " teams";
+      renderRows(rows);
+      Api.setStatus(statusEl, true, "OK");
+    }).catch(function(err){
+      console.error(err);
+      Api.setStatus(statusEl, false, "ERROR");
+      tableBody.innerHTML = "<tr><td colspan='3' class='muted'>加载失败：" + escapeHtml(err.message || err) + "</td></tr>";
     });
-  });
-}
+  }
 
-async function openRound(componentId) {
-  openDrawer(roundDrawer);
-  roundDrawerBody.textContent = "加载中…";
+  function loadLeaderboardsForSeason(){
+    var sid = selectedSeason();
+    Api.setStatus(statusEl, true, "Loading season…");
 
-  const data = await api.round(componentId);
-  dRoundName.textContent = data.component?.name || componentId;
-  dRoundSub.textContent = `component_id = ${componentId}`;
-
-  const rows = data.rows || [];
-  const html = `
-    <table class="table">
-      <thead><tr><th class="col-rank">Rank</th><th>Team</th><th class="col-points">Points</th></tr></thead>
-      <tbody>
-        ${rows.map(r => `
-          <tr data-team-id="${escapeHtml(r.team_id)}">
-            <td class="col-rank">${r.rank ?? ""}</td>
-            <td>${escapeHtml(r.team_name || "")}</td>
-            <td class="col-points">${Number(r.points || 0)}</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  `;
-
-  roundDrawerBody.innerHTML = html;
-
-  // click team inside round → open team drawer
-  roundDrawerBody.querySelectorAll("tbody tr").forEach(tr => {
-    tr.addEventListener("click", async () => {
-      const teamId = tr.getAttribute("data-team-id");
-      await openTeam(teamId);
+    // 你的 Worker 目前如果没有单独的 /leaderboards，我们就用 /rounds 来凑（它能列出 component/round 列表）
+    Api.fetchJson("/api/public/rounds", { season_id: sid }).then(function(data){
+      var items = data.rounds || [];
+      // rounds 里通常会有 leaderboard_key / name / round_count
+      // 如果你的字段名略有不同，这里也能兜底显示 leaderboard_key
+      var preferKey = qs("leaderboard_key") || (items[0] ? (items[0].leaderboard_key || "") : "");
+      renderLeaderboards(items, preferKey);
+      seasonMetaEl.textContent = "season_id = " + sid;
+      Api.setStatus(statusEl, true, "OK");
+      loadLeaderboard();
+    }).catch(function(err){
+      console.error(err);
+      Api.setStatus(statusEl, false, "ERROR");
+      seasonMetaEl.textContent = String(err.message || err);
     });
-  });
-}
+  }
 
-init().catch(err => {
-  statusPill.textContent = "ERROR";
-  subtitle.textContent = err.message;
-  console.error(err);
-});
+  function boot(){
+    Api.setStatus(statusEl, true, "Loading…");
+    Api.fetchJson("/api/public/seasons").then(function(data){
+      var seasons = data.seasons || [];
+      var sid = qs("season_id") || data.current_season_id || (seasons[0] ? seasons[0].season_id : "");
+      renderSeasons(seasons, sid);
+      loadLeaderboardsForSeason();
+    }).catch(function(err){
+      console.error(err);
+      Api.setStatus(statusEl, false, "ERROR");
+      seasonMetaEl.textContent = String(err.message || err);
+    });
+  }
+
+  function init(){
+    statusEl = el("statusBadge");
+    seasonSelect = el("seasonSelect");
+    leaderboardSelect = el("leaderboardSelect");
+    tableBody = el("lbBody");
+    seasonMetaEl = el("seasonMeta");
+
+    drawerBackdrop = el("drawerBackdrop");
+    drawerTitle = el("drawerTitle");
+    drawerBody = el("drawerBody");
+    el("drawerClose").addEventListener("click", closeDrawer);
+    drawerBackdrop.addEventListener("click", function(e){
+      if (e.target === drawerBackdrop) closeDrawer();
+    });
+
+    el("refreshBtn").addEventListener("click", boot);
+    el("backBtn").addEventListener("click", function(){ location.href="/campaigns"; });
+
+    seasonSelect.addEventListener("change", function(){
+      // 更新 URL，方便分享
+      var sid = selectedSeason();
+      history.replaceState({}, "", "/hpl?season_id=" + encodeURIComponent(sid));
+      loadLeaderboardsForSeason();
+    });
+
+    leaderboardSelect.addEventListener("change", function(){
+      var sid = selectedSeason();
+      var key = selectedLeaderboard();
+      history.replaceState({}, "", "/hpl?season_id=" + encodeURIComponent(sid) + "&leaderboard_key=" + encodeURIComponent(key));
+      loadLeaderboard();
+    });
+
+    boot();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();

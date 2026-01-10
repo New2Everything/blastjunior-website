@@ -1,101 +1,93 @@
 <!doctype html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
-    <base href="/" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>HPL</title>
-    <link rel="stylesheet" href="./assets/css/site.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HPL · Leaderboard</title>
+
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/site.css?v=20260110" />
 </head>
 <body>
-<div class="layout">
+<script>
+    window.API_BASE = "https://blast-campaigns-api.kanjiaming2022.workers.dev";
+</script>
+
+<div class="container">
     <aside class="sidebar">
-        <div class="brand">HPL · Leaderboard</div>
+        <div class="card">
+            <div class="header">
+                <div>
+                    <h1 class="h1">HPL · Leaderboard</h1>
+                    <div class="sub">左侧选赛季 & 榜单</div>
+                </div>
+                <div id="statusBadge" class="badge ok" aria-live="polite">
+                    <span class="badge-dot"></span>
+                    <span class="badge-msg">OK</span>
+                </div>
+            </div>
 
-        <div class="block">
-            <label class="label">赛季</label>
-            <select id="seasonSelect" class="select"></select>
-        </div>
+            <div class="section">
+                <div class="field">
+                    <label for="seasonSelect">赛季</label>
+                    <select id="seasonSelect" aria-label="赛季选择"></select>
+                    <div id="seasonMeta" class="small">—</div>
+                </div>
 
-        <div class="block">
-            <label class="label">榜单（leaderboard_key）</label>
-            <select id="lbSelect" class="select"></select>
-        </div>
+                <div class="field">
+                    <label for="leaderboardSelect">榜单（leaderboard_key）</label>
+                    <select id="leaderboardSelect" aria-label="榜单选择"></select>
+                </div>
 
-        <div class="block row">
-            <a class="btn" href="./campaigns.html">返回 Campaigns</a>
-            <button id="refreshBtn" class="btn primary">刷新</button>
-        </div>
-
-        <div class="block">
-            <div class="pill" id="statusPill">Ready</div>
+                <div class="btn-row">
+                    <button id="backBtn" class="btn" type="button">返回 Campaigns</button>
+                    <button id="refreshBtn" class="btn" type="button">刷新</button>
+                </div>
+            </div>
         </div>
     </aside>
 
     <main class="main">
-        <div class="header">
-            <div>
-                <div class="h1">HPL</div>
-                <div class="sub" id="subtitle">加载中…</div>
+        <div class="card">
+            <div class="header">
+                <div>
+                    <h2 class="h1" style="font-size:20px;">总榜</h2>
+                    <div class="sub">点击队伍行 → 右侧抽屉查看详情</div>
+                </div>
+                <div class="pill" id="teamCount">—</div>
+            </div>
+
+            <div class="section">
+                <table class="table" aria-label="榜单表格">
+                    <thead>
+                    <tr>
+                        <th style="width:72px;">Rank</th>
+                        <th>Team</th>
+                        <th style="width:110px;">Points</th>
+                    </tr>
+                    </thead>
+                    <tbody id="lbBody"></tbody>
+                </table>
             </div>
         </div>
-
-        <section class="card" style="margin-bottom:12px;">
-            <div class="card-hd">
-                <div>总榜</div>
-                <div class="pill" id="metaPill">—</div>
-            </div>
-            <div class="card-bd">
-                <table class="table">
-                    <thead>
-                    <tr><th class="col-rank">Rank</th><th>Team</th><th class="col-points">Points</th></tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="card">
-            <div class="card-hd">
-                <div>轮次（score_components）</div>
-                <div class="pill" id="roundMeta">—</div>
-            </div>
-            <div class="card-bd">
-                <table class="table">
-                    <thead>
-                    <tr><th>Round</th><th>Date</th><th>Type</th><th class="col-points">Action</th></tr>
-                    </thead>
-                    <tbody id="roundBody"></tbody>
-                </table>
-            </div>
-        </section>
     </main>
 </div>
 
-<!-- Team Drawer -->
-<div id="teamDrawer" class="drawer">
-    <div class="d-hd">
-        <div>
-            <div class="d-title" id="dTeamName">Team</div>
-            <div class="d-sub" id="dTeamSub">—</div>
+<!-- Drawer -->
+<div id="drawerBackdrop" class="drawer-backdrop" role="dialog" aria-modal="true" aria-label="队伍详情抽屉">
+    <div class="drawer">
+        <div class="drawer-head">
+            <div>
+                <h3 id="drawerTitle" class="drawer-title">队伍详情</h3>
+                <div class="small">点击背景或关闭按钮可退出</div>
+            </div>
+            <button id="drawerClose" class="drawer-close" type="button" aria-label="关闭抽屉">关闭</button>
         </div>
-        <button id="closeTeamDrawer" class="btn">关闭</button>
+        <div id="drawerBody" class="drawer-body"></div>
     </div>
-    <div class="d-bd" id="teamDrawerBody">加载中…</div>
 </div>
 
-<!-- Round Drawer -->
-<div id="roundDrawer" class="drawer">
-    <div class="d-hd">
-        <div>
-            <div class="d-title" id="dRoundName">Round</div>
-            <div class="d-sub" id="dRoundSub">—</div>
-        </div>
-        <button id="closeRoundDrawer" class="btn">关闭</button>
-    </div>
-    <div class="d-bd" id="roundDrawerBody">加载中…</div>
-</div>
-
-<script type="module" src="./assets/js/pages/hpl.js"></script>
+<script src="/assets/js/api.js?v=20260110"></script>
+<script src="/assets/js/pages/hpl.js?v=20260110"></script>
 </body>
 </html>

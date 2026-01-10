@@ -9,7 +9,8 @@
  *   GET /api/public/divisions?season_id=...
  *   GET /api/public/players
  *   GET /api/public/teams?season_id=... (optional)
- *   GET /api/public/leaderboard?season_id=...&division=...&leaderboard_key=...
+ *   GET /api/public/leaderboards?season_id=...        ✅ NEW: list leaderboard_keys for a season
+ *   GET /api/public/leaderboard?season_id=...&leaderboard_key=...   ✅ FIXED: includes 0-point teams
  *   GET /api/public/team?team_id=...&season_id=... (season optional)
  *   GET /api/public/rounds?season_id=...&leaderboard_key=... (optional)
  *   GET /api/public/round?component_id=...
@@ -39,56 +40,59 @@ export default {
 
       const path = url.pathname;
 
-      // ---- health ----
       if (path === "/api/public/health") {
         return json({ ok: true, service: "blast-campaigns-api", ts: new Date().toISOString() });
       }
 
-      // ---- seasons ----
       if (path === "/api/public/seasons") {
         return handleSeasons(env);
       }
 
-      // ---- divisions ----
       if (path === "/api/public/divisions") {
         const season_id = mustParam(url, "season_id");
         return handleDivisions(env, season_id);
       }
 
-      // ---- players ----
+      // ✅ players list (you asked: “players 清单接口不能少”)
       if (path === "/api/public/players") {
         return handlePlayers(env);
       }
 
-      // ---- teams list ----
+      if (path === "/api/public/player") {
+        const player_id = mustParam(url, "player_id");
+        return handlePlayer(env, { player_id });
+      }
+
       if (path === "/api/public/teams") {
         const season_id = url.searchParams.get("season_id"); // optional
         return handleTeams(env, season_id);
       }
 
-      // ---- leaderboard ----
+      // ✅ NEW: list leaderboard keys available for a season
+      if (path === "/api/public/leaderboards") {
+        const season_id = mustParam(url, "season_id");
+        return handleLeaderboards(env, { season_id });
+      }
+
+      // ✅ FIXED leaderboard: include 0-point teams
       if (path === "/api/public/leaderboard") {
         const season_id = mustParam(url, "season_id");
-        const leaderboard_key = mustParam(url, "leaderboard_key"); // ✅ 必填
+        const leaderboard_key = mustParam(url, "leaderboard_key");
         return handleLeaderboard(env, { season_id, leaderboard_key });
       }
-      
 
-      // ---- team detail ----
       if (path === "/api/public/team") {
         const team_id = mustParam(url, "team_id");
         const season_id = url.searchParams.get("season_id"); // optional
         return handleTeamDetail(env, { team_id, season_id });
       }
 
-      // ---- rounds list ----
       if (path === "/api/public/rounds") {
         const season_id = mustParam(url, "season_id");
         const leaderboard_key = url.searchParams.get("leaderboard_key"); // optional
         return handleRounds(env, { season_id, leaderboard_key });
       }
 
-      // ---- round detail ----
       if (path === "/api/public/round") {
         const component_id = mustParam(url, "component_id");
         return handleRoundDetail(env, { component_id });
@@ -96,13 +100,7 @@ export default {
 
       return json({ ok: false, error: "Not Found" }, 404);
     } catch (err) {
-      return json(
-        {
-          ok: false,
-          error: err?.message || String(err),
-        },
-        500
-      );
+      return json({ ok: false, error: err?.message || String(err) }, 500);
     }
   },
 };
@@ -110,7 +108,6 @@ export default {
 /* ----------------------------- Handlers ----------------------------- */
 
 async function handleSeasons(env) {
-  // current season: pick ongoing first, else latest by start_date
   const current = await env.DB.prepare(
     `
     SELECT season_id
@@ -191,7 +188,6 @@ async function handlePlayers(env) {
 }
 
 async function handleTeams(env, season_id) {
-  // If season_id provided, return only teams registered in that season.
   if (season_id) {
     const rows = await env.DB.prepare(
       `
@@ -218,7 +214,6 @@ async function handleTeams(env, season_id) {
     return json({ season_id, teams: rows.results || [] });
   }
 
-  // Otherwise return all teams
   const rows = await env.DB.prepare(
     `
     SELECT team_id, canonical_name, club_id, first_seen_season_id, note, created_at, updated_at
@@ -230,6 +225,11 @@ async function handleTeams(env, season_id) {
   return json({ teams: rows.results || [] });
 }
 
+/**
+ * ✅ FIXED:
+ * - include 0-point teams
+ * - leaderboard_key condition moved into JOIN score_components
+ */
 async function handleLeaderboard(env, { season_id, leaderboard_key }) {
   const sql = `
     SELECT
@@ -239,18 +239,19 @@ async function handleLeaderboard(env, { season_id, leaderboard_key }) {
       COALESCE(SUM(tcp.points), 0) AS points
     FROM registrations r
     JOIN teams t ON t.team_id = r.team_id
-    LEFT JOIN team_component_points tcp ON tcp.registration_id = r.registration_id
+    LEFT JOIN team_component_points tcp
+      ON tcp.registration_id = r.registration_id
     LEFT JOIN score_components c
       ON c.component_id = tcp.component_id
       AND c.source_season_id = r.season_id
-    WHERE r.season_id = ?
       AND c.leaderboard_key = ?
+    WHERE r.season_id = ?
       AND (r.status IS NULL OR r.status <> 'cancelled')
     GROUP BY t.team_id, t.canonical_name, r.registration_id
     ORDER BY points DESC, t.canonical_name COLLATE NOCASE ASC
   `;
 
-  const rows = await env.DB.prepare(sql).bind(season_id, leaderboard_key).all();
+  const rows = await env.DB.prepare(sql).bind(leaderboard_key, season_id).all();
   const ranked = addRankWithTies(rows.results || [], "points");
 
   return json({
@@ -276,15 +277,14 @@ async function handleLeaderboards(env, { season_id }) {
     GROUP BY leaderboard_key
     ORDER BY min_sort_order ASC, leaderboard_key ASC
     `
-  ).bind(season_id).all();
+  )
+    .bind(season_id)
+    .all();
 
   return json({ season_id, leaderboards: rows.results || [] });
 }
 
-
-
 async function handleTeamDetail(env, { team_id, season_id }) {
-  // Team base
   const team = await env.DB.prepare(
     `
     SELECT team_id, canonical_name, club_id, first_seen_season_id, note, created_at, updated_at
@@ -297,7 +297,6 @@ async function handleTeamDetail(env, { team_id, season_id }) {
 
   if (!team) return json({ ok: false, error: "team not found" }, 404);
 
-  // Aliases
   const aliases = await env.DB.prepare(
     `
     SELECT alias_id, team_id, alias_name, from_date, to_date, note, created_at
@@ -309,7 +308,6 @@ async function handleTeamDetail(env, { team_id, season_id }) {
     .bind(team_id)
     .all();
 
-  // Registrations (optionally one season)
   const regBinds = [team_id];
   let regWhere = `WHERE r.team_id = ?`;
   if (season_id) {
@@ -328,7 +326,6 @@ async function handleTeamDetail(env, { team_id, season_id }) {
     .bind(...regBinds)
     .all();
 
-  // Roster (optionally one season)
   const rosterBinds = [team_id];
   let rosterWhere = `WHERE ro.team_id = ?`;
   if (season_id) {
@@ -360,8 +357,6 @@ async function handleTeamDetail(env, { team_id, season_id }) {
     .bind(...rosterBinds)
     .all();
 
-  // Season totals for this team (across registrations)
-  // Sum points by season, using the same season match rule: c.source_season_id = r.season_id
   const totals = await env.DB.prepare(
     `
     SELECT
@@ -380,7 +375,6 @@ async function handleTeamDetail(env, { team_id, season_id }) {
     .bind(team_id)
     .all();
 
-  // Detailed points by component for this team (optionally season filter)
   const detailBinds = [team_id];
   let detailWhere = `WHERE r.team_id = ?`;
   if (season_id) {
@@ -425,8 +419,6 @@ async function handleTeamDetail(env, { team_id, season_id }) {
 }
 
 async function handleRounds(env, { season_id, leaderboard_key }) {
-  // We treat "rounds" as score_components rows for a season.
-  // If you want only certain component_type, you can later filter in UI or add query param.
   const binds = [season_id];
   let where = `WHERE source_season_id = ?`;
   if (leaderboard_key) {
@@ -459,7 +451,6 @@ async function handleRounds(env, { season_id, leaderboard_key }) {
 }
 
 async function handleRoundDetail(env, { component_id }) {
-  // Component meta
   const component = await env.DB.prepare(
     `
     SELECT
@@ -482,7 +473,6 @@ async function handleRoundDetail(env, { component_id }) {
 
   if (!component) return json({ ok: false, error: "component not found" }, 404);
 
-  // Scores inside this component, by team (via registration)
   const rows = await env.DB.prepare(
     `
     SELECT
@@ -507,11 +497,56 @@ async function handleRoundDetail(env, { component_id }) {
 
   const ranked = addRankWithTies(rows.results || [], "points");
 
+  return json({ component, rows: ranked });
+}
+
+async function handlePlayer(env, { player_id }) {
+  const player = await env.DB.prepare(
+    `
+    SELECT
+      player_id,
+      nickname,
+      display_name,
+      real_name,
+      birth_year,
+      gender,
+      club_name,
+      joined_at,
+      is_active,
+      notes,
+      created_at,
+      updated_at
+    FROM players
+    WHERE player_id = ?
+    `
+  ).bind(player_id).first();
+
+  if (!player) return json({ ok: false, error: "player not found" }, 404);
+
+  // 该球员出现在哪些 rosters（含队名、赛季）
+  const rosters = await env.DB.prepare(
+    `
+    SELECT
+      ro.roster_id,
+      ro.season_id,
+      ro.team_id,
+      t.canonical_name AS team_name,
+      ro.role,
+      ro.notes,
+      ro.created_at
+    FROM rosters ro
+    LEFT JOIN teams t ON t.team_id = ro.team_id
+    WHERE ro.player_id = ?
+    ORDER BY ro.season_id DESC, ro.created_at DESC
+    `
+  ).bind(player_id).all();
+
   return json({
-    component,
-    rows: ranked,
+    player,
+    rosters: rosters.results || []
   });
 }
+
 
 /* ----------------------------- Utilities ----------------------------- */
 
@@ -522,7 +557,6 @@ function mustParam(url, key) {
 }
 
 function addRankWithTies(rows, pointsKey) {
-  // rows already sorted desc by pointsKey
   let rank = 0;
   let lastPoints = null;
   let seen = 0;
@@ -548,10 +582,7 @@ function corsHeaders() {
 }
 
 function corsPreflight() {
-  return new Response(null, {
-    status: 204,
-    headers: corsHeaders(),
-  });
+  return new Response(null, { status: 204, headers: corsHeaders() });
 }
 
 function json(data, status = 200) {

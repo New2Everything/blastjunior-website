@@ -1,63 +1,93 @@
 <!doctype html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
-    <base href="/" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Team</title>
-    <link rel="stylesheet" href="./assets/css/site.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Team · BLAST Junior</title>
+
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/site.css?v=20260110" />
 </head>
 <body>
-<div class="layout">
+<script>
+    window.API_BASE = "https://blast-campaigns-api.kanjiaming2022.workers.dev";
+</script>
+
+<div class="container">
     <aside class="sidebar">
-        <div class="brand">Team</div>
+        <div class="card">
+            <div class="header">
+                <div>
+                    <h1 class="h1">Team</h1>
+                    <div class="sub">选择赛季 → 选择队伍</div>
+                </div>
+                <div id="statusBadge" class="badge ok" aria-live="polite">
+                    <span class="badge-dot"></span>
+                    <span class="badge-msg">OK</span>
+                </div>
+            </div>
 
-        <div class="block">
-            <label class="label">赛季（可选）</label>
-            <select id="seasonSelect" class="select"></select>
-        </div>
+            <div class="section">
+                <div class="field">
+                    <label for="seasonSelect">赛季</label>
+                    <select id="seasonSelect" aria-label="赛季选择"></select>
+                </div>
 
-        <div class="block row">
-            <a class="btn" href="./hpl.html">返回 HPL</a>
-            <a class="btn" href="./campaigns.html">返回 Campaigns</a>
-        </div>
+                <div class="field">
+                    <label for="teamSelect">队伍</label>
+                    <select id="teamSelect" aria-label="队伍选择"></select>
+                </div>
 
-        <div class="block">
-            <div class="pill" id="statusPill">Ready</div>
+                <div class="btn-row">
+                    <button id="backBtn" class="btn" type="button">返回 Campaigns</button>
+                    <button id="refreshBtn" class="btn" type="button">刷新</button>
+                </div>
+
+                <div id="hint" class="small" style="margin-top:12px;">—</div>
+            </div>
         </div>
     </aside>
 
     <main class="main">
-        <div class="header">
-            <div>
-                <div class="h1" id="teamTitle">加载中…</div>
-                <div class="sub" id="teamSub">—</div>
+        <div class="card">
+            <div class="header">
+                <div>
+                    <h2 class="h1" style="font-size:20px;">Roster</h2>
+                    <div class="sub">队员名单（只读）</div>
+                </div>
+                <div class="pill">rosters</div>
+            </div>
+            <div class="section" id="roster"></div>
+        </div>
+
+        <div style="height:14px;"></div>
+
+        <div class="card">
+            <div class="header">
+                <div>
+                    <h2 class="h1" style="font-size:20px;">积分明细</h2>
+                    <div class="sub">team_component_points（按 leaderboard_key + component 展示）</div>
+                </div>
+                <div class="pill">points</div>
+            </div>
+            <div class="section">
+                <table class="table" aria-label="积分明细表">
+                    <thead>
+                    <tr>
+                        <th>Leaderboard</th>
+                        <th>Component</th>
+                        <th style="width:110px;">Points</th>
+                        <th style="width:180px;">Created</th>
+                    </tr>
+                    </thead>
+                    <tbody id="pointsBody"></tbody>
+                </table>
             </div>
         </div>
-
-        <section class="card" style="margin-bottom:12px;">
-            <div class="card-hd"><div>概览</div></div>
-            <div class="card-bd" id="overview">—</div>
-        </section>
-
-        <div class="grid2">
-            <section class="card">
-                <div class="card-hd"><div>队员（Roster）</div></div>
-                <div class="card-bd" id="roster">—</div>
-            </section>
-            <section class="card">
-                <div class="card-hd"><div>得分构成（Components）</div></div>
-                <div class="card-bd" id="breakdown">—</div>
-            </section>
-        </div>
-
-        <section class="card" style="margin-top:12px;">
-            <div class="card-hd"><div>历史（Season Totals）</div></div>
-            <div class="card-bd" id="history">—</div>
-        </section>
     </main>
 </div>
 
-<script type="module" src="./assets/js/pages/team.js"></script>
+<script src="/assets/js/api.js?v=20260110"></script>
+<script src="/assets/js/pages/team.js?v=20260110"></script>
 </body>
 </html>

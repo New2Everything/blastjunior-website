@@ -1,78 +1,77 @@
 <!doctype html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
-    <base href="/" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Players</title>
-    <link rel="stylesheet" href="./assets/css/site.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Players · BLAST Junior</title>
+
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/site.css?v=20260110" />
 </head>
 <body>
-<div class="layout">
+<script>
+    window.API_BASE = "https://blast-campaigns-api.kanjiaming2022.workers.dev";
+</script>
+
+<div class="container">
     <aside class="sidebar">
-        <div class="brand">Players · 检索</div>
+        <div class="card">
+            <div class="header">
+                <div>
+                    <h1 class="h1">Players</h1>
+                    <div class="sub">只读检索</div>
+                </div>
+                <div id="statusBadge" class="badge ok" aria-live="polite">
+                    <span class="badge-dot"></span>
+                    <span class="badge-msg">OK</span>
+                </div>
+            </div>
 
-        <div class="block">
-            <label class="label">搜索（昵称/显示名/真名/player_id）</label>
-            <input id="q" class="input" placeholder="例如：九天 / AUSTIN / lx_039 / 姚梓茜" />
+            <div class="section">
+                <div class="field">
+                    <label for="q">检索（名字 / alias / player_id）</label>
+                    <input id="q" type="text" inputmode="search" placeholder="例如：九天 / Troy / player_001" aria-label="球员检索输入框" />
+                </div>
+
+                <div class="btn-row">
+                    <button id="searchBtn" class="btn primary" type="button">搜索</button>
+                    <button id="backBtn" class="btn" type="button">返回 Campaigns</button>
+                </div>
+
+                <div class="small" style="margin-top:12px;">点击列表中的球员 → 右侧显示详情</div>
+            </div>
         </div>
 
-        <div class="block row">
-            <a class="btn" href="./campaigns.html">返回 Campaigns</a>
-            <a class="btn" href="./hpl.html">返回 HPL</a>
-        </div>
+        <div style="height:14px;"></div>
 
-        <div class="block">
-            <div class="pill" id="metaPill">—</div>
-        </div>
-
-        <div class="block">
-            <div class="pill" id="statusPill">Ready</div>
+        <div class="card">
+            <div class="header">
+                <div>
+                    <h2 class="h1" style="font-size:18px;">结果列表</h2>
+                    <div class="sub">GET /api/public/players</div>
+                </div>
+            </div>
+            <div class="section" id="list"></div>
         </div>
     </aside>
 
     <main class="main">
-        <div class="header">
-            <div>
-                <div class="h1">球员检索</div>
-                <div class="sub" id="subtitle">加载中…</div>
+        <div class="card">
+            <div class="header">
+                <div>
+                    <h2 class="h1" style="font-size:20px;">球员详情</h2>
+                    <div class="sub">GET /api/public/player?player_id=...</div>
+                </div>
+                <div class="pill">rosters</div>
+            </div>
+            <div class="section" id="detail">
+                <div class="muted">从左侧选择一个球员查看</div>
             </div>
         </div>
-
-        <section class="card">
-            <div class="card-hd">
-                <div>Players</div>
-                <div class="pill" id="countPill">—</div>
-            </div>
-            <div class="card-bd">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>昵称</th>
-                        <th>显示名</th>
-                        <th>真名</th>
-                        <th class="col-points">player_id</th>
-                    </tr>
-                    </thead>
-                    <tbody id="tbody"></tbody>
-                </table>
-            </div>
-        </section>
     </main>
 </div>
 
-<!-- Player Drawer -->
-<div id="playerDrawer" class="drawer">
-    <div class="d-hd">
-        <div>
-            <div class="d-title" id="dTitle">Player</div>
-            <div class="d-sub" id="dSub">—</div>
-        </div>
-        <button id="closeDrawer" class="btn">关闭</button>
-    </div>
-    <div class="d-bd" id="drawerBody">加载中…</div>
-</div>
-
-<script type="module" src="./assets/js/pages/players.js"></script>
+<script src="/assets/js/api.js?v=20260110"></script>
+<script src="/assets/js/pages/players.js?v=20260110"></script>
 </body>
 </html>

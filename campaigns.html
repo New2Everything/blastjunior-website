@@ -1,75 +1,74 @@
 <!doctype html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <base href="/" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Campaigns</title>
-  <link rel="stylesheet" href="./assets/css/site.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Campaigns · BLAST Junior</title>
+
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/assets/site.css?v=20260110" />
 </head>
 <body>
-<div class="layout">
+<script>
+  // 你的 API Worker
+  window.API_BASE = "https://blast-campaigns-api.kanjiaming2022.workers.dev";
+</script>
+
+<div class="container">
   <aside class="sidebar">
-    <div class="brand">兰星 · 数据中心</div>
+    <div class="card">
+      <div class="header">
+        <div>
+          <h1 class="h1">Campaigns</h1>
+          <div class="sub">兰星少年 · 数据中心</div>
+        </div>
+        <div id="statusBadge" class="badge ok" aria-live="polite">
+          <span class="badge-dot"></span>
+          <span class="badge-msg">OK</span>
+        </div>
+      </div>
 
-    <div class="block">
-      <label class="label">赛季</label>
-      <select id="seasonSelect" class="select"></select>
-    </div>
+      <div class="section">
+        <div class="field">
+          <label for="seasonSelect">赛季</label>
+          <select id="seasonSelect" aria-label="赛季选择"></select>
+          <div id="seasonsHint" class="small">—</div>
+        </div>
 
-    <div class="block">
-      <label class="label">榜单（leaderboard_key）</label>
-      <select id="lbSelect" class="select"></select>
-    </div>
+        <div class="btn-row">
+          <button id="goHpl" class="btn primary" type="button">打开 HPL 榜单</button>
+          <button id="goTeams" class="btn" type="button">队伍页（只读）</button>
+          <button id="goPlayers" class="btn" type="button">球员检索（只读）</button>
+        </div>
 
-    <div class="block row">
-      <a class="btn" href="./players.html">球员检索</a>
-
-      <a class="btn primary" href="./hpl.html">进入 HPL</a>
-    </div>
-
-    <div class="block">
-      <div class="pill" id="statusPill">Ready</div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button id="refreshBtn" class="btn" type="button">刷新</button>
+        </div>
+      </div>
     </div>
   </aside>
 
   <main class="main">
-    <div class="header">
-      <div>
-        <div class="h1">Campaigns</div>
-        <div class="sub" id="subtitle">加载中…</div>
+    <div class="card">
+      <div class="header">
+        <div>
+          <h2 class="h1" style="font-size:20px;">使用说明</h2>
+          <div class="sub">先选赛季 → 再进入榜单/队伍/球员</div>
+        </div>
+        <div class="pill">只读展示</div>
+      </div>
+
+      <div class="section">
+        <div class="muted">
+          <div style="margin-bottom:8px;">✅ 你已经完成：API 正常返回、榜单能渲染、上线能访问。</div>
+          <div>下一步：等你说“第二个问题是什么”，我继续带你逐个修复 UI/性能/SEO。</div>
+        </div>
       </div>
     </div>
-
-    <section class="card">
-      <div class="card-hd">
-        <div>排行榜</div>
-        <div class="pill" id="metaPill">—</div>
-      </div>
-      <div class="card-bd">
-        <table class="table">
-          <thead>
-          <tr><th class="col-rank">Rank</th><th>Team</th><th class="col-points">Points</th></tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </section>
   </main>
 </div>
 
-<!-- Team Drawer -->
-<div id="teamDrawer" class="drawer" aria-hidden="true">
-  <div class="d-hd">
-    <div>
-      <div class="d-title" id="dTeamName">Team</div>
-      <div class="d-sub" id="dTeamSub">—</div>
-    </div>
-    <button id="closeDrawer" class="btn">关闭</button>
-  </div>
-  <div class="d-bd" id="drawerBody">加载中…</div>
-</div>
-
-<script type="module" src="./assets/js/pages/campaigns.js"></script>
+<script src="/assets/js/api.js?v=20260110"></script>
+<script src="/assets/js/pages/campaigns.js?v=20260110"></script>
 </body>
 </html>
