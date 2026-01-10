@@ -1,113 +1,126 @@
 <!doctype html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Campaigns • BLAST Junior</title>
   <link rel="stylesheet" href="/assets/css/site.css?v=20260110" />
+  <style>
+    .page { max-width: 1100px; margin: 0 auto; padding: 18px 14px 40px; }
+    .hero { display:flex; justify-content:space-between; gap:12px; align-items:flex-end; margin-bottom: 14px; }
+    .hero h1 { margin:0; font-size: 40px; line-height:1; letter-spacing: .3px; }
+    .hero .sub { opacity:.8; margin-top:6px; font-size: 14px; }
+    .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius: 999px; font-size: 13px; }
+    .dot { width:8px; height:8px; border-radius: 999px; background: #4ade80; }
+    .dot.err { background: #fb7185; }
+    .card { border-radius: 18px; padding: 14px; backdrop-filter: blur(10px); }
+    .grid { display:grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 900px) { .grid { grid-template-columns: 420px 1fr; } }
+    .row { display:flex; gap:10px; flex-wrap:wrap; }
+    .row > * { flex: 1 1 160px; min-width: 160px; }
+    label { display:block; font-size: 13px; opacity:.85; margin: 10px 0 6px; }
+    select, button { width:100%; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
+    .actions button { flex: 0 0 auto; width:auto; padding: 10px 14px; }
+    .table-wrap { overflow:auto; border-radius: 14px; }
+    table { width:100%; border-collapse: collapse; min-width: 520px; }
+    th, td { padding: 12px 10px; text-align: left; white-space: nowrap; }
+    th:last-child, td:last-child { text-align:right; }
+    tbody tr { border-top: 1px solid rgba(255,255,255,.06); }
+    .muted { opacity:.75; }
+  </style>
 </head>
+<body>
+<main class="page">
+  <header class="hero">
+    <div>
+      <h1>Campaigns</h1>
+      <div class="sub">兰星少年 · 数据中心</div>
+    </div>
+    <div id="statusPill" class="pill card" aria-live="polite">
+      <span id="statusDot" class="dot"></span>
+      <span id="statusText">Loading…</span>
+    </div>
+  </header>
 
-<body class="bg">
-<div class="wrap">
-  <div class="card">
-    <div class="row">
-      <div>
-        <h1 class="h1">Campaigns</h1>
-        <div class="muted">兰星少年 · 数据中心</div>
+  <section class="grid">
+    <div class="card">
+      <div class="row">
+        <div>
+          <label for="eventSelect">赛事（Event）</label>
+          <select id="eventSelect"></select>
+        </div>
+        <div>
+          <label for="seasonSelect">赛季（Season）</label>
+          <select id="seasonSelect"></select>
+        </div>
       </div>
-      <div class="pill" id="statusPill">Idle</div>
+
+      <div class="row">
+        <div>
+          <label for="divisionSelect">组别（Division）</label>
+          <select id="divisionSelect"></select>
+        </div>
+        <div>
+          <label for="viewSelect">查看方式</label>
+          <select id="viewSelect">
+            <option value="total">总积分</option>
+            <option value="round">按场次/分组</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="roundSelect">场次 / 分组（Round / Group）</label>
+          <select id="roundSelect" disabled></select>
+        </div>
+        <div>
+          <label for="lbKeyBox">当前基准 leaderboard_key</label>
+          <input id="lbKeyBox" class="muted" type="text" readonly />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnRefresh" type="button">刷新</button>
+        <button type="button" onclick="location.href='/team'">队伍页（只读）</button>
+        <button type="button" onclick="location.href='/players'">球员检索（只读）</button>
+      </div>
+
+      <p class="muted" style="margin:12px 0 0;">
+        逻辑：Event → Season → Division（拿到 division.leaderboard_key 作为基准）→ 先出总积分；如需按场次/分组，自动列出同基准 key 前缀的子榜单。
+      </p>
     </div>
 
-    <div class="grid">
-      <div class="field">
-        <div class="label">赛事（Event）</div>
-        <select class="sel" id="eventSelect">
-          <option value="">加载中…</option>
-        </select>
+    <div class="card">
+      <div class="row" style="align-items:flex-end;">
+        <div style="flex:1 1 auto; min-width: 220px;">
+          <div id="titleLine" class="muted">请选择 Event / Season / Division</div>
+        </div>
+        <div style="flex:0 0 auto; min-width: 180px;">
+          <div id="metaLine" class="muted" style="text-align:right;"></div>
+        </div>
       </div>
 
-      <div class="field">
-        <div class="label">赛季（Season）</div>
-        <select class="sel" id="seasonSelect" disabled>
-          <option value="">先选 Event</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <div class="label">组别（Division）</div>
-        <select class="sel" id="divisionSelect" disabled>
-          <option value="">先选 Season</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <div class="label">查看方式</div>
-        <select class="sel" id="viewSelect" disabled>
-          <option value="total">总积分</option>
-          <option value="round">按场次</option>
-          <option value="group">按场次 + 分组</option>
-        </select>
-      </div>
-
-      <div class="field" id="roundField" style="display:none;">
-        <div class="label">场次（Round）</div>
-        <select class="sel" id="roundSelect" disabled>
-          <option value="">先选 Division</option>
-        </select>
-      </div>
-
-      <div class="field" id="groupField" style="display:none;">
-        <div class="label">分组（Group）</div>
-        <select class="sel" id="groupSelect" disabled>
-          <option value="">先选 Round</option>
-        </select>
+      <div class="table-wrap" style="margin-top: 12px;">
+        <table>
+          <thead>
+          <tr>
+            <th style="width: 72px;">RANK</th>
+            <th>TEAM</th>
+            <th style="width: 120px;">POINTS</th>
+          </tr>
+          </thead>
+          <tbody id="tableBody">
+          <tr><td class="muted" colspan="3">—</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
+  </section>
+</main>
 
-    <div class="btn-row" style="margin-top:12px;">
-      <button class="btn" id="refreshBtn">刷新</button>
-      <a class="btn ghost" href="/team" title="队伍页（只读）">队伍页（只读）</a>
-      <a class="btn ghost" href="/players" title="球员检索（只读）">球员检索（只读）</a>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:14px;">
-    <div class="row">
-      <div>
-        <div class="h2">积分榜</div>
-        <div class="muted" id="subtitle">请选择 Event / Season / Division</div>
-      </div>
-    </div>
-
-    <div class="table-wrap" style="margin-top:10px;">
-      <table class="table" id="leaderboardTable">
-        <thead>
-        <tr>
-          <th style="width:80px;">RANK</th>
-          <th>TEAM</th>
-          <th style="width:120px; text-align:right;">POINTS</th>
-        </tr>
-        </thead>
-        <tbody id="leaderboardBody">
-        <tr><td colspan="3" class="muted">—</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:14px;">
-    <div class="h2">只读展示</div>
-    <div class="muted" style="margin-top:6px;">
-      说明：Event → Season → Division 后默认展示“总积分”。你也可以切换到“按场次 / 按场次+分组”查看。
-    </div>
-    <div class="muted" style="margin-top:8px;">
-      ✅ 你已经完成：API 正常返回、移动端适配已通过 T=0。<br/>
-      下一步：按 division 的 leaderboard_key 展示总积分，并可切换分场/分组榜单。
-    </div>
-  </div>
-</div>
-
-<script src="/assets/js/api.js?v=20260110"></script>
-<script type="module" src="/assets/js/pages/campaigns.js?v=20260110"></script>
+<script src="/api.js?v=20260110"></script>
+<script src="/campaigns.js?v=20260110"></script>
 </body>
 </html>
