@@ -4,64 +4,92 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Campaigns · BLAST Junior</title>
-  <link rel="stylesheet" href="/assets/css/site.css?v=20260110" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="site.css?v=20260110" />
 </head>
-<body>
-<div class="container">
-  <div class="layout">
+
+<body class="page">
+<div class="app">
+  <aside class="sidebar">
     <div class="card">
-      <div class="card-inner">
-        <div class="card-head">
-          <div style="min-width:0">
-            <div class="h1">Campaigns</div>
-            <div class="sub">兰星少年 · 数据中心</div>
-          </div>
-          <div class="pill" id="statusPill" data-kind="loading" aria-live="polite">
-            <span class="dot" id="statusDot"></span>
-            <span id="statusText">Loading...</span>
-          </div>
+      <div class="head">
+        <div>
+          <div class="title">Campaigns</div>
+          <div class="sub">兰星少年 · 数据中心</div>
         </div>
+        <div id="statusPill" class="pill ok" title="状态">OK</div>
+      </div>
 
-        <div class="hr" style="margin:14px 0;"></div>
+      <div class="controls">
+        <label class="label" for="eventSelect">赛事（Event）</label>
+        <select id="eventSelect" class="select" title="选择赛事"></select>
 
-        <div class="form-row">
-          <label for="seasonSelect">赛季</label>
-          <select id="seasonSelect" aria-label="赛季选择"></select>
-        </div>
+        <label class="label" for="seasonSelect">赛季（Season）</label>
+        <select id="seasonSelect" class="select" title="选择赛季"></select>
+
+        <label class="label" for="divisionSelect">组别（Division）</label>
+        <select id="divisionSelect" class="select" title="选择组别"></select>
+
+        <label class="label" for="leaderboardSelect">榜单口径（Leaderboard）</label>
+        <select id="leaderboardSelect" class="select" title="选择榜单口径"></select>
 
         <div class="btn-row">
-          <button class="primary" id="btnHpl">打开 HPL 榜单</button>
-          <button id="btnTeam">队伍页（只读）</button>
-          <button id="btnPlayers">球员检索（只读）</button>
-          <button id="btnRefresh">刷新</button>
+          <button id="openTeamBtn" class="btn" title="打开队伍页">队伍页（只读）</button>
+          <button id="openPlayersBtn" class="btn" title="打开球员检索页">球员检索（只读）</button>
         </div>
 
-        <div class="msg" id="msg"></div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button id="refreshBtn" class="btn secondary" title="刷新">刷新</button>
+        </div>
+
+        <div id="errBox" class="hint" style="display:none;"></div>
       </div>
     </div>
 
+    <div class="card" style="margin-top:12px;">
+      <div class="head">
+        <div>
+          <div class="title" style="font-size:16px;">使用说明</div>
+          <div class="sub">先选 Event → Season → Division，再选榜单口径</div>
+        </div>
+        <div class="pill" title="只读展示">只读展示</div>
+      </div>
+      <div class="hint">
+        ✅ 你已经完成：API 正常返回、移动端适配已通过 T=0。<br />
+        下一步：按 division 的 leaderboard_key 展示总积分，并可切换分场/分组榜单。
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
     <div class="card">
-      <div class="card-inner">
-        <div class="section-title">
-          <div class="left">
-            <h2>使用说明</h2>
-            <div class="hint">先选赛季 → 再进入榜单/队伍/球员</div>
-          </div>
-          <div class="tag">只读展示</div>
+      <div class="head">
+        <div>
+          <div class="title" id="mainTitle">积分榜</div>
+          <div class="sub" id="mainSub">请选择 Event / Season / Division</div>
         </div>
+        <div class="pill" id="metaPill" title="当前选择">—</div>
+      </div>
 
-        <div class="hr" style="margin:14px 0;"></div>
-
-        <div class="sub">
-          ✅ 你已经完成：API 正常返回、页面能渲染、上线能访问。<br/>
-          下一步：继续优化移动端稳定性与响应式排版。
-        </div>
+      <div class="table-wrap">
+        <table class="table" id="lbTable" aria-label="leaderboard table">
+          <thead>
+          <tr>
+            <th style="width:70px;">RANK</th>
+            <th>TEAM</th>
+            <th style="width:110px;">POINTS</th>
+          </tr>
+          </thead>
+          <tbody id="lbBody">
+          <tr><td colspan="3" class="muted">等待选择…</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
-  </div>
+  </main>
 </div>
 
-<script src="/assets/js/api.js?v=20260110"></script>
-<script src="/assets/js/pages/campaigns.js?v=20260110"></script>
+<script src="api.js?v=20260110"></script>
+<script src="campaigns.js?v=20260110"></script>
 </body>
 </html>
