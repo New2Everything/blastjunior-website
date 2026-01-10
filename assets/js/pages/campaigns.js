@@ -104,40 +104,51 @@
     setStatus("ok", "Loading…");
     el.tableBody.innerHTML = '<tr><td class="muted" colspan="3">Loading…</td></tr>';
 
-    const data = await API.getJSON("/api/public/leaderboard", {
-      season_id: state.current.season_id,
-      leaderboard_key,
-    });
+    try {
+      const data = await API.getJSON("/api/public/leaderboard", {
+        season_id: state.current.season_id,
+        leaderboard_key,
+      });
 
-    const rows = data.rows || [];
+      const rows = data.rows || [];
 
-    const ev = state.events.find(x => x.event_id === state.current.event_id);
-    const se = state.seasons.find(x => x.season_id === state.current.season_id);
-    const dv = state.divisions.find(x => x.division_id === state.current.division_id);
+      const ev = state.events.find(x => x.event_id === state.current.event_id);
+      const se = state.seasons.find(x => x.season_id === state.current.season_id);
+      const dv = state.divisions.find(x => x.division_id === state.current.division_id);
 
-    $("titleLine").textContent = [
-      ev?.name_zh || ev?.name_en || ev?.event_id,
-      se?.name || se?.season_id,
-      dv?.name || dv?.division_id
-    ].filter(Boolean).join(" · ");
-    $("metaLine").textContent = leaderboard_key;
+      $("titleLine").textContent = [
+        ev?.name_zh || ev?.name_en || ev?.event_id,
+        se?.name || se?.season_id,
+        dv?.name || dv?.division_id
+      ].filter(Boolean).join(" · ");
+      $("metaLine").textContent = leaderboard_key;
 
-    if (!rows.length) {
-      el.tableBody.innerHTML = '<tr><td class="muted" colspan="3">暂无数据</td></tr>';
+      if (!rows.length) {
+        el.tableBody.innerHTML = '<tr><td class="muted" colspan="3">暂无数据</td></tr>';
+        setStatus("ok", "OK");
+        return;
+      }
+
+      el.tableBody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.rank ?? ""}</td>
+          <td>${String(r.team_name ?? r.team_id ?? "")
+            .replaceAll("&","&amp;")
+            .replaceAll("<","&lt;")
+            .replaceAll(">","&gt;")}</td>
+          <td>${r.points ?? 0}</td>
+        </tr>
+      `).join("");
+
       setStatus("ok", "OK");
-      return;
+    } catch (e) {
+      console.error("renderLeaderboard failed:", e);
+      setStatus("error", "ERROR");
+      el.tableBody.innerHTML =
+        '<tr><td class="muted" colspan="3">Failed to fetch</td></tr>';
     }
-
-    el.tableBody.innerHTML = rows.map(r => `
-      <tr>
-        <td>${r.rank ?? ""}</td>
-        <td>${String(r.team_name ?? r.team_id ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")}</td>
-        <td>${r.points ?? 0}</td>
-      </tr>
-    `).join("");
-
-    setStatus("ok", "OK");
   }
+
 
   async function onEventChange() {
     const event_id = el.event.value;

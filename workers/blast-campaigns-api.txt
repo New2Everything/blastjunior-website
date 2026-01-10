@@ -44,6 +44,9 @@ export default {
         return json({ ok: true, service: "blast-campaigns-api", ts: new Date().toISOString() });
       }
 
+      if (pathname === '/api/public/events') return handleEvents(url, env);
+
+
       if (path === "/api/public/seasons") {
         return handleSeasons(env);
       }
@@ -107,41 +110,48 @@ export default {
 
 /* ----------------------------- Handlers ----------------------------- */
 
-async function handleSeasons(env) {
-  const current = await env.DB.prepare(
-    `
-    SELECT season_id
-    FROM seasons
-    ORDER BY
-      CASE status
-        WHEN 'ongoing' THEN 0
-        WHEN 'active' THEN 0
-        WHEN 'finished' THEN 2
-        ELSE 1
-      END,
-      CASE WHEN start_date IS NULL THEN 1 ELSE 0 END,
-      start_date DESC,
-      created_at DESC
-    LIMIT 1
-    `
-  ).first();
-
-  const seasons = await env.DB.prepare(
-    `
-    SELECT season_id, event_id, name, year, start_date, end_date, status, season_type, notes, created_at, updated_at
-    FROM seasons
-    ORDER BY
-      CASE WHEN start_date IS NULL THEN 1 ELSE 0 END,
-      start_date DESC,
-      created_at DESC
-    `
-  ).all();
-
-  return json({
-    current_season_id: current?.season_id || null,
-    seasons: seasons.results || [],
-  });
+async function handleEvents(url, env) {
+  const sql = `
+    SELECT
+      event_id,
+      name_zh,
+      name_en
+    FROM events
+    ORDER BY event_id ASC
+  `;
+  const rs = await env.DB.prepare(sql).all();
+  return json(rs.results || []);
 }
+
+
+async function handleSeasons(url, env) {
+  const eventId = url.searchParams.get('event_id'); // 可选
+
+  let sql = `
+    SELECT
+      season_id,
+      event_id,
+      name,
+      year,
+      start_date,
+      end_date,
+      status,
+      notes
+    FROM seasons
+  `;
+  const binds = [];
+
+  if (eventId) {
+    sql += ` WHERE event_id = ? `;
+    binds.push(eventId);
+  }
+
+  sql += ` ORDER BY year DESC, start_date DESC, season_id DESC `;
+
+  const rs = await env.DB.prepare(sql).bind(...binds).all();
+  return json(rs.results || []);
+}
+
 
 async function handleDivisions(env, season_id) {
   const rows = await env.DB.prepare(
@@ -236,22 +246,33 @@ async function handleLeaderboard(env, { season_id, leaderboard_key }) {
       t.team_id,
       t.canonical_name AS team_name,
       r.registration_id,
-      COALESCE(SUM(tcp.points), 0) AS points
+      COALESCE(SUM(CASE WHEN c.component_id IS NOT NULL THEN tcp.points ELSE 0 END), 0) AS points
     FROM registrations r
     JOIN teams t ON t.team_id = r.team_id
+
     LEFT JOIN team_component_points tcp
       ON tcp.registration_id = r.registration_id
+
     LEFT JOIN score_components c
       ON c.component_id = tcp.component_id
       AND c.source_season_id = r.season_id
-      AND c.leaderboard_key = ?
+      AND (
+        c.leaderboard_key = ?
+        OR c.leaderboard_key LIKE ? || '_%'
+      )
+
     WHERE r.season_id = ?
       AND (r.status IS NULL OR r.status <> 'cancelled')
+
     GROUP BY t.team_id, t.canonical_name, r.registration_id
     ORDER BY points DESC, t.canonical_name COLLATE NOCASE ASC
   `;
 
-  const rows = await env.DB.prepare(sql).bind(leaderboard_key, season_id).all();
+  const rows = await env.DB
+    .prepare(sql)
+    .bind(leaderboard_key, leaderboard_key, season_id)
+    .all();
+
   const ranked = addRankWithTies(rows.results || [], "points");
 
   return json({
@@ -261,28 +282,6 @@ async function handleLeaderboard(env, { season_id, leaderboard_key }) {
   });
 }
 
-async function handleLeaderboards(env, { season_id }) {
-  const rows = await env.DB.prepare(
-    `
-    SELECT
-      leaderboard_key,
-      COUNT(*) AS component_count,
-      MIN(sort_order) AS min_sort_order,
-      MIN(start_date) AS first_date,
-      MAX(end_date) AS last_date
-    FROM score_components
-    WHERE source_season_id = ?
-      AND leaderboard_key IS NOT NULL
-      AND leaderboard_key <> ''
-    GROUP BY leaderboard_key
-    ORDER BY min_sort_order ASC, leaderboard_key ASC
-    `
-  )
-    .bind(season_id)
-    .all();
-
-  return json({ season_id, leaderboards: rows.results || [] });
-}
 
 async function handleTeamDetail(env, { team_id, season_id }) {
   const team = await env.DB.prepare(
@@ -418,37 +417,38 @@ async function handleTeamDetail(env, { team_id, season_id }) {
   });
 }
 
-async function handleRounds(env, { season_id, leaderboard_key }) {
-  const binds = [season_id];
-  let where = `WHERE source_season_id = ?`;
-  if (leaderboard_key) {
-    where += ` AND leaderboard_key = ?`;
-    binds.push(leaderboard_key);
-  }
+async function handleRounds(url, env) {
+  const leaderboardKey = url.searchParams.get('leaderboard_key');
+  const seasonId = url.searchParams.get('season_id');
+  const mode = url.searchParams.get('mode') || 'round'; // round | round_group
 
-  const rows = await env.DB.prepare(
-    `
+  if (!leaderboardKey) return json({ error: 'Missing required param: leaderboard_key' }, 400);
+  if (!seasonId) return json({ error: 'Missing required param: season_id' }, 400);
+
+  const likeKey = leaderboardKey + '%';
+  const wantType = mode === 'round_group' ? 'round_group' : 'round';
+
+  const sql = `
     SELECT
       component_id,
-      source_season_id,
       leaderboard_key,
       name,
       component_type,
       start_date,
       end_date,
-      sort_order,
-      notes,
-      created_at
+      sort_order
     FROM score_components
-    ${where}
+    WHERE leaderboard_key LIKE ?
+      AND source_season_id = ?
+      AND component_type = ?
     ORDER BY sort_order ASC, start_date ASC, component_id ASC
-    `
-  )
-    .bind(...binds)
-    .all();
+  `;
 
-  return json({ season_id, leaderboard_key: leaderboard_key || null, rounds: rows.results || [] });
+  const rs = await env.DB.prepare(sql).bind(likeKey, seasonId, wantType).all();
+  return json(rs.results || []);
 }
+
+
 
 async function handleRoundDetail(env, { component_id }) {
   const component = await env.DB.prepare(
