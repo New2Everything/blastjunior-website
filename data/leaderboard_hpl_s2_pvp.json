@@ -1,0 +1,15 @@
+{
+  "season_id": "hpl_s2_2025",
+  "division_id": "hpl_s2_pvp",
+  "updated_at": "2026-01-09",
+  "rows": [
+    { "rank": 1, "team_id": "guole_leiting", "team_name": "果乐雷霆", "points": 28, "played": 1, "wins": 1, "losses": 0, "note": "首场从 12/28 计入" },
+    { "rank": 2, "team_id": "heaven", "team_name": "Heaven", "points": 20, "played": 1, "wins": 1, "losses": 0, "note": "" },
+    { "rank": 3, "team_id": "bingmei_fengbao", "team_name": "冰莓风暴", "points": 16, "played": 1, "wins": 0, "losses": 1, "note": "" },
+    { "rank": 4, "team_id": "yihui_tianma", "team_name": "一辉-天马", "points": 14, "played": 1, "wins": 0, "losses": 1, "note": "" },
+    { "rank": 5, "team_id": "qcs", "team_name": "Qcs", "points": 12, "played": 0, "wins": 0, "losses": 0, "note": "注意大小写：Qcs" },
+    { "rank": 6, "team_id": "yihui_zilong", "team_name": "一辉-紫龙", "points": 12, "played": 0, "wins": 0, "losses": 0, "note": "" },
+    { "rank": 7, "team_id": "qingshuru_wenzi", "team_name": "请输入文字", "points": 12, "played": 0, "wins": 0, "losses": 0, "note": "" },
+    { "rank": 8, "team_id": "hk_jineng_qianxian", "team_name": "HK激能前线", "points": 12, "played": 0, "wins": 0, "losses": 0, "note": "" }
+  ]
+}

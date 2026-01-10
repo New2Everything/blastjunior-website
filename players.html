@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Players</title>
+    <link rel="stylesheet" href="./assets/css/site.css" />
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand">Players · 检索</div>
+
+        <div class="block">
+            <label class="label">搜索（昵称/显示名/真名/player_id）</label>
+            <input id="q" class="input" placeholder="例如：九天 / AUSTIN / lx_039 / 姚梓茜" />
+        </div>
+
+        <div class="block row">
+            <a class="btn" href="./campaigns.html">返回 Campaigns</a>
+            <a class="btn" href="./hpl.html">返回 HPL</a>
+        </div>
+
+        <div class="block">
+            <div class="pill" id="metaPill">—</div>
+        </div>
+
+        <div class="block">
+            <div class="pill" id="statusPill">Ready</div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="header">
+            <div>
+                <div class="h1">球员检索</div>
+                <div class="sub" id="subtitle">加载中…</div>
+            </div>
+        </div>
+
+        <section class="card">
+            <div class="card-hd">
+                <div>Players</div>
+                <div class="pill" id="countPill">—</div>
+            </div>
+            <div class="card-bd">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>昵称</th>
+                        <th>显示名</th>
+                        <th>真名</th>
+                        <th class="col-points">player_id</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Player Drawer -->
+<div id="playerDrawer" class="drawer">
+    <div class="d-hd">
+        <div>
+            <div class="d-title" id="dTitle">Player</div>
+            <div class="d-sub" id="dSub">—</div>
+        </div>
+        <button id="closeDrawer" class="btn">关闭</button>
+    </div>
+    <div class="d-bd" id="drawerBody">加载中…</div>
+</div>
+
+<script type="module" src="./assets/js/pages/players.js"></script>
+</body>
+</html>

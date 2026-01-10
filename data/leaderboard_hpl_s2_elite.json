@@ -1,0 +1,8 @@
+{
+  "season_id": "hpl_s2_2025",
+  "division_id": "hpl_s2_elite",
+  "updated_at": "2026-01-09",
+  "rows": [
+    { "rank": 1, "team_id": "guole_leiting", "team_name": "果乐雷霆", "points": 0, "played": 0, "wins": 0, "losses": 0, "note": "占位：后续接 DB 自动填充" }
+  ]
+}

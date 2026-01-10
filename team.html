@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Team</title>
+    <link rel="stylesheet" href="./assets/css/site.css" />
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="brand">Team</div>
+
+        <div class="block">
+            <label class="label">赛季（可选）</label>
+            <select id="seasonSelect" class="select"></select>
+        </div>
+
+        <div class="block row">
+            <a class="btn" href="./hpl.html">返回 HPL</a>
+            <a class="btn" href="./campaigns.html">返回 Campaigns</a>
+        </div>
+
+        <div class="block">
+            <div class="pill" id="statusPill">Ready</div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="header">
+            <div>
+                <div class="h1" id="teamTitle">加载中…</div>
+                <div class="sub" id="teamSub">—</div>
+            </div>
+        </div>
+
+        <section class="card" style="margin-bottom:12px;">
+            <div class="card-hd"><div>概览</div></div>
+            <div class="card-bd" id="overview">—</div>
+        </section>
+
+        <div class="grid2">
+            <section class="card">
+                <div class="card-hd"><div>队员（Roster）</div></div>
+                <div class="card-bd" id="roster">—</div>
+            </section>
+            <section class="card">
+                <div class="card-hd"><div>得分构成（Components）</div></div>
+                <div class="card-bd" id="breakdown">—</div>
+            </section>
+        </div>
+
+        <section class="card" style="margin-top:12px;">
+            <div class="card-hd"><div>历史（Season Totals）</div></div>
+            <div class="card-bd" id="history">—</div>
+        </section>
+    </main>
+</div>
+
+<script type="module" src="./assets/js/pages/team.js"></script>
+</body>
+</html>

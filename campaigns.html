@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Campaigns</title>
+  <link rel="stylesheet" href="./assets/css/site.css" />
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">兰星 · 数据中心</div>
+
+    <div class="block">
+      <label class="label">赛季</label>
+      <select id="seasonSelect" class="select"></select>
+    </div>
+
+    <div class="block">
+      <label class="label">榜单（leaderboard_key）</label>
+      <select id="lbSelect" class="select"></select>
+    </div>
+
+    <div class="block row">
+      <a class="btn" href="./players.html">球员检索</a>
+
+      <a class="btn primary" href="./hpl.html">进入 HPL</a>
+    </div>
+
+    <div class="block">
+      <div class="pill" id="statusPill">Ready</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="header">
+      <div>
+        <div class="h1">Campaigns</div>
+        <div class="sub" id="subtitle">加载中…</div>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="card-hd">
+        <div>排行榜</div>
+        <div class="pill" id="metaPill">—</div>
+      </div>
+      <div class="card-bd">
+        <table class="table">
+          <thead>
+          <tr><th class="col-rank">Rank</th><th>Team</th><th class="col-points">Points</th></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Team Drawer -->
+<div id="teamDrawer" class="drawer" aria-hidden="true">
+  <div class="d-hd">
+    <div>
+      <div class="d-title" id="dTeamName">Team</div>
+      <div class="d-sub" id="dTeamSub">—</div>
+    </div>
+    <button id="closeDrawer" class="btn">关闭</button>
+  </div>
+  <div class="d-bd" id="drawerBody">加载中…</div>
+</div>
+
+<script type="module" src="./assets/js/pages/campaigns.js"></script>
+</body>
+</html>
