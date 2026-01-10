@@ -1,95 +1,113 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Campaigns · BLAST Junior</title>
-  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <title>Campaigns • BLAST Junior</title>
   <link rel="stylesheet" href="/assets/css/site.css?v=20260110" />
 </head>
 
-<body class="page">
-<div class="app">
-  <aside class="sidebar">
-    <div class="card">
-      <div class="head">
-        <div>
-          <div class="title">Campaigns</div>
-          <div class="sub">兰星少年 · 数据中心</div>
-        </div>
-        <div id="statusPill" class="pill ok" title="状态">OK</div>
+<body class="bg">
+<div class="wrap">
+  <div class="card">
+    <div class="row">
+      <div>
+        <h1 class="h1">Campaigns</h1>
+        <div class="muted">兰星少年 · 数据中心</div>
+      </div>
+      <div class="pill" id="statusPill">Idle</div>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <div class="label">赛事（Event）</div>
+        <select class="sel" id="eventSelect">
+          <option value="">加载中…</option>
+        </select>
       </div>
 
-      <div class="controls">
-        <label class="label" for="eventSelect">赛事（Event）</label>
-        <select id="eventSelect" class="select" title="选择赛事"></select>
+      <div class="field">
+        <div class="label">赛季（Season）</div>
+        <select class="sel" id="seasonSelect" disabled>
+          <option value="">先选 Event</option>
+        </select>
+      </div>
 
-        <label class="label" for="seasonSelect">赛季（Season）</label>
-        <select id="seasonSelect" class="select" title="选择赛季"></select>
+      <div class="field">
+        <div class="label">组别（Division）</div>
+        <select class="sel" id="divisionSelect" disabled>
+          <option value="">先选 Season</option>
+        </select>
+      </div>
 
-        <label class="label" for="divisionSelect">组别（Division）</label>
-        <select id="divisionSelect" class="select" title="选择组别"></select>
+      <div class="field">
+        <div class="label">查看方式</div>
+        <select class="sel" id="viewSelect" disabled>
+          <option value="total">总积分</option>
+          <option value="round">按场次</option>
+          <option value="group">按场次 + 分组</option>
+        </select>
+      </div>
 
-        <label class="label" for="leaderboardSelect">榜单口径（Leaderboard）</label>
-        <select id="leaderboardSelect" class="select" title="选择榜单口径"></select>
+      <div class="field" id="roundField" style="display:none;">
+        <div class="label">场次（Round）</div>
+        <select class="sel" id="roundSelect" disabled>
+          <option value="">先选 Division</option>
+        </select>
+      </div>
 
-        <div class="btn-row">
-          <button id="openTeamBtn" class="btn" title="打开队伍页">队伍页（只读）</button>
-          <button id="openPlayersBtn" class="btn" title="打开球员检索页">球员检索（只读）</button>
-        </div>
-
-        <div class="btn-row" style="margin-top:12px;">
-          <button id="refreshBtn" class="btn secondary" title="刷新">刷新</button>
-        </div>
-
-        <div id="errBox" class="hint" style="display:none;"></div>
+      <div class="field" id="groupField" style="display:none;">
+        <div class="label">分组（Group）</div>
+        <select class="sel" id="groupSelect" disabled>
+          <option value="">先选 Round</option>
+        </select>
       </div>
     </div>
 
-    <div class="card" style="margin-top:12px;">
-      <div class="head">
-        <div>
-          <div class="title" style="font-size:16px;">使用说明</div>
-          <div class="sub">先选 Event → Season → Division，再选榜单口径</div>
-        </div>
-        <div class="pill" title="只读展示">只读展示</div>
-      </div>
-      <div class="hint">
-        ✅ 你已经完成：API 正常返回、移动端适配已通过 T=0。<br />
-        下一步：按 division 的 leaderboard_key 展示总积分，并可切换分场/分组榜单。
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn" id="refreshBtn">刷新</button>
+      <a class="btn ghost" href="/team" title="队伍页（只读）">队伍页（只读）</a>
+      <a class="btn ghost" href="/players" title="球员检索（只读）">球员检索（只读）</a>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="row">
+      <div>
+        <div class="h2">积分榜</div>
+        <div class="muted" id="subtitle">请选择 Event / Season / Division</div>
       </div>
     </div>
-  </aside>
 
-  <main class="main">
-    <div class="card">
-      <div class="head">
-        <div>
-          <div class="title" id="mainTitle">积分榜</div>
-          <div class="sub" id="mainSub">请选择 Event / Season / Division</div>
-        </div>
-        <div class="pill" id="metaPill" title="当前选择">—</div>
-      </div>
-
-      <div class="table-wrap">
-        <table class="table" id="lbTable" aria-label="leaderboard table">
-          <thead>
-          <tr>
-            <th style="width:70px;">RANK</th>
-            <th>TEAM</th>
-            <th style="width:110px;">POINTS</th>
-          </tr>
-          </thead>
-          <tbody id="lbBody">
-          <tr><td colspan="3" class="muted">等待选择…</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="table-wrap" style="margin-top:10px;">
+      <table class="table" id="leaderboardTable">
+        <thead>
+        <tr>
+          <th style="width:80px;">RANK</th>
+          <th>TEAM</th>
+          <th style="width:120px; text-align:right;">POINTS</th>
+        </tr>
+        </thead>
+        <tbody id="leaderboardBody">
+        <tr><td colspan="3" class="muted">—</td></tr>
+        </tbody>
+      </table>
     </div>
-  </main>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="h2">只读展示</div>
+    <div class="muted" style="margin-top:6px;">
+      说明：Event → Season → Division 后默认展示“总积分”。你也可以切换到“按场次 / 按场次+分组”查看。
+    </div>
+    <div class="muted" style="margin-top:8px;">
+      ✅ 你已经完成：API 正常返回、移动端适配已通过 T=0。<br/>
+      下一步：按 division 的 leaderboard_key 展示总积分，并可切换分场/分组榜单。
+    </div>
+  </div>
 </div>
 
-<script src="api.js?v=20260110"></script>
-<script src="campaigns.js?v=20260110"></script>
+<script src="/assets/js/api.js?v=20260110"></script>
+<script type="module" src="/assets/js/pages/campaigns.js?v=20260110"></script>
 </body>
 </html>

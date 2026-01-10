@@ -1,66 +1,57 @@
-// assets/js/api.js
-(() => {
-  // ✅ 默认同域：/api/...
-  // 你也可以临时改成 "https://blast-campaigns-api.kanjiaming2022.workers.dev"
-  // 但手机网络经常不稳定，建议用同域 route。
-  const API_BASE = (window.API_BASE ?? "").replace(/\/$/, "");
+// /assets/js/api.js
+(function () {
+  const DEFAULT_TIMEOUT_MS = 15000;
 
-  function withTimeout(ms) {
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(new Error("timeout")), ms);
-    return { controller, cancel: () => clearTimeout(t) };
+  function withQuery(url, params = {}) {
+    const u = new URL(url, window.location.origin);
+    Object.entries(params).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === "") return;
+      u.searchParams.set(k, String(v));
+    });
+    return u.toString();
   }
 
-  async function safeFetch(url, options = {}, { timeoutMs = 12000, retry = 1 } = {}) {
-    let lastErr;
-    for (let attempt = 0; attempt <= retry; attempt++) {
-      const { controller, cancel } = withTimeout(timeoutMs);
-      try {
-        const res = await fetch(url, {
-          ...options,
-          signal: controller.signal,
-          // 避免某些移动端怪异缓存
-          cache: "no-store",
-          mode: "cors",
-        });
-        cancel();
+  async function apiFetchJson(path, params = {}, { timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+    const url = withQuery(path, params);
 
-        if (!res.ok) {
-          const text = await res.text().catch(() => "");
-          const err = new Error(`HTTP ${res.status} ${res.statusText}${text ? `: ${text}` : ""}`);
-          err.status = res.status;
-          throw err;
-        }
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
 
-        const ct = (res.headers.get("content-type") || "").toLowerCase();
-        if (ct.includes("application/json")) return await res.json();
-        // 兜底：有时候 Worker 返回 text
-        const raw = await res.text();
-        try { return JSON.parse(raw); } catch { return raw; }
-      } catch (e) {
-        cancel();
-        lastErr = e;
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { "Accept": "application/json" },
+        signal: ctrl.signal,
+        cache: "no-store",
+      });
 
-        // 只有网络类/超时才重试
-        const msg = String(e?.message || "");
-        const isNetworkish = msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("timeout") || msg.includes("aborted");
-        if (!isNetworkish || attempt === retry) break;
+      const text = await res.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
 
-        // 简单退避
-        await new Promise(r => setTimeout(r, 400 + attempt * 600));
+      if (!res.ok) {
+        const msg = (data && (data.error || data.message)) ? (data.error || data.message) : `HTTP ${res.status}`;
+        const err = new Error(msg);
+        err.status = res.status;
+        err.data = data;
+        throw err;
       }
-    }
-    throw lastErr;
-  }
 
-  async function apiGet(path, opts) {
-    const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
-    return safeFetch(url, { method: "GET" }, opts);
+      // 兼容：有些接口返回 {ok:false,error:"..."}
+      if (data && data.ok === false) {
+        const err = new Error(data.error || "API returned ok:false");
+        err.status = 200;
+        err.data = data;
+        throw err;
+      }
+
+      return data;
+    } finally {
+      clearTimeout(t);
+    }
   }
 
   window.API = {
-    API_BASE,
-    apiGet,
-    safeFetch,
+    apiGet: apiFetchJson,
   };
 })();
