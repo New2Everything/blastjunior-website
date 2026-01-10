@@ -1,41 +1,73 @@
-import { apiGet } from "../api.js";
-import { qs, setStatus } from "../utils.js";
+// assets/js/pages/campaigns.js
+(async () => {
+  const $ = (id) => document.getElementById(id);
 
-const statusEl = qs("#status");
-const rowsTbody = qs("#rows");
+  const statusDot = $("statusDot");
+  const statusText = $("statusText");
+  const statusPill = $("statusPill");
+  const seasonSelect = $("seasonSelect");
+  const msg = $("msg");
 
-function setRow(i, ok, text) {
-  const tr = rowsTbody.children[i];
-  if (!tr) return;
-  tr.children[2].textContent = ok ? "OK" : `ERROR: ${text || ""}`;
-}
-
-async function run() {
-  try {
-    setStatus(statusEl, { ok: true, text: "loading…" });
-
-    const seasons = await apiGet("/api/public/seasons");
-    setRow(0, true, "OK");
-
-    const seasonId = seasons?.current_season_id || seasons?.seasons?.[0]?.season_id;
-    if (!seasonId) throw new Error("No season_id from /seasons");
-
-    const lbs = await apiGet(`/api/public/leaderboards?season_id=${encodeURIComponent(seasonId)}`);
-    setRow(1, true, "OK");
-
-    const leaderboardKey = lbs?.leaderboards?.[0]?.leaderboard_key;
-    if (!leaderboardKey) throw new Error("No leaderboard_key from /leaderboards");
-
-    await apiGet(`/api/public/leaderboard?season_id=${encodeURIComponent(seasonId)}&leaderboard_key=${encodeURIComponent(leaderboardKey)}`);
-    setRow(2, true, "OK");
-
-    setStatus(statusEl, { ok: true, text: "OK" });
-  } catch (e) {
-    setStatus(statusEl, { ok: false, text: e?.message || String(e) });
-    setRow(0, false, "");
-    setRow(1, false, "");
-    setRow(2, false, "");
+  function setStatus(kind, text) {
+    statusPill.dataset.kind = kind; // ok|loading|error
+    statusText.textContent = text;
   }
-}
 
-run();
+  function setMsg(t) {
+    msg.textContent = t || "";
+  }
+
+  function option(label, value) {
+    const o = document.createElement("option");
+    o.value = value;
+    o.textContent = label;
+    return o;
+  }
+
+  async function loadSeasons() {
+    setStatus("loading", "Loading...");
+    setMsg("");
+
+    try {
+      const data = await API.apiGet("/api/public/seasons", { timeoutMs: 12000, retry: 1 });
+
+      seasonSelect.innerHTML = "";
+      const seasons = data?.seasons || [];
+      const current = data?.current_season_id || (seasons[0]?.season_id ?? "");
+
+      for (const s of seasons) {
+        const label = `${s.name || s.season_id} · ${s.start_date || ""}${s.status ? ` · ${s.status}` : ""}`.replace(/\s+/g, " ").trim();
+        seasonSelect.appendChild(option(label, s.season_id));
+      }
+      seasonSelect.value = current || seasonSelect.value;
+
+      setStatus("ok", "OK");
+      return seasonSelect.value;
+    } catch (e) {
+      setStatus("error", "ERROR");
+      setMsg(`Failed to fetch: ${String(e?.message || e)}`);
+      throw e;
+    }
+  }
+
+  $("btnHpl").addEventListener("click", () => {
+    const season_id = seasonSelect.value;
+    location.href = `/hpl?season_id=${encodeURIComponent(season_id)}`;
+  });
+
+  $("btnTeam").addEventListener("click", () => {
+    const season_id = seasonSelect.value;
+    location.href = `/team?season_id=${encodeURIComponent(season_id)}`;
+  });
+
+  $("btnPlayers").addEventListener("click", () => {
+    location.href = `/players`;
+  });
+
+  $("btnRefresh").addEventListener("click", async () => {
+    try { await loadSeasons(); } catch {}
+  });
+
+  // 初始加载
+  try { await loadSeasons(); } catch {}
+})();

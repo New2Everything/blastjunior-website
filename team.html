@@ -2,56 +2,103 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Team · BLAST Junior</title>
-    <link rel="icon" href="/favicon.ico" />
-    <link rel="stylesheet" href="/assets/css/site.css?v=20260110" />
+    <link rel="stylesheet" href="/site.css?v=20260110" />
 </head>
 <body>
 <div class="container">
-    <aside class="sidebar">
-        <h1 class="h1">Team</h1>
-        <div class="small">只读检索：team_id</div>
+    <div class="layout">
+        <div class="card">
+            <div class="card-inner">
+                <div class="card-head">
+                    <div style="min-width:0">
+                        <div class="h1">Team</div>
+                        <div class="sub">选择赛季 → 选择队伍</div>
+                    </div>
+                    <div class="pill" id="statusPill" data-kind="loading" aria-live="polite">
+                        <span class="dot"></span>
+                        <span id="statusText">Loading...</span>
+                    </div>
+                </div>
 
-        <hr class="sep" />
+                <div class="hr" style="margin:14px 0;"></div>
 
-        <div class="field">
-            <label for="teamIdInput">team_id</label>
-            <input id="teamIdInput" placeholder="例如: heaven / aka / ..." />
+                <div class="form-row">
+                    <label for="seasonSelect">赛季</label>
+                    <select id="seasonSelect" aria-label="赛季选择"></select>
+                </div>
+
+                <div class="form-row">
+                    <label for="teamSelect">队伍</label>
+                    <select id="teamSelect" aria-label="队伍选择"></select>
+                </div>
+
+                <div class="btn-row">
+                    <button id="btnBack">返回 Campaigns</button>
+                    <button id="btnRefresh">刷新</button>
+                </div>
+
+                <div class="msg" id="msg"></div>
+            </div>
         </div>
 
-        <div class="btnrow">
-            <button class="primary" id="searchBtn" type="button">查询</button>
-            <a class="pill" href="/hpl">返回 HPL</a>
+        <div>
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-inner">
+                    <div class="section-title">
+                        <div class="left">
+                            <h2>Roster</h2>
+                            <div class="hint">队员名单（只读）</div>
+                        </div>
+                        <div class="tag">rosters</div>
+                    </div>
+
+                    <div class="table-wrap" style="margin-top:12px;">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Alias</th>
+                            </tr>
+                            </thead>
+                            <tbody id="rosterBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-inner">
+                    <div class="section-title">
+                        <div class="left">
+                            <h2>积分明细</h2>
+                            <div class="hint">team_component_points（按 leaderboard_key + component 展示）</div>
+                        </div>
+                        <div class="tag">points</div>
+                    </div>
+
+                    <div class="table-wrap" style="margin-top:12px;">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Leaderboard</th>
+                                <th>Component</th>
+                                <th>Points</th>
+                                <th>Created</th>
+                            </tr>
+                            </thead>
+                            <tbody id="pointsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
-
-        <div class="status" id="status">
-            <span class="dot"></span>
-            <span class="msg">waiting…</span>
-        </div>
-    </aside>
-
-    <main class="main">
-        <h1 class="h1" id="title">—</h1>
-        <div class="small" id="sub">—</div>
-
-        <hr class="sep" />
-
-        <h2 class="h2">Roster</h2>
-        <div class="tableWrap">
-            <table>
-                <thead>
-                <tr>
-                    <th>PLAYER</th>
-                    <th>ROLE</th>
-                </tr>
-                </thead>
-                <tbody id="tbody"></tbody>
-            </table>
-        </div>
-    </main>
+    </div>
 </div>
 
-<script type="module" src="/assets/js/pages/team.js?v=20260110"></script>
+<script src="/assets/js/api.js?v=20260110"></script>
+<script src="/assets/js/pages/team.js?v=20260110"></script>
 </body>
 </html>

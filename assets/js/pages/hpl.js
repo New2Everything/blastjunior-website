@@ -1,147 +1,113 @@
-import { apiGet } from "../api.js";
-import { qs, setStatus, escapeHtml } from "../utils.js";
+// assets/js/pages/hpl.js
+(async () => {
+  const $ = (id) => document.getElementById(id);
 
-const app = qs("#app");
-const statusEl = qs("#status");
+  const seasonSelect = $("seasonSelect");
+  const leaderboardSelect = $("leaderboardSelect");
+  const tableBody = $("tableBody");
+  const titleSeason = $("titleSeason");
+  const pillCount = $("pillCount");
+  const msg = $("msg");
+  const statusPill = $("statusPill");
+  const statusText = $("statusText");
 
-const seasonSelect = qs("#seasonSelect");
-const lbSelect = qs("#lbSelect");
-const refreshBtn = qs("#refreshBtn");
-
-const subtitle = qs("#subtitle");
-const seasonPill = qs("#seasonPill");
-const countPill = qs("#countPill");
-const tbody = qs("#tbody");
-
-// drawer
-const drawerOverlay = qs("#drawerOverlay");
-const drawer = qs("#drawer");
-const drawerCloseBtn = qs("#drawerCloseBtn");
-const drawerTitle = qs("#drawerTitle");
-const drawerSub = qs("#drawerSub");
-const drawerTbody = qs("#drawerTbody");
-
-function openDrawer() { document.body.classList.add("drawerOpen"); }
-function closeDrawer() { document.body.classList.remove("drawerOpen"); }
-drawerOverlay.addEventListener("click", closeDrawer);
-drawerCloseBtn.addEventListener("click", closeDrawer);
-
-async function loadSeasons() {
-  const data = await apiGet("/api/public/seasons");
-  const list = data?.seasons || [];
-  const current = data?.current_season_id || list?.[0]?.season_id;
-
-  seasonSelect.innerHTML = list.map(s => {
-    const label = `${s.name || s.season_id} · ${s.start_date || "—"} · ${s.status || "—"}`;
-    return `<option value="${escapeHtml(s.season_id)}">${escapeHtml(label)}</option>`;
-  }).join("");
-
-  if (current) seasonSelect.value = current;
-  return current;
-}
-
-async function loadLeaderboards(seasonId) {
-  const data = await apiGet(`/api/public/leaderboards?season_id=${encodeURIComponent(seasonId)}`);
-  const list = data?.leaderboards || [];
-  lbSelect.innerHTML = list.map(lb => {
-    const label = `${lb.leaderboard_key} (${lb.components_count ?? "?"})`;
-    return `<option value="${escapeHtml(lb.leaderboard_key)}">${escapeHtml(label)}</option>`;
-  }).join("");
-
-  if (list[0]?.leaderboard_key) lbSelect.value = list[0].leaderboard_key;
-}
-
-function renderRows(rows) {
-  tbody.innerHTML = rows.map(r => {
-    const teamId = r.team_id || "";
-    const teamName = r.team_name || r.team || teamId;
-    const rank = r.rank ?? "";
-    const pts = r.points ?? r.total_points ?? "";
-    return `
-      <tr>
-        <td class="rank">${escapeHtml(rank)}</td>
-        <td class="link">
-          <a href="/team?team_id=${encodeURIComponent(teamId)}" data-team-id="${escapeHtml(teamId)}">${escapeHtml(teamName)}</a>
-        </td>
-        <td class="num">${escapeHtml(pts)}</td>
-      </tr>
-    `;
-  }).join("");
-
-  // click open drawer
-  tbody.querySelectorAll("a[data-team-id]").forEach(a => {
-    a.addEventListener("click", async (ev) => {
-      ev.preventDefault();
-      const teamId = a.getAttribute("data-team-id");
-      if (!teamId) return;
-
-      try {
-        setStatus(statusEl, { ok: true, text: "loading team…" });
-        const team = await apiGet(`/api/public/team?team_id=${encodeURIComponent(teamId)}`);
-        drawerTitle.textContent = team?.team?.name || team?.team_name || teamId;
-        drawerSub.textContent = `team_id = ${teamId}`;
-
-        const roster = team?.roster || team?.players || [];
-        drawerTbody.innerHTML = roster.map(p => `
-          <tr>
-            <td class="link"><a href="/players?player_id=${encodeURIComponent(p.player_id || "")}">${escapeHtml(p.player_name || p.name || p.player_id || "")}</a></td>
-            <td>${escapeHtml(p.role || "")}</td>
-          </tr>
-        `).join("");
-
-        openDrawer();
-        setStatus(statusEl, { ok: true, text: "OK" });
-      } catch (e) {
-        setStatus(statusEl, { ok: false, text: e?.message || String(e) });
-      }
-    });
-  });
-}
-
-async function loadLeaderboard() {
-  const seasonId = seasonSelect.value;
-  const lbKey = lbSelect.value;
-
-  subtitle.textContent = `season_id = ${seasonId}`;
-  seasonPill.textContent = `season_id = ${seasonId}`;
-
-  const data = await apiGet(`/api/public/leaderboard?season_id=${encodeURIComponent(seasonId)}&leaderboard_key=${encodeURIComponent(lbKey)}`);
-  const rows = data?.rows || data?.leaderboard || [];
-  renderRows(rows);
-  countPill.textContent = `${rows.length} teams`;
-}
-
-async function init() {
-  try {
-    setStatus(statusEl, { ok: true, text: "loading…" });
-    const seasonId = await loadSeasons();
-    await loadLeaderboards(seasonId);
-    await loadLeaderboard();
-    setStatus(statusEl, { ok: true, text: "OK" });
-  } catch (e) {
-    setStatus(statusEl, { ok: false, text: e?.message || String(e) });
+  function setStatus(kind, text) {
+    statusPill.dataset.kind = kind;
+    statusText.textContent = text;
   }
-}
+  function setMsg(t) { msg.textContent = t || ""; }
 
-seasonSelect.addEventListener("change", async () => {
-  try {
-    setStatus(statusEl, { ok: true, text: "loading leaderboards…" });
-    await loadLeaderboards(seasonSelect.value);
-    await loadLeaderboard();
-    setStatus(statusEl, { ok: true, text: "OK" });
-  } catch (e) {
-    setStatus(statusEl, { ok: false, text: e?.message || String(e) });
+  function option(label, value) {
+    const o = document.createElement("option");
+    o.value = value;
+    o.textContent = label;
+    return o;
   }
-});
-lbSelect.addEventListener("change", async () => {
-  try {
-    setStatus(statusEl, { ok: true, text: "loading leaderboard…" });
-    await loadLeaderboard();
-    setStatus(statusEl, { ok: true, text: "OK" });
-  } catch (e) {
-    setStatus(statusEl, { ok: false, text: e?.message || String(e) });
-  }
-});
-refreshBtn.addEventListener("click", init);
 
-init();
+  function getQS(name) {
+    const u = new URL(location.href);
+    return u.searchParams.get(name);
+  }
+
+  async function loadSeasons() {
+    const data = await API.apiGet("/api/public/seasons", { timeoutMs: 12000, retry: 1 });
+    const seasons = data?.seasons || [];
+    const current = data?.current_season_id || seasons[0]?.season_id || "";
+
+    seasonSelect.innerHTML = "";
+    for (const s of seasons) {
+      const label = `${s.name || s.season_id} · ${s.start_date || ""}${s.status ? ` · ${s.status}` : ""}`.replace(/\s+/g, " ").trim();
+      seasonSelect.appendChild(option(label, s.season_id));
+    }
+
+    const qsSeason = getQS("season_id");
+    seasonSelect.value = qsSeason || current || seasonSelect.value;
+
+    return seasonSelect.value;
+  }
+
+  async function loadLeaderboards(season_id) {
+    const data = await API.apiGet(`/api/public/leaderboards?season_id=${encodeURIComponent(season_id)}`, { timeoutMs: 12000, retry: 1 });
+    const lbs = data?.leaderboards || [];
+
+    leaderboardSelect.innerHTML = "";
+    for (const lb of lbs) {
+      const label = `${lb.leaderboard_key}${lb.team_count != null ? ` (${lb.team_count})` : ""}`;
+      leaderboardSelect.appendChild(option(label, lb.leaderboard_key));
+    }
+
+    // 默认选第一个
+    leaderboardSelect.value = lbs[0]?.leaderboard_key || leaderboardSelect.value;
+    return leaderboardSelect.value;
+  }
+
+  function renderTable(rows) {
+    tableBody.innerHTML = "";
+    for (const r of rows) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="mono">${r.rank ?? ""}</td>
+        <td class="strong">${escapeHtml(r.team_name ?? "")}</td>
+        <td class="mono">${r.points ?? ""}</td>
+      `;
+      tableBody.appendChild(tr);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
+
+  async function reloadAll() {
+    setStatus("loading", "Loading...");
+    setMsg("");
+    try {
+      const season_id = await loadSeasons();
+      titleSeason.textContent = `season_id = ${season_id}`;
+
+      const leaderboard_key = await loadLeaderboards(season_id);
+
+      const data = await API.apiGet(
+        `/api/public/leaderboard?leaderboard_key=${encodeURIComponent(leaderboard_key)}`,
+        { timeoutMs: 12000, retry: 1 }
+      );
+
+      renderTable(data?.rows || []);
+      pillCount.textContent = `${data?.team_count ?? (data?.rows?.length ?? 0)} teams`;
+
+      setStatus("ok", "OK");
+    } catch (e) {
+      setStatus("error", "ERROR");
+      setMsg(String(e?.message || e));
+    }
+  }
+
+  seasonSelect.addEventListener("change", reloadAll);
+  leaderboardSelect.addEventListener("change", reloadAll);
+  $("btnBack").addEventListener("click", () => location.href = "/campaigns");
+  $("btnRefresh").addEventListener("click", reloadAll);
+
+  await reloadAll();
+})();

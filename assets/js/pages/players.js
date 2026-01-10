@@ -1,54 +1,65 @@
-import { apiGet } from "../api.js";
-import { qs, setStatus, escapeHtml } from "../utils.js";
+// assets/js/pages/players.js
+(async () => {
+  const $ = (id) => document.getElementById(id);
 
-const statusEl = qs("#status");
-const playerIdInput = qs("#playerIdInput");
-const searchBtn = qs("#searchBtn");
-const title = qs("#title");
-const sub = qs("#sub");
-const tbody = qs("#tbody");
+  const qInput = $("qInput");
+  const btnSearch = $("btnSearch");
+  const msg = $("msg");
+  const statusPill = $("statusPill");
+  const statusText = $("statusText");
+  const tableBody = $("tableBody");
 
-function getPlayerIdFromUrl() {
-  const sp = new URLSearchParams(location.search);
-  return sp.get("player_id") || "";
-}
-
-async function load(playerId) {
-  if (!playerId) throw new Error("player_id 不能为空");
-  // 你定义的接口：GET /api/public/player?player_id=...
-  const data = await apiGet(`/api/public/player?player_id=${encodeURIComponent(playerId)}`);
-
-  title.textContent = data?.player?.name || data?.player_name || playerId;
-  sub.textContent = `player_id = ${playerId}`;
-
-  const rows = data?.rosters || data?.rows || [];
-  tbody.innerHTML = rows.map(r => `
-    <tr>
-      <td>${escapeHtml(r.season_id || "")}</td>
-      <td class="link"><a href="/team?team_id=${encodeURIComponent(r.team_id || "")}">${escapeHtml(r.team_name || r.team_id || "")}</a></td>
-      <td>${escapeHtml(r.role || "")}</td>
-    </tr>
-  `).join("");
-}
-
-async function run(playerId) {
-  try {
-    setStatus(statusEl, { ok: true, text: "loading…" });
-    await load(playerId);
-    setStatus(statusEl, { ok: true, text: "OK" });
-  } catch (e) {
-    setStatus(statusEl, { ok: false, text: e?.message || String(e) });
-    title.textContent = "—";
-    sub.textContent = "—";
-    tbody.innerHTML = "";
+  function setStatus(kind, text) {
+    statusPill.dataset.kind = kind;
+    statusText.textContent = text;
   }
-}
+  function setMsg(t) { msg.textContent = t || ""; }
 
-searchBtn.addEventListener("click", () => run(playerIdInput.value.trim()));
-playerIdInput.addEventListener("keydown", (e) => { if (e.key === "Enter") run(playerIdInput.value.trim()); });
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
 
-const initId = getPlayerIdFromUrl();
-if (initId) {
-  playerIdInput.value = initId;
-  run(initId);
-}
+  async function search() {
+    const q = qInput.value.trim();
+    if (!q) {
+      setMsg("请输入 player_id 或名字关键词");
+      return;
+    }
+
+    setStatus("loading", "Loading...");
+    setMsg("");
+    tableBody.innerHTML = "";
+
+    try {
+      // 这里用你已有的 public search 接口（如果你现在是 /api/public/players?q=...）
+      const data = await API.apiGet(`/api/public/players?q=${encodeURIComponent(q)}`, { timeoutMs: 12000, retry: 1 });
+      const rows = data?.rows || [];
+
+      for (const r of rows) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="mono">${escapeHtml(r.player_id ?? "")}</td>
+          <td class="strong">${escapeHtml(r.player_name ?? "")}</td>
+          <td class="muted">${escapeHtml(r.team_name ?? "")}</td>
+          <td class="muted mono">${escapeHtml(r.season_id ?? "")}</td>
+        `;
+        tableBody.appendChild(tr);
+      }
+
+      setStatus("ok", "OK");
+      if (!rows.length) setMsg("没有匹配结果");
+    } catch (e) {
+      setStatus("error", "ERROR");
+      setMsg(String(e?.message || e));
+    }
+  }
+
+  btnSearch.addEventListener("click", search);
+  qInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") search();
+  });
+
+  setStatus("ok", "OK");
+})();
