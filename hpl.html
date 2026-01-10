@@ -2,93 +2,97 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <title>HPL · Leaderboard</title>
-
-    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/assets/css/site.css?v=20260110">
-
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/assets/css/site.css?v=20260110" />
 </head>
 <body>
-<script>
-    window.API_BASE = "https://blast-campaigns-api.kanjiaming2022.workers.dev";
-</script>
-
-<div class="container">
+<div class="container" id="app">
     <aside class="sidebar">
-        <div class="card">
-            <div class="header">
-                <div>
-                    <h1 class="h1">HPL · Leaderboard</h1>
-                    <div class="sub">左侧选赛季 & 榜单</div>
-                </div>
-                <div id="statusBadge" class="badge ok" aria-live="polite">
-                    <span class="badge-dot"></span>
-                    <span class="badge-msg">OK</span>
-                </div>
-            </div>
+        <h1 class="h1">HPL · Leaderboard</h1>
+        <div class="small" id="subtitle">loading…</div>
 
-            <div class="section">
-                <div class="field">
-                    <label for="seasonSelect">赛季</label>
-                    <select id="seasonSelect" aria-label="赛季选择"></select>
-                    <div id="seasonMeta" class="small">—</div>
-                </div>
+        <hr class="sep" />
 
-                <div class="field">
-                    <label for="leaderboardSelect">榜单（leaderboard_key）</label>
-                    <select id="leaderboardSelect" aria-label="榜单选择"></select>
-                </div>
+        <div class="field">
+            <label for="seasonSelect">赛季</label>
+            <select id="seasonSelect" aria-label="赛季选择"></select>
+        </div>
 
-                <div class="btn-row">
-                    <button id="backBtn" class="btn" type="button">返回 Campaigns</button>
-                    <button id="refreshBtn" class="btn" type="button">刷新</button>
-                </div>
-            </div>
+        <div class="field">
+            <label for="lbSelect">榜单（leaderboard_key）</label>
+            <select id="lbSelect" aria-label="榜单选择"></select>
+        </div>
+
+        <div class="btnrow">
+            <a class="pill" href="/campaigns">返回 Campaigns</a>
+            <button class="primary" id="refreshBtn" type="button">刷新</button>
+        </div>
+
+        <div class="status" id="status">
+            <span class="dot"></span>
+            <span class="msg">loading…</span>
         </div>
     </aside>
 
     <main class="main">
-        <div class="card">
-            <div class="header">
-                <div>
-                    <h2 class="h1" style="font-size:20px;">总榜</h2>
-                    <div class="sub">点击队伍行 → 右侧抽屉查看详情</div>
-                </div>
-                <div class="pill" id="teamCount">—</div>
-            </div>
+        <div class="kv">
+            <span class="pill" id="seasonPill">season_id = —</span>
+            <span class="pill" id="countPill">— teams</span>
+        </div>
 
-            <div class="section">
-                <table class="table" aria-label="榜单表格">
+        <h1 class="h1" style="margin-top:14px;">总榜</h1>
+
+        <div class="tableWrap">
+            <table>
+                <thead>
+                <tr>
+                    <th class="rank">RANK</th>
+                    <th>TEAM</th>
+                    <th class="num">POINTS</th>
+                </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
+
+        <hr class="sep" />
+
+        <div class="card">
+            <div class="h2" style="margin-top:0;">操作</div>
+            <div class="small">点击 TEAM 会打开右侧抽屉查看队伍详情（只读）。</div>
+        </div>
+    </main>
+
+    <!-- Drawer -->
+    <div class="drawerOverlay" id="drawerOverlay"></div>
+    <div class="drawer" id="drawer">
+        <div class="drawerHeader">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                <div>
+                    <div class="h1" style="margin:0;font-size:18px;" id="drawerTitle">Team</div>
+                    <div class="small" id="drawerSub">—</div>
+                </div>
+                <button type="button" id="drawerCloseBtn">关闭</button>
+            </div>
+        </div>
+        <div class="drawerBody">
+            <div class="tableWrap">
+                <table>
                     <thead>
                     <tr>
-                        <th style="width:72px;">Rank</th>
-                        <th>Team</th>
-                        <th style="width:110px;">Points</th>
+                        <th>PLAYER</th>
+                        <th>ROLE</th>
                     </tr>
                     </thead>
-                    <tbody id="lbBody"></tbody>
+                    <tbody id="drawerTbody"></tbody>
                 </table>
             </div>
         </div>
-    </main>
-</div>
-
-<!-- Drawer -->
-<div id="drawerBackdrop" class="drawer-backdrop" role="dialog" aria-modal="true" aria-label="队伍详情抽屉">
-    <div class="drawer">
-        <div class="drawer-head">
-            <div>
-                <h3 id="drawerTitle" class="drawer-title">队伍详情</h3>
-                <div class="small">点击背景或关闭按钮可退出</div>
-            </div>
-            <button id="drawerClose" class="drawer-close" type="button" aria-label="关闭抽屉">关闭</button>
-        </div>
-        <div id="drawerBody" class="drawer-body"></div>
     </div>
 </div>
 
-<script src="/assets/js/api.js?v=20260110"></script>
-<script src="/assets/js/pages/hpl.js?v=20260110"></script>
+<script type="module" src="/assets/js/pages/hpl.js?v=20260110"></script>
 </body>
 </html>

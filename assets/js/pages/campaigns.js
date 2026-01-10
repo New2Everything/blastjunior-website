@@ -1,65 +1,41 @@
-(function(){
-  var statusEl, seasonSelect, seasonsHint;
+import { apiGet } from "../api.js";
+import { qs, setStatus } from "../utils.js";
 
-  function el(id){ return document.getElementById(id); }
+const statusEl = qs("#status");
+const rowsTbody = qs("#rows");
 
-  function renderSeasons(seasons, currentId){
-    seasonSelect.innerHTML = "";
-    for (var i=0;i<seasons.length;i++){
-      var s = seasons[i];
-      var opt = document.createElement("option");
-      opt.value = s.season_id;
-      var d = [];
-      if (s.name) d.push(s.name);
-      if (s.start_date) d.push(s.start_date);
-      if (s.status) d.push(s.status);
-      opt.textContent = d.join(" · ") || s.season_id;
-      if (s.season_id === currentId) opt.selected = true;
-      seasonSelect.appendChild(opt);
-    }
+function setRow(i, ok, text) {
+  const tr = rowsTbody.children[i];
+  if (!tr) return;
+  tr.children[2].textContent = ok ? "OK" : `ERROR: ${text || ""}`;
+}
+
+async function run() {
+  try {
+    setStatus(statusEl, { ok: true, text: "loading…" });
+
+    const seasons = await apiGet("/api/public/seasons");
+    setRow(0, true, "OK");
+
+    const seasonId = seasons?.current_season_id || seasons?.seasons?.[0]?.season_id;
+    if (!seasonId) throw new Error("No season_id from /seasons");
+
+    const lbs = await apiGet(`/api/public/leaderboards?season_id=${encodeURIComponent(seasonId)}`);
+    setRow(1, true, "OK");
+
+    const leaderboardKey = lbs?.leaderboards?.[0]?.leaderboard_key;
+    if (!leaderboardKey) throw new Error("No leaderboard_key from /leaderboards");
+
+    await apiGet(`/api/public/leaderboard?season_id=${encodeURIComponent(seasonId)}&leaderboard_key=${encodeURIComponent(leaderboardKey)}`);
+    setRow(2, true, "OK");
+
+    setStatus(statusEl, { ok: true, text: "OK" });
+  } catch (e) {
+    setStatus(statusEl, { ok: false, text: e?.message || String(e) });
+    setRow(0, false, "");
+    setRow(1, false, "");
+    setRow(2, false, "");
   }
+}
 
-  function getSelectedSeasonId(){
-    return seasonSelect.value;
-  }
-
-  function wireNav(){
-    el("goHpl").addEventListener("click", function(){
-      var sid = getSelectedSeasonId();
-      location.href = "/hpl?season_id=" + encodeURIComponent(sid);
-    });
-    el("goTeams").addEventListener("click", function(){
-      var sid = getSelectedSeasonId();
-      location.href = "/team?season_id=" + encodeURIComponent(sid);
-    });
-    el("goPlayers").addEventListener("click", function(){
-      location.href = "/players";
-    });
-    el("refreshBtn").addEventListener("click", boot);
-  }
-
-  function boot(){
-    Api.setStatus(statusEl, true, "Loading…");
-    Api.fetchJson("/api/public/seasons").then(function(data){
-      var seasons = data.seasons || [];
-      var current = data.current_season_id || (seasons[0] ? seasons[0].season_id : "");
-      renderSeasons(seasons, current);
-      seasonsHint.textContent = "共 " + seasons.length + " 个赛季";
-      Api.setStatus(statusEl, true, "OK");
-    }).catch(function(err){
-      console.error(err);
-      Api.setStatus(statusEl, false, "ERROR");
-      seasonsHint.textContent = String(err.message || err);
-    });
-  }
-
-  function init(){
-    statusEl = el("statusBadge");
-    seasonSelect = el("seasonSelect");
-    seasonsHint = el("seasonsHint");
-    wireNav();
-    boot();
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-})();
+run();
