@@ -1,247 +1,261 @@
-/* globals API */
-// Step 7: Campaigns page — division switch, round selection, explain cards, shareable URL, and team link context
-(() => {
-  const $ = (id) => document.getElementById(id);
-  const qs = () => new URLSearchParams(location.search);
+/* campaigns.js (T=1.61)
+   - Event list includes ALL events.
+   - Default event: HPL.
+   - Clean IA: left = selection, right = display.
+*/
 
-  const el = {
-    seasonSelect: $("seasonSelect"),
-    divisionSelect: $("divisionSelect"),
-    roundSelect: $("roundSelect"),
-    tableBody: $("tableBody"),
-    infoCards: $("infoCards"),
-    infoExplain: $("infoExplain"),
+import { API, fmt } from "../api.js";
 
-    btnRefresh: $("btnRefresh"),
-    msg: $("msg"),
-    statusPill: $("statusPill"),
-    statusText: $("statusText"),
-  };
+const QS = new URLSearchParams(location.search);
+const DEFAULT_EVENT_ID = "hpl";
 
-  function setStatus(kind, text){
-    if (el.statusPill) el.statusPill.dataset.kind = kind;
-    if (el.statusText) el.statusText.textContent = text || "";
+const el = {
+  statusDot: document.getElementById("statusDot"),
+  statusText: document.getElementById("statusText"),
+
+  eventSelect: document.getElementById("eventSelect"),
+  seasonSelect: document.getElementById("seasonSelect"),
+  divisionSelect: document.getElementById("divisionSelect"),
+  viewSelect: document.getElementById("viewSelect"),
+  roundSelect: document.getElementById("roundSelect"),
+
+  k_event: document.getElementById("k_event"),
+  k_season: document.getElementById("k_season"),
+  k_division: document.getElementById("k_division"),
+  k_defaultRound: document.getElementById("k_defaultRound"),
+  k_viewRound: document.getElementById("k_viewRound"),
+
+  primaryTitle: document.getElementById("primaryTitle"),
+  secondaryTitle: document.getElementById("secondaryTitle"),
+
+  leaderboardKey: document.getElementById("leaderboardKey"),
+  tableBody: document.getElementById("tableBody"),
+  emptyHint: document.getElementById("emptyHint"),
+
+  btnRefresh: document.getElementById("btnRefresh"),
+};
+
+let state = {
+  events: [],
+  seasons: [],
+  divisions: [],
+  rounds: [],
+  current: {
+    event_id: QS.get("event_id") || DEFAULT_EVENT_ID,
+    season_id: QS.get("season_id") || null,
+    division_key: QS.get("division_key") || "elite",
+    view_mode: QS.get("view") || "total", // total | round
+    round_key: QS.get("round_key") || null,
   }
-  function setMsg(t){ if (el.msg) el.msg.textContent = t || ""; }
+};
 
-  function esc(s){
-    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
+function setStatus(ok, text){
+  if (el.statusDot) el.statusDot.style.background = ok ? "var(--ok)" : "var(--err)";
+  if (el.statusText) el.statusText.textContent = text;
+}
+
+function setQS(partial){
+  const p = new URLSearchParams(location.search);
+  for (const [k,v] of Object.entries(partial)){
+    if (v === null || v === undefined || v === "") p.delete(k);
+    else p.set(k, String(v));
   }
+  history.replaceState({}, "", `${location.pathname}?${p.toString()}`);
+}
 
-  function option(label, value){
-    const o = document.createElement("option");
-    o.value = value;
-    o.textContent = label;
-    return o;
+function optionize(sel, items, getValue, getLabel){
+  sel.innerHTML = "";
+  for (const it of items){
+    const opt = document.createElement("option");
+    opt.value = getValue(it);
+    opt.textContent = getLabel(it);
+    sel.appendChild(opt);
   }
+}
 
-  function getQS(name){ return qs().get(name); }
-  function setQS(params){
-    const u = new URL(location.href);
-    Object.entries(params).forEach(([k,v]) => {
-      if (v === null || v === undefined || v === "") u.searchParams.delete(k);
-      else u.searchParams.set(k, v);
-    });
-    history.replaceState({}, "", u.toString());
+function chooseDefaultSeason(seasons){
+  const ongoing = seasons.find(s => (s.status||"") === "ongoing");
+  if (ongoing) return ongoing.season_id;
+  // fallback: latest year then first
+  const sorted = [...seasons].sort((a,b) => (b.year||0) - (a.year||0));
+  return sorted[0]?.season_id || null;
+}
+
+async function loadEvents(){
+  state.events = await API.events();
+  optionize(el.eventSelect, state.events, e => e.event_id, e => `${e.name_zh || e.event_id}`);
+  // ensure default selection exists
+  if (!state.events.some(e => e.event_id === state.current.event_id)){
+    state.current.event_id = DEFAULT_EVENT_ID;
   }
+  el.eventSelect.value = state.current.event_id;
+  el.k_event.textContent = (state.events.find(e => e.event_id === state.current.event_id)?.name_zh) || state.current.event_id;
+}
 
-  function card(label, value, sub=""){
-    return `
-      <div class="card">
-        <div class="label">${esc(label)}</div>
-        <div class="value mono">${esc(value)}</div>
-        ${sub ? `<div class="sub muted">${esc(sub)}</div>` : ""}
-      </div>
-    `;
+async function loadSeasons(){
+  state.seasons = await API.seasons(state.current.event_id);
+  optionize(el.seasonSelect, state.seasons, s => s.season_id, s => `${s.name || s.season_id}${s.status ? ` (${s.status})` : ""}`);
+
+  if (!state.current.season_id || !state.seasons.some(s => s.season_id === state.current.season_id)){
+    state.current.season_id = chooseDefaultSeason(state.seasons);
   }
+  el.seasonSelect.value = state.current.season_id || "";
 
-  function renderExplain({ event, season, division, lastRound, selectedRound }){
-    const topN = 20;
+  const season = state.seasons.find(s => s.season_id === state.current.season_id);
+  el.k_season.textContent = season ? `${season.name || season.season_id}` : "-";
+}
 
-    const cards = [
-      card("Event", event?.name_zh || event?.name_en || event?.event_id || "HPL"),
-      card("Season", season?.name || season?.season_id || "unknown", season?.status || ""),
-      card("Division", division?.name || division?.division_key || "elite"),
-      card("Default Round", lastRound?.name || lastRound?.leaderboard_key || "unknown", "Top20 默认口径"),
-      card("Viewing Round", selectedRound?.name || selectedRound?.leaderboard_key || "unknown", `榜单展示 Top ${topN}`),
-    ].join("");
+async function loadDivisions(){
+  state.divisions = await API.divisions(state.current.season_id);
+  optionize(el.divisionSelect, state.divisions, d => d.division_key, d => `${d.name} (${d.division_key})`);
 
-    if (el.infoCards) el.infoCards.innerHTML = `<div class="cards">${cards}</div>`;
-    if (el.infoExplain){
-      el.infoExplain.textContent =
-        "说明：本页 Top 20 默认展示该 Division 的「最后一个 Round」积分（last_round）。你也可以从 Round 下拉中切换查看其它 Round 的 Top 20。点击 Team 将进入 Team 档案页（Team 页不处理 Round 选择）。";
-    }
+  if (!state.divisions.some(d => d.division_key === state.current.division_key)){
+    // prefer elite else first
+    state.current.division_key = state.divisions.find(d => d.division_key === "elite")?.division_key || state.divisions[0]?.division_key || "";
   }
+  el.divisionSelect.value = state.current.division_key;
 
-  async function loadBootstrap(){
-    // locked to HPL ongoing in your backend bootstrap
-    const boot = await API.getJSON("/bootstrap", {}, { ttl: 60 });
-    return boot;
+  const division = state.divisions.find(d => d.division_key === state.current.division_key);
+  el.k_division.textContent = division ? division.name : "-";
+}
+
+async function loadRounds(){
+  // rounds are score_components with component_type=round/round_group under the base leaderboard key.
+  const division = state.divisions.find(d => d.division_key === state.current.division_key);
+  if (!division){ state.rounds = []; return; }
+
+  const bundle = await API.roundsBundle(state.current.season_id, division.leaderboard_key);
+  state.rounds = bundle.rounds || [];
+  optionize(el.roundSelect, state.rounds, r => r.component_id, r => r.name || r.component_id);
+
+  const last = bundle.last_round || null;
+  if (!state.current.round_key || !state.rounds.some(r => r.component_id === state.current.round_key)){
+    // default: last_round
+    state.current.round_key = last;
   }
+  if (state.current.round_key) el.roundSelect.value = state.current.round_key;
 
-  async function loadDivisions(season_id){
-    const data = await API.getJSON("/divisions", { season_id }, { ttl: 300 });
-    return data?.divisions || [];
-  }
+  el.k_defaultRound.textContent = last ? (state.rounds.find(r => r.component_id === last)?.name || last) : "-";
+  el.k_viewRound.textContent = state.current.view_mode === "round"
+    ? (state.rounds.find(r => r.component_id === state.current.round_key)?.name || state.current.round_key || "-")
+    : "(Total)";
+}
 
-  async function loadRounds(season_id, division_key){
-    const data = await API.getJSON("/rounds_bundle", { season_id, division_key }, { ttl: 60 });
-    // expect: rounds + last_round
-    return data;
-  }
+function pickLeaderboardKey(){
+  const division = state.divisions.find(d => d.division_key === state.current.division_key);
+  if (!division) return null;
 
-  async function loadLeaderboard(season_id, leaderboard_key){
-    const data = await API.getJSON("/leaderboard_bundle", { season_id, leaderboard_key }, { ttl: 30 });
-    return data;
-  }
+  // total = division.leaderboard_key, round = round_key (which itself is a leaderboard_key in DB for round_group cases)
+  // NOTE: In DB, round_group rows have leaderboard_key like hpl_s2_2025_elite.
+  // But our roundSelect uses component_id; we need resolve to leaderboard_key.
+  if (state.current.view_mode === "total") return division.leaderboard_key;
 
-  function renderLeaderboard({ rows, season_id, returnTo }){
+  const roundComp = state.rounds.find(r => r.component_id === state.current.round_key);
+  return roundComp?.leaderboard_key || null;
+}
+
+async function renderLeaderboard(){
+  const lb = pickLeaderboardKey();
+  el.leaderboardKey.value = lb || "";
+
+  if (!lb){
     el.tableBody.innerHTML = "";
-    const top = (rows || []).slice(0, 20);
-
-    if (!top.length){
-      el.tableBody.innerHTML = '<tr><td class="muted" colspan="3">暂无数据</td></tr>';
-      return;
-    }
-
-    top.forEach((r, idx) => {
-      const tr = document.createElement("tr");
-      tr.classList.add("row-clickable");
-      tr.dataset.teamId = r.team_id;
-      tr.innerHTML = `
-        <td class="mono">${idx + 1}</td>
-        <td class="strong">${esc(r.team_name || r.team_id || "")}</td>
-        <td class="mono">${esc(r.points ?? 0)}</td>
-      `;
-      tr.addEventListener("click", () => {
-        const team_id = tr.dataset.teamId;
-        const url =
-          `/team/?team_id=${encodeURIComponent(team_id)}` +
-          `&season_id=${encodeURIComponent(season_id)}` +
-          `&from=campaigns` +
-          `&tab=roster` +
-          `&return=${encodeURIComponent(returnTo)}`;
-        location.href = url;
-      });
-      el.tableBody.appendChild(tr);
-    });
+    el.emptyHint.style.display = "block";
+    el.primaryTitle.textContent = "Top 20";
+    el.secondaryTitle.textContent = "请选择 Event / Season / Division";
+    return;
   }
 
-  function fillEventSelect(event){
-    if (!el.eventSelect) return;
-    el.eventSelect.innerHTML = "";
-    const label = event?.name_zh || event?.name_en || event?.event_id || "event";
-    el.eventSelect.appendChild(option(label, event?.event_id || ""));
-    el.eventSelect.value = event?.event_id || "";
-    el.eventSelect.disabled = true; // locked to HPL
+  el.emptyHint.style.display = "none";
+  const data = await API.leaderboardBundle(lb, { limit: 20 });
+  const rows = data.rows || [];
+
+  el.primaryTitle.textContent = "Top 20";
+  // small, non-explanatory summary
+  const countText = rows.length ? `${rows.length} teams` : "0 teams";
+  el.secondaryTitle.textContent = `${lb} · ${countText}`;
+
+  el.tableBody.innerHTML = "";
+  for (const r of rows){
+    const tr = document.createElement("tr");
+
+    const tdRank = document.createElement("td");
+    tdRank.textContent = String(r.rank || "-");
+
+    const tdTeam = document.createElement("td");
+    const a = document.createElement("a");
+    a.href = `/team/?team_id=${encodeURIComponent(r.team_id)}`;
+    a.textContent = r.team_name || r.team_id;
+    tdTeam.appendChild(a);
+
+    const tdPts = document.createElement("td");
+    tdPts.style.textAlign = "right";
+    tdPts.textContent = fmt.num(r.points);
+
+    tr.appendChild(tdRank);
+    tr.appendChild(tdTeam);
+    tr.appendChild(tdPts);
+    el.tableBody.appendChild(tr);
   }
+}
 
-  function fillSeasonSelect(season){
-    el.seasonSelect.innerHTML = "";
-    el.seasonSelect.appendChild(option(season?.name || season?.season_id || "season", season?.season_id || ""));
-    el.seasonSelect.value = season?.season_id || "";
-    // fixed ongoing season: disable manual changing (division switch is allowed)
-    el.seasonSelect.disabled = true;
-  }
-
-  function fillDivisionSelect(divisions, selectedKey){
-    el.divisionSelect.innerHTML = "";
-    divisions.forEach(d => {
-      const label = d.name ? `${d.name} (${d.division_key})` : d.division_key;
-      el.divisionSelect.appendChild(option(label, d.division_key));
-    });
-    if (divisions.some(d => d.division_key === selectedKey)) el.divisionSelect.value = selectedKey;
-    else el.divisionSelect.value = divisions[0]?.division_key || "";
-  }
-
-  function fillRoundSelect(rounds, selectedKey){
-    el.roundSelect.innerHTML = "";
-    rounds.forEach(r => {
-      const label = r.name ? `${r.name}` : r.leaderboard_key;
-      el.roundSelect.appendChild(option(label, r.leaderboard_key));
-    });
-    if (rounds.some(r => r.leaderboard_key === selectedKey)) el.roundSelect.value = selectedKey;
-    else el.roundSelect.value = rounds[0]?.leaderboard_key || "";
-  }
-
-  async function refreshAll(){
-    setStatus("loading", "Loading...");
-    setMsg("");
-
-    try{
-      const boot = await loadBootstrap();
-      const season = boot?.season;
-      const event = boot?.event;
-      const defaultDivision = boot?.division; // likely elite
-
-      const season_id = season?.season_id;
-      if (!season_id) throw new Error("bootstrap missing season_id");
-
-      fillEventSelect(event);
-      fillSeasonSelect(season);
-
-      // divisions for this season
-      const divisions = await loadDivisions(season_id);
-
-      const urlDivisionKey = getQS("division_key");
-      const division_key = urlDivisionKey || defaultDivision?.division_key || "elite";
-      fillDivisionSelect(divisions, division_key);
-
-      // rounds for division
-      const roundsBundle = await loadRounds(season_id, el.divisionSelect.value);
-      const rounds = roundsBundle?.rounds || [];
-      const lastRound = roundsBundle?.last_round || rounds[rounds.length - 1] || null;
-
-      // selected round for viewing
-      const urlRoundKey = getQS("round_key");
-      const selectedRoundKey = urlRoundKey || lastRound?.leaderboard_key || rounds[0]?.leaderboard_key || "";
-      fillRoundSelect(rounds, selectedRoundKey);
-
-      // persist URL state
-      setQS({
-        season_id,
-        division_key: el.divisionSelect.value,
-        round_key: el.roundSelect.value,
-      });
-
-      // load leaderboard for selected round
-      const board = await loadLeaderboard(season_id, el.roundSelect.value);
-      const rows = board?.rows || board?.leaderboard || [];
-
-      const selectedRound = rounds.find(r => r.leaderboard_key === el.roundSelect.value) || null;
-
-      renderExplain({
-        event,
-        season,
-        division: divisions.find(d => d.division_key === el.divisionSelect.value) || defaultDivision,
-        lastRound,
-        selectedRound,
-      });
-
-      const returnTo = `${location.pathname}${location.search}`;
-      renderLeaderboard({ rows, season_id, returnTo });
-
-      setStatus("ok", "OK");
-    }catch(e){
-      console.error(e);
-      setStatus("error", "ERROR");
-      setMsg(String(e?.message || e));
-    }
-  }
-
-  // events
-  el.btnRefresh?.addEventListener("click", refreshAll);
-  el.divisionSelect?.addEventListener("change", async () => {
-    // changing division resets round to last_round of new division
-    setQS({ division_key: el.divisionSelect.value, round_key: "" });
-    await refreshAll();
+function syncUI(){
+  el.viewSelect.value = state.current.view_mode;
+  el.roundSelect.disabled = (state.current.view_mode !== "round");
+  setQS({
+    event_id: state.current.event_id,
+    season_id: state.current.season_id,
+    division_key: state.current.division_key,
+    view: state.current.view_mode,
+    round_key: (state.current.view_mode === "round") ? state.current.round_key : null,
   });
-  el.roundSelect?.addEventListener("change", async () => {
-    setQS({ round_key: el.roundSelect.value });
-    await refreshAll();
+}
+
+async function fullReload(){
+  try{
+    setStatus(true, "Loading");
+    await loadEvents();
+    await loadSeasons();
+    await loadDivisions();
+    await loadRounds();
+    syncUI();
+    await renderLeaderboard();
+    setStatus(true, "OK");
+  }catch(e){
+    console.error(e);
+    setStatus(false, "ERROR");
+  }
+}
+
+function wire(){
+  el.eventSelect.addEventListener("change", async () => {
+    state.current.event_id = el.eventSelect.value;
+    state.current.season_id = null;
+    await fullReload();
   });
 
-  refreshAll();
-})();
+  el.seasonSelect.addEventListener("change", async () => {
+    state.current.season_id = el.seasonSelect.value;
+    await fullReload();
+  });
+
+  el.divisionSelect.addEventListener("change", async () => {
+    state.current.division_key = el.divisionSelect.value;
+    await fullReload();
+  });
+
+  el.viewSelect.addEventListener("change", async () => {
+    state.current.view_mode = el.viewSelect.value;
+    await fullReload();
+  });
+
+  el.roundSelect.addEventListener("change", async () => {
+    state.current.round_key = el.roundSelect.value;
+    await fullReload();
+  });
+
+  el.btnRefresh.addEventListener("click", () => fullReload());
+}
+
+wire();
+fullReload();

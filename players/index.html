@@ -1,73 +1,56 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Players · BLAST Junior</title>
-    <link rel="stylesheet" href="/assets/css/site.css?v=20260110" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Players · BLAST Junior</title>
+  <link rel="stylesheet" href="/assets/css/site.css?v=20260110" />
 </head>
-<body>
-<div class="container">
+<body class="app players">
+  <div class="container">
+    <header class="card" style="margin-bottom:16px;">
+      <div class="card-inner" style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;">
+        <div style="min-width:0">
+          <div class="h1">Players</div>
+          <div class="sub">player_id / 昵称 / 姓名</div>
+        </div>
+        <div class="pill" aria-label="service status">
+          <span id="statusDot" class="dot"></span>
+          <span id="statusText">OK</span>
+        </div>
+      </div>
+    </header>
+
     <div class="layout">
-        <div class="card">
-            <div class="card-inner">
-                <div class="card-head">
-                    <div style="min-width:0">
-                        <div class="h1">Players</div>
-                        <div class="sub">只读检索：player_id / 名字关键词</div>
-                    </div>
-                    <div class="pill" id="statusPill" data-kind="ok" aria-live="polite">
-                        <span class="dot"></span>
-                        <span id="statusText">OK</span>
-                    </div>
-                </div>
+      <aside class="card">
+        <div class="card-inner">
+          <div class="section-title">检索</div>
 
-                <div class="hr" style="margin:14px 0;"></div>
+          <div>
+            <div class="label">关键词</div>
+            <input id="q" placeholder="例如：lx_002 / Mel / 阚国毅" />
+          </div>
 
-                <div class="form-row">
-                    <label for="qInput">检索</label>
-                    <input id="qInput" type="text" placeholder="例如：player_id 或 张三 / Heaven" />
-                </div>
+          <div style="margin-top:12px;display:flex;gap:10px;">
+            <button id="btnSearch" class="btn primary" type="button" style="flex:1">搜索</button>
+            <a class="btn" href="/campaigns/" style="flex:1;text-align:center">Campaigns</a>
+          </div>
 
-                <div class="btn-row">
-                    <button class="primary" id="btnSearch">搜索</button>
-                    <button onclick="location.href='/campaigns/'">返回 Campaigns</button>
-                </div>
-
-                <div class="msg" id="msg"></div>
-            </div>
+          <div id="hint" class="muted" style="margin-top:12px;">
+            输入后点击搜索。
+          </div>
         </div>
+      </aside>
 
-        <div class="card">
-            <div class="card-inner">
-                <div class="section-title">
-                    <div class="left">
-                        <h2>结果</h2>
-                        <div class="hint">展示 player + team + season</div>
-                    </div>
-                    <div class="tag">只读</div>
-                </div>
-
-                <div class="table-wrap" style="margin-top:12px;">
-                    <table>
-                        <thead>
-                        <tr>
-                            <th>Player ID</th>
-                            <th>Player</th>
-                            <th>Team</th>
-                            <th>Season</th>
-                        </tr>
-                        </thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
-                </div>
-            </div>
+      <main class="card">
+        <div class="card-inner">
+          <div class="section-title">结果</div>
+          <div id="result"></div>
         </div>
-
+      </main>
     </div>
-</div>
+  </div>
 
-<script src="/assets/js/api.js?v=20260110"></script>
-<script src="/assets/js/pages/players.js?v=20260110"></script>
+  <script type="module" src="/assets/js/pages/players.js"></script>
 </body>
 </html>

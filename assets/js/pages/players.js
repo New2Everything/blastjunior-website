@@ -1,171 +1,144 @@
-/* globals API */
-// Step 6: Players page (search + detail + URL state)
-(() => {
-  const $ = (id) => document.getElementById(id);
-  const qs = () => new URLSearchParams(location.search);
+import { API } from "../api.js";
 
-  const el = {
-    qInput: $("qInput"),
-    btnSearch: $("btnSearch"),
-    msg: $("msg"),
-    statusPill: $("statusPill"),
-    statusText: $("statusText"),
-    tableBody: $("tableBody"),
-  };
+const el = {
+  q: document.getElementById("q"),
+  btnSearch: document.getElementById("btnSearch"),
+  result: document.getElementById("result"),
+  hint: document.getElementById("hint"),
+  statusDot: document.getElementById("statusDot"),
+  statusText: document.getElementById("statusText"),
+};
 
-  function setStatus(kind, text){
-    if (el.statusPill) el.statusPill.dataset.kind = kind;
-    if (el.statusText) el.statusText.textContent = text || "";
-  }
-  function setMsg(t){ if (el.msg) el.msg.textContent = t || ""; }
-  function esc(s){
-    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
-  }
-  function getQS(name){ return qs().get(name); }
-  function setQS(params){
-    const u = new URL(location.href);
-    Object.entries(params).forEach(([k,v]) => {
-      if (v === null || v === undefined || v === "") u.searchParams.delete(k);
-      else u.searchParams.set(k, v);
+function setStatus(ok, text){
+  if (el.statusDot) el.statusDot.style.background = ok ? "var(--ok)" : "var(--err)";
+  if (el.statusText) el.statusText.textContent = text;
+}
+
+function escapeHTML(s){
+  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"','&quot;');
+}
+
+function renderPlayerDetail(p){
+  el.result.innerHTML = `
+    <div class="card" style="box-shadow:none">
+      <div class="card-inner">
+        <div class="split" style="align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:20px;font-weight:900">${escapeHTML(p.nickname || p.display_name || p.player_id)}</div>
+            <div class="muted" style="margin-top:4px">ID: ${escapeHTML(p.player_id || "-")}</div>
+            <div class="muted">姓名: ${escapeHTML(p.real_name || "-")}</div>
+            <div class="muted">俱乐部: ${escapeHTML(p.club_name || "-")}</div>
+          </div>
+          <a class="btn" href="/team/?team_id=${encodeURIComponent(p.team_id || "")}" style="visibility:${p.team_id?"visible":"hidden"}">Team</a>
+        </div>
+
+        ${Array.isArray(p.rosters) && p.rosters.length ? `
+          <div style="margin-top:16px">
+            <div class="section-title">出现在哪些队伍/赛季</div>
+            <div style="overflow:auto">
+              <table class="table">
+                <thead><tr><th>SEASON</th><th>TEAM</th><th>TEAM_ID</th></tr></thead>
+                <tbody>
+                  ${p.rosters.map(r => `
+                    <tr>
+                      <td>${escapeHTML(r.season_id)}</td>
+                      <td><a href="/team/?team_id=${encodeURIComponent(r.team_id)}">${escapeHTML(r.team_name || r.team_id)}</a></td>
+                      <td class="muted">${escapeHTML(r.team_id)}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function renderLookupList(list){
+  el.result.innerHTML = `
+    <div style="overflow:auto">
+      <table class="table">
+        <thead><tr><th>PLAYER_ID</th><th>昵称</th><th>姓名</th><th>俱乐部</th></tr></thead>
+        <tbody>
+          ${list.map(p => `
+            <tr>
+              <td><a href="#" data-player-id="${escapeHTML(p.player_id)}">${escapeHTML(p.player_id)}</a></td>
+              <td>${escapeHTML(p.nickname || "-")}</td>
+              <td>${escapeHTML(p.real_name || "-")}</td>
+              <td class="muted">${escapeHTML(p.club_name || "-")}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  el.result.querySelectorAll("a[data-player-id]").forEach(a => {
+    a.addEventListener("click", async (ev) => {
+      ev.preventDefault();
+      await loadDetail(a.getAttribute("data-player-id"));
     });
-    history.replaceState({}, "", u.toString());
-  }
-  function displayName(p){
-    return p.nickname || p.display_name || p.real_name || p.player_id || "";
-  }
+  });
+}
 
-  async function renderDetail(player_id){
-    setStatus("loading", "Loading...");
-    setMsg("");
-    el.tableBody.innerHTML = '<tr><td class="muted" colspan="4">Loading…</td></tr>';
+async function loadDetail(player_id){
+  const d = await API.playerDetail(player_id);
+  renderPlayerDetail(d);
+}
 
-    try{
-      const d = await API.getJSON("/player", { player_id }, { ttl: 60 });
-      const p = d?.player;
-      const rosters = d?.rosters || [];
+function looksLikePlayerId(q){
+  const s = q.trim();
+  if (!s) return false;
+  // ids in this project look like lx_002; treat any token containing '_' as id
+  if (s.includes("_")) return true;
+  // also allow exact alnum with dash
+  return /^\w{2,30}$/.test(s) && /^[a-z]/i.test(s);
+}
 
-      if (!p){
-        el.tableBody.innerHTML = '<tr><td class="muted" colspan="4">player not found</td></tr>';
-        setStatus("ok", "OK");
-        return;
-      }
-
-      const header = [
-        ["PLAYER", displayName(p)],
-        ["PLAYER_ID", p.player_id],
-        p.club_name ? ["CLUB", p.club_name] : null,
-      ].filter(Boolean);
-
-      el.tableBody.innerHTML = header.map(([k,v]) => `
-        <tr><td class="muted mono">${esc(k)}</td><td class="strong" colspan="3">${esc(v)}</td></tr>
-      `).join("");
-
-      el.tableBody.innerHTML += '<tr><td class="muted mono">ROSTERS</td><td class="muted" colspan="3">该player出现在哪些team/赛季</td></tr>';
-
-      if (!rosters.length){
-        el.tableBody.innerHTML += '<tr><td class="muted" colspan="4">暂无 roster</td></tr>';
-        setStatus("ok", "OK");
-        return;
-      }
-
-      const frag = document.createDocumentFragment();
-      for (const r of rosters){
-        const tr = document.createElement("tr");
-        tr.classList.add("row-clickable");
-        tr.dataset.teamId = r.team_id;
-        tr.dataset.seasonId = r.season_id;
-        tr.innerHTML = `
-          <td class="muted mono">${esc(r.season_id || "")}</td>
-          <td class="strong">${esc(r.team_name || r.team_id || "")}</td>
-          <td class="muted">${esc(r.role || "")}</td>
-          <td class="muted mono">${esc(r.team_id || "")}</td>
-        `;
-        tr.addEventListener("click", () => {
-          location.href = `/team/?team_id=${encodeURIComponent(tr.dataset.teamId)}&season_id=${encodeURIComponent(tr.dataset.seasonId)}`;
-        });
-        frag.appendChild(tr);
-      }
-      el.tableBody.appendChild(frag);
-
-      setStatus("ok", "OK");
-    }catch(e){
-      console.error(e);
-      setStatus("error", "ERROR");
-      setMsg(String(e?.message || e));
-      el.tableBody.innerHTML = '<tr><td class="muted" colspan="4">加载失败</td></tr>';
-    }
+async function onSearch(){
+  const q = el.q.value.trim();
+  if (!q){
+    el.hint.textContent = "请输入关键词";
+    return;
   }
 
-  async function search(){
-    const q = (el.qInput?.value || "").trim();
-    if (!q){
-      setMsg("请输入 player_id 或名字关键词");
+  try{
+    setStatus(true, "Loading");
+
+    if (looksLikePlayerId(q)){
+      await loadDetail(q);
+      el.hint.textContent = "";
+      setStatus(true, "OK");
       return;
     }
 
-    if (/^\d+$/.test(q)){
-      setQS({ player_id: q });
-      return renderDetail(q);
+    const list = await API.playerLookup(q);
+    if (!list || list.length === 0){
+      el.result.innerHTML = `<div class="muted">没有找到结果</div>`;
+    } else if (list.length === 1){
+      await loadDetail(list[0].player_id);
+    } else {
+      renderLookupList(list);
     }
 
-    setStatus("loading", "Loading...");
-    setMsg("");
-    el.tableBody.innerHTML = "";
-
-    try{
-      const data = await API.getJSON("/players", {}, { ttl: 300 });
-      const all = data?.players || (Array.isArray(data) ? data : []);
-      const qq = q.toLowerCase();
-      const matches = all.filter(p => {
-        const a = (p.nickname || "").toLowerCase();
-        const b = (p.display_name || "").toLowerCase();
-        const c = (p.real_name || "").toLowerCase();
-        const id = String(p.player_id || "").toLowerCase();
-        return id.includes(qq) || a.includes(qq) || b.includes(qq) || c.includes(qq);
-      }).slice(0, 30);
-
-      if (!matches.length){
-        setStatus("ok", "OK");
-        setMsg("没有匹配结果");
-        return;
-      }
-
-      el.tableBody.innerHTML = matches.map(p => `
-        <tr class="row-clickable" data-player="${esc(p.player_id)}">
-          <td class="mono">${esc(p.player_id)}</td>
-          <td class="strong">${esc(displayName(p))}</td>
-          <td class="muted">${esc(p.club_name || "")}</td>
-          <td class="muted">${esc(p.is_active ?? "")}</td>
-        </tr>
-      `).join("");
-
-      el.tableBody.querySelectorAll("tr[data-player]").forEach(tr => {
-        tr.addEventListener("click", () => {
-          const pid = tr.getAttribute("data-player");
-          if (el.qInput) el.qInput.value = pid;
-          setQS({ player_id: pid });
-          renderDetail(pid);
-        });
-      });
-
-      setStatus("ok", "OK");
-    }catch(e){
-      console.error(e);
-      setStatus("error", "ERROR");
-      setMsg(String(e?.message || e));
-    }
+    el.hint.textContent = "";
+    setStatus(true, "OK");
+  }catch(e){
+    console.error(e);
+    el.result.innerHTML = `<div class="muted">查询失败</div>`;
+    setStatus(false, "ERROR");
   }
+}
 
-  const pid = getQS("player_id");
-  if (pid){
-    if (el.qInput) el.qInput.value = pid;
-    renderDetail(pid);
-  } else {
-    setStatus("ok", "OK");
-  }
+el.btnSearch.addEventListener("click", onSearch);
+el.q.addEventListener("keydown", (e) => { if (e.key === "Enter") onSearch(); });
 
-  el.btnSearch?.addEventListener("click", search);
-  el.qInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
-})();
+// deep link: /players/?q=...
+const qs = new URLSearchParams(location.search);
+const preset = qs.get("q");
+if (preset){
+  el.q.value = preset;
+  onSearch();
+}

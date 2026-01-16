@@ -3,105 +3,113 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Campaigns • BLAST Junior</title>
+  <title>Campaigns · BLAST Junior</title>
   <link rel="stylesheet" href="/assets/css/site.css?v=20260110" />
-  
 </head>
 <body class="app campaigns">
-<main class="page">
-  <header class="hero">
-    <div>
-      <h1>Campaigns</h1>
-      <div class="sub">兰星少年 · 数据中心</div>
+  <div class="container">
+    <header class="card" style="margin-bottom:16px;">
+      <div class="card-inner" style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;">
+        <div style="min-width:0">
+          <div class="h1">Campaigns</div>
+          <div class="sub">兰星少年 · 数据中心</div>
+        </div>
+        <div class="pill" aria-label="service status">
+          <span id="statusDot" class="dot"></span>
+          <span id="statusText">OK</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Left: selection -->
+      <aside class="card">
+        <div class="card-inner">
+          <div class="section-title">选择</div>
+
+          <div class="row">
+            <div>
+              <div class="label">Event</div>
+              <select id="eventSelect"></select>
+            </div>
+            <div>
+              <div class="label">Season</div>
+              <select id="seasonSelect"></select>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:12px;">
+            <div>
+              <div class="label">Division</div>
+              <select id="divisionSelect"></select>
+            </div>
+            <div>
+              <div class="label">View</div>
+              <select id="viewSelect">
+                <option value="total">Total</option>
+                <option value="round">Round / Group</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <div class="label">Round / Group</div>
+            <select id="roundSelect"></select>
+          </div>
+
+          <div style="margin-top:14px;display:flex;gap:10px;">
+            <button id="btnRefresh" class="btn primary" type="button" style="flex:1">刷新</button>
+            <a class="btn" href="/team/" style="flex:1;text-align:center">Teams</a>
+            <a class="btn" href="/players/" style="flex:1;text-align:center">Players</a>
+          </div>
+
+          <div class="kpis">
+            <div class="kpi"><div class="k">Event</div><div class="v" id="k_event">-</div></div>
+            <div class="kpi"><div class="k">Season</div><div class="v" id="k_season">-</div></div>
+            <div class="kpi"><div class="k">Division</div><div class="v" id="k_division">-</div></div>
+            <div class="kpi"><div class="k">Default Round</div><div class="v" id="k_defaultRound">-</div></div>
+            <div class="kpi"><div class="k">Viewing</div><div class="v" id="k_viewRound">-</div></div>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- Right: display -->
+      <main class="card">
+        <div class="card-inner">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div>
+              <div class="section-title" id="primaryTitle">Top 20</div>
+              <div class="sub" id="secondaryTitle">-</div>
+            </div>
+            <div style="width:360px;max-width:100%;">
+              <div class="label">leaderboard_key</div>
+              <input id="leaderboardKey" type="text" disabled />
+            </div>
+          </div>
+
+          <div id="emptyHint" class="muted" style="margin-top:14px;display:none;">
+            请先选择 Event / Season / Division
+          </div>
+
+          <div style="margin-top:14px;overflow:auto;">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width:72px;">RANK</th>
+                  <th>TEAM</th>
+                  <th style="width:120px;text-align:right;">POINTS</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+
+        </div>
+      </main>
     </div>
-    <div id="statusPill" class="pill card" aria-live="polite">
-      <span id="statusDot" class="dot"></span>
-      <span id="statusText">Loading…</span>
-    </div>
-  </header>
+  </div>
 
-<section id="infoCards" class="cards"></section>
-<div id="infoExplain" class="muted explain"></div>
-
-
-  <section class="layout-2col">
-    <aside class="card filters">
-      <div class="row">
-        <div>
-          <label for="eventSelect">赛事（Event）</label>
-          <select id="eventSelect"></select>
-        </div>
-        <div>
-          <label for="seasonSelect">赛季（Season）</label>
-          <select id="seasonSelect"></select>
-        </div>
-      </div>
-
-      <div class="row">
-        <div>
-          <label for="divisionSelect">组别（Division）</label>
-          <select id="divisionSelect"></select>
-        </div>
-        <div>
-          <label for="viewSelect">查看方式</label>
-          <select id="viewSelect">
-            <option value="total">总积分</option>
-            <option value="round">按场次/分组</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row">
-        <div>
-          <label for="roundSelect">场次 / 分组（Round / Group）</label>
-          <select id="roundSelect" disabled></select>
-        </div>
-        <div>
-          <label for="lbKeyBox">当前基准 leaderboard_key</label>
-          <input id="lbKeyBox" class="muted" type="text" readonly />
-        </div>
-      </div>
-
-      <div class="actions">
-        <button id="btnRefresh" type="button">刷新</button>
-        <button type="button" onclick="location.href='/team'">队伍页（只读）</button>
-        <button type="button" onclick="location.href='/players'">球员检索（只读）</button>
-      </div>
-
-      <p class="muted" style="margin:12px 0 0;">
-        逻辑：Event → Season → Division（拿到 division.leaderboard_key 作为基准）→ 先出总积分；如需按场次/分组，自动列出同基准 key 前缀的子榜单。
-      </p>
-    </div>
-
-    <div class="card">
-      <div class="row" style="align-items:flex-end;">
-        <div style="flex:1 1 auto; min-width: 220px;">
-          <div id="titleLine" class="muted">请选择 Event / Season / Division</div>
-        </div>
-        <div style="flex:0 0 auto; min-width: 180px;">
-          <div id="metaLine" class="muted" style="text-align:right;"></div>
-        </div>
-      </div>
-
-      <div class="table-wrap" style="margin-top: 12px;">
-        <table>
-          <thead>
-          <tr>
-            <th style="width: 72px;">RANK</th>
-            <th>TEAM</th>
-            <th style="width: 120px;">POINTS</th>
-          </tr>
-          </thead>
-          <tbody id="tableBody">
-          <tr><td class="muted" colspan="3">—</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-</main>
-
-<script src="/assets/js/api.js?v=20260110"></script>
-<script src="/assets/js/pages/campaigns.js?v=20260110"></script>
+  <script type="module" src="/assets/js/pages/campaigns.js"></script>
 </body>
 </html>
