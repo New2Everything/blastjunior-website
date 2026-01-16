@@ -122,7 +122,8 @@
         const a = (p.nickname || "").toLowerCase();
         const b = (p.display_name || "").toLowerCase();
         const c = (p.real_name || "").toLowerCase();
-        return a.includes(qq) || b.includes(qq) || c.includes(qq);
+        const id = String(p.player_id || "").toLowerCase();
+        return id.includes(qq) || a.includes(qq) || b.includes(qq) || c.includes(qq);
       }).slice(0, 30);
 
       if (!matches.length){

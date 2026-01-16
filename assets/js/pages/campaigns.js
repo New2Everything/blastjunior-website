@@ -129,6 +129,15 @@
     });
   }
 
+  function fillEventSelect(event){
+    if (!el.eventSelect) return;
+    el.eventSelect.innerHTML = "";
+    const label = event?.name_zh || event?.name_en || event?.event_id || "event";
+    el.eventSelect.appendChild(option(label, event?.event_id || ""));
+    el.eventSelect.value = event?.event_id || "";
+    el.eventSelect.disabled = true; // locked to HPL
+  }
+
   function fillSeasonSelect(season){
     el.seasonSelect.innerHTML = "";
     el.seasonSelect.appendChild(option(season?.name || season?.season_id || "season", season?.season_id || ""));
@@ -170,6 +179,7 @@
       const season_id = season?.season_id;
       if (!season_id) throw new Error("bootstrap missing season_id");
 
+      fillEventSelect(event);
       fillSeasonSelect(season);
 
       // divisions for this season
