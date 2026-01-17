@@ -3,101 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Team · BLAST Junior</title>
+  <title>Teams · BLAST Junior</title>
   <link rel="stylesheet" href="/assets/css/site.css?v=20260110" />
 </head>
 <body class="app team">
-<main class="page">
-  <header class="hero">
-    <div style="min-width:0">
-      <h1 id="teamHeaderTitle">Team</h1>
-      <div id="teamHeaderMeta" class="sub">选择赛季 → 选择队伍</div>
-      <div class="meta-lines">
-        <div id="teamAliasLine" class="muted"></div>
-        <div id="teamNoteLine" class="muted"></div>
+  <main class="page">
+    <header class="card topbar">
+      <div class="topbar-left">
+        <div class="title">Teams</div>
+        <nav id="crumb" class="crumb" aria-label="breadcrumb"></nav>
       </div>
-    </div>
-    <div class="hero-actions">
-      <button id="btnBack" class="btn ghost" type="button">← 返回</button>
-      <button id="btnRefresh" class="btn" type="button">刷新</button>
-      <div id="statusPill" class="pill card" aria-live="polite">
-        <span class="dot" data-dot></span>
-        <span id="statusText">Loading…</span>
+      <div class="split">
+        <a class="btn" href="/campaigns/">Campaigns</a>
+        <a class="btn" href="/players/">Players</a>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <section class="layout-2col">
-    <aside class="card filters">
-      <div class="row">
-        <div>
-          <label for="seasonSelect">赛季（Season）</label>
-          <select id="seasonSelect"></select>
-        </div>
-        <div>
-          <label for="teamSelect">队伍（Team）</label>
-          <select id="teamSelect"></select>
-        </div>
-      </div>
+    <section class="content" id="content" aria-live="polite"></section>
+  </main>
 
-      <div class="divider"></div>
-
-      <h3 class="h3">积分筛选</h3>
-      <div class="row">
-        <div>
-          <label for="ptsSeason">赛季</label>
-          <select id="ptsSeason"></select>
-        </div>
-        <div>
-          <label for="ptsType">类型</label>
-          <select id="ptsType"></select>
-        </div>
-      </div>
-      <div class="row">
-        <div>
-          <label for="ptsQuery">关键词（component_id / 名称）</label>
-          <input id="ptsQuery" class="input" placeholder="例如：r01 / stage / autumn" />
-        </div>
-      </div>
-      <div class="row buttons">
-        <button id="ptsApply" class="btn" type="button">应用</button>
-        <button id="ptsReset" class="btn ghost" type="button">重置</button>
-      </div>
-      <div id="ptsSummary" class="muted"></div>
-
-      <div id="msg" class="msg"></div>
-    </aside>
-
-    <section class="card main">
-      <h2 class="h2">队员（Roster）</h2>
-      <table class="table">
-        <thead><tr><th>player_id</th><th>昵称</th><th>姓名</th><th>俱乐部</th></tr></thead>
-        <tbody id="rosterBody"></tbody>
-      </table>
-
-      <div class="spacer"></div>
-
-      <h2 class="h2">参赛记录（Registrations）</h2>
-      <table class="table">
-        <thead><tr><th>season</th><th>division</th><th>status</th><th>registration_id</th></tr></thead>
-        <tbody id="regsBody"></tbody>
-      </table>
-
-      <div class="spacer"></div>
-
-      <h2 class="h2">积分明细（Team Component Points）</h2>
-      <table class="table">
-        <thead><tr><th>component</th><th>points</th><th>recorded_at</th><th>note</th></tr></thead>
-        <tbody id="ptsTableBody"></tbody>
-      </table>
-    </section>
-  </section>
-</main>
-
-<script src="/assets/js/config.js?v=20260110"></script>
-<script src="/assets/js/api.js?v=20260110"></script>
-<script src="/assets/js/utils.js?v=20260110"></script>
-<script src="/assets/js/ui.js?v=20260110"></script>
-<script src="/assets/js/pages/team.js?v=20260110"></script>
+  <script type="module" src="/assets/js/pages/team.js"></script>
 </body>
 </html>

@@ -1,261 +1,253 @@
-/* campaigns.js (T=1.61)
-   - Event list includes ALL events.
-   - Default event: HPL.
-   - Clean IA: left = selection, right = display.
-*/
+import { getBundle } from "../api.js";
+import { qs, setSearch, clearSearch, renderCrumb, tile, emptyBlock } from "../common.js";
+import { upsertTeams } from "../store.js";
 
-import { API, fmt } from "../api.js";
+const content = document.getElementById("content");
+const crumbEl = document.getElementById("crumb");
 
-const QS = new URLSearchParams(location.search);
-const DEFAULT_EVENT_ID = "hpl";
+function normalizeContext(ctx, selectors) {
+  // First entry default: if no event_id in URL, default to hpl (but keep full events list)
+  const event_id = ctx.event_id || qs("event_id") || "hpl";
+  const season_id = ctx.season_id || qs("season_id") || selectors.seasons?.[0]?.season_id || "";
+  const division_key = ctx.division_key || qs("division_key") || selectors.divisions?.[0]?.division_key || "";
+  const round_key = ctx.round_key || qs("round_key") || selectors.rounds?.slice(-1)[0]?.round_key || selectors.rounds?.slice(-1)[0]?.component_id || "";
+  return { event_id, season_id, division_key, round_key };
+}
 
-const el = {
-  statusDot: document.getElementById("statusDot"),
-  statusText: document.getElementById("statusText"),
+function nameBy(list, idKey, idVal, nameKey = "name") {
+  const f = (list || []).find(x => String(x?.[idKey]) === String(idVal));
+  return f?.[nameKey] || idVal || "";
+}
 
-  eventSelect: document.getElementById("eventSelect"),
-  seasonSelect: document.getElementById("seasonSelect"),
-  divisionSelect: document.getElementById("divisionSelect"),
-  viewSelect: document.getElementById("viewSelect"),
-  roundSelect: document.getElementById("roundSelect"),
+function isLeaderboardView(p) {
+  return !!(p.event_id && p.season_id && p.division_key && p.round_key);
+}
 
-  k_event: document.getElementById("k_event"),
-  k_season: document.getElementById("k_season"),
-  k_division: document.getElementById("k_division"),
-  k_defaultRound: document.getElementById("k_defaultRound"),
-  k_viewRound: document.getElementById("k_viewRound"),
+function state(p) {
+  if (!p.event_id) return "EVENT";
+  if (p.event_id && !p.season_id) return "SEASON";
+  if (p.season_id && !p.division_key) return "DIVISION";
+  if (p.division_key && !p.round_key) return "ROUND";
+  return "LEADERBOARD";
+}
 
-  primaryTitle: document.getElementById("primaryTitle"),
-  secondaryTitle: document.getElementById("secondaryTitle"),
+async function load() {
+  // Always call bundle with current params (or default hpl handled server-side as well)
+  const params = {
+    event_id: qs("event_id") || "",
+    season_id: qs("season_id") || "",
+    division_key: qs("division_key") || "",
+    round_key: qs("round_key") || ""
+  };
+  const data = await getBundle("campaigns_bundle", params);
+  // Persist teams we have seen (helps Team page list without extra endpoints)
+  upsertTeams((data.table || []).map(r => ({ team_id: r.team_id, team_name: r.team_name })));
+  return data;
+}
 
-  leaderboardKey: document.getElementById("leaderboardKey"),
-  tableBody: document.getElementById("tableBody"),
-  emptyHint: document.getElementById("emptyHint"),
+function render(data) {
+  const selectors = data.selectors || {};
+  const ctx = normalizeContext(data.context || {}, selectors);
 
-  btnRefresh: document.getElementById("btnRefresh"),
-};
+  // Breadcrumb
+  const items = [];
+  const s = state({
+    event_id: qs("event_id"),
+    season_id: qs("season_id"),
+    division_key: qs("division_key"),
+    round_key: qs("round_key")
+  });
 
-let state = {
-  events: [],
-  seasons: [],
-  divisions: [],
-  rounds: [],
-  current: {
-    event_id: QS.get("event_id") || DEFAULT_EVENT_ID,
-    season_id: QS.get("season_id") || null,
-    division_key: QS.get("division_key") || "elite",
-    view_mode: QS.get("view") || "total", // total | round
-    round_key: QS.get("round_key") || null,
+  items.push({ label: "Events", href: "/campaigns/", onClick: () => { clearSearch(["event_id","season_id","division_key","round_key"]); boot(); } });
+
+  if (qs("event_id")) {
+    const evName = nameBy(selectors.events, "event_id", qs("event_id"), "name");
+    items.push({ label: evName, href: "#", onClick: () => { clearSearch(["season_id","division_key","round_key"]); boot(); } });
   }
-};
-
-function setStatus(ok, text){
-  if (el.statusDot) el.statusDot.style.background = ok ? "var(--ok)" : "var(--err)";
-  if (el.statusText) el.statusText.textContent = text;
-}
-
-function setQS(partial){
-  const p = new URLSearchParams(location.search);
-  for (const [k,v] of Object.entries(partial)){
-    if (v === null || v === undefined || v === "") p.delete(k);
-    else p.set(k, String(v));
+  if (qs("season_id")) {
+    const snName = nameBy(selectors.seasons, "season_id", qs("season_id"), "name");
+    items.push({ label: snName, href: "#", onClick: () => { clearSearch(["division_key","round_key"]); boot(); } });
   }
-  history.replaceState({}, "", `${location.pathname}?${p.toString()}`);
-}
-
-function optionize(sel, items, getValue, getLabel){
-  sel.innerHTML = "";
-  for (const it of items){
-    const opt = document.createElement("option");
-    opt.value = getValue(it);
-    opt.textContent = getLabel(it);
-    sel.appendChild(opt);
+  if (qs("division_key")) {
+    const dvName = nameBy(selectors.divisions, "division_key", qs("division_key"), "name");
+    items.push({ label: dvName, href: "#", onClick: () => { clearSearch(["round_key"]); boot(); } });
   }
-}
-
-function chooseDefaultSeason(seasons){
-  const ongoing = seasons.find(s => (s.status||"") === "ongoing");
-  if (ongoing) return ongoing.season_id;
-  // fallback: latest year then first
-  const sorted = [...seasons].sort((a,b) => (b.year||0) - (a.year||0));
-  return sorted[0]?.season_id || null;
-}
-
-async function loadEvents(){
-  state.events = await API.events();
-  optionize(el.eventSelect, state.events, e => e.event_id, e => `${e.name_zh || e.event_id}`);
-  // ensure default selection exists
-  if (!state.events.some(e => e.event_id === state.current.event_id)){
-    state.current.event_id = DEFAULT_EVENT_ID;
+  if (qs("round_key")) {
+    const rdName = nameBy(selectors.rounds, "round_key", qs("round_key"), "name");
+    items.push({ label: rdName });
   }
-  el.eventSelect.value = state.current.event_id;
-  el.k_event.textContent = (state.events.find(e => e.event_id === state.current.event_id)?.name_zh) || state.current.event_id;
-}
+  renderCrumb(crumbEl, items);
 
-async function loadSeasons(){
-  state.seasons = await API.seasons(state.current.event_id);
-  optionize(el.seasonSelect, state.seasons, s => s.season_id, s => `${s.name || s.season_id}${s.status ? ` (${s.status})` : ""}`);
+  content.innerHTML = "";
 
-  if (!state.current.season_id || !state.seasons.some(s => s.season_id === state.current.season_id)){
-    state.current.season_id = chooseDefaultSeason(state.seasons);
-  }
-  el.seasonSelect.value = state.current.season_id || "";
-
-  const season = state.seasons.find(s => s.season_id === state.current.season_id);
-  el.k_season.textContent = season ? `${season.name || season.season_id}` : "-";
-}
-
-async function loadDivisions(){
-  state.divisions = await API.divisions(state.current.season_id);
-  optionize(el.divisionSelect, state.divisions, d => d.division_key, d => `${d.name} (${d.division_key})`);
-
-  if (!state.divisions.some(d => d.division_key === state.current.division_key)){
-    // prefer elite else first
-    state.current.division_key = state.divisions.find(d => d.division_key === "elite")?.division_key || state.divisions[0]?.division_key || "";
-  }
-  el.divisionSelect.value = state.current.division_key;
-
-  const division = state.divisions.find(d => d.division_key === state.current.division_key);
-  el.k_division.textContent = division ? division.name : "-";
-}
-
-async function loadRounds(){
-  // rounds are score_components with component_type=round/round_group under the base leaderboard key.
-  const division = state.divisions.find(d => d.division_key === state.current.division_key);
-  if (!division){ state.rounds = []; return; }
-
-  const bundle = await API.roundsBundle(state.current.season_id, division.leaderboard_key);
-  state.rounds = bundle.rounds || [];
-  optionize(el.roundSelect, state.rounds, r => r.component_id, r => r.name || r.component_id);
-
-  const last = bundle.last_round || null;
-  if (!state.current.round_key || !state.rounds.some(r => r.component_id === state.current.round_key)){
-    // default: last_round
-    state.current.round_key = last;
-  }
-  if (state.current.round_key) el.roundSelect.value = state.current.round_key;
-
-  el.k_defaultRound.textContent = last ? (state.rounds.find(r => r.component_id === last)?.name || last) : "-";
-  el.k_viewRound.textContent = state.current.view_mode === "round"
-    ? (state.rounds.find(r => r.component_id === state.current.round_key)?.name || state.current.round_key || "-")
-    : "(Total)";
-}
-
-function pickLeaderboardKey(){
-  const division = state.divisions.find(d => d.division_key === state.current.division_key);
-  if (!division) return null;
-
-  // total = division.leaderboard_key, round = round_key (which itself is a leaderboard_key in DB for round_group cases)
-  // NOTE: In DB, round_group rows have leaderboard_key like hpl_s2_2025_elite.
-  // But our roundSelect uses component_id; we need resolve to leaderboard_key.
-  if (state.current.view_mode === "total") return division.leaderboard_key;
-
-  const roundComp = state.rounds.find(r => r.component_id === state.current.round_key);
-  return roundComp?.leaderboard_key || null;
-}
-
-async function renderLeaderboard(){
-  const lb = pickLeaderboardKey();
-  el.leaderboardKey.value = lb || "";
-
-  if (!lb){
-    el.tableBody.innerHTML = "";
-    el.emptyHint.style.display = "block";
-    el.primaryTitle.textContent = "Top 20";
-    el.secondaryTitle.textContent = "请选择 Event / Season / Division";
+  // Default first entry behavior: first open defaults to HPL (but Events remains accessible via breadcrumb)
+  if (!qs("event_id")) {
+    setSearch({ event_id: "hpl", season_id: "", division_key: "", round_key: "" }, true);
+    boot();
     return;
   }
 
-  el.emptyHint.style.display = "none";
-  const data = await API.leaderboardBundle(lb, { limit: 20 });
-  const rows = data.rows || [];
+  if (!qs("season_id")) {
+    renderSeasonGrid(selectors, qs("event_id"));
+    return;
+  }
+  if (!qs("division_key")) {
+    renderDivisionGrid(selectors, qs("event_id"), qs("season_id"));
+    return;
+  }
+  if (!qs("round_key")) {
+    renderRoundGrid(selectors, qs("event_id"), qs("season_id"), qs("division_key"));
+    return;
+  }
+  renderLeaderboard(data);
+}
 
-  el.primaryTitle.textContent = "Top 20";
-  // small, non-explanatory summary
-  const countText = rows.length ? `${rows.length} teams` : "0 teams";
-  el.secondaryTitle.textContent = `${lb} · ${countText}`;
+function renderEventGrid(selectors) {
+  const events = selectors.events || [];
+  if (!events.length) {
+    content.appendChild(emptyBlock());
+    return;
+  }
+  const grid = document.createElement("div");
+  grid.className = "grid";
 
-  el.tableBody.innerHTML = "";
-  for (const r of rows){
-    const tr = document.createElement("tr");
+  for (const ev of events) {
+    const t = tile({ title: ev.name || ev.event_id, subtitle: ev.event_id, badge: "Event" });
+    t.addEventListener("click", () => {
+      setSearch({ event_id: ev.event_id, season_id: "", division_key: "", round_key: "" }, false);
+      boot();
+    });
+    grid.appendChild(t);
+  }
+  content.appendChild(grid);
+}
 
-    const tdRank = document.createElement("td");
-    tdRank.textContent = String(r.rank || "-");
+function renderSeasonGrid(selectors) {
+  const seasons = selectors.seasons || [];
+  if (!seasons.length) {
+    content.appendChild(emptyBlock());
+    return;
+  }
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  for (const s of seasons) {
+    const t = tile({ title: s.name || s.season_id, subtitle: s.status || "", badge: "Season" });
+    t.addEventListener("click", () => {
+      setSearch({ season_id: s.season_id, division_key: "", round_key: "" }, false);
+      boot();
+    });
+    grid.appendChild(t);
+  }
+  content.appendChild(grid);
+}
 
-    const tdTeam = document.createElement("td");
-    const a = document.createElement("a");
-    a.href = `/team/?team_id=${encodeURIComponent(r.team_id)}`;
-    a.textContent = r.team_name || r.team_id;
-    tdTeam.appendChild(a);
+function renderDivisionGrid(selectors) {
+  const divisions = selectors.divisions || [];
+  if (!divisions.length) {
+    content.appendChild(emptyBlock());
+    return;
+  }
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  for (const d of divisions) {
+    const t = tile({ title: d.name || d.division_key, subtitle: d.division_key, badge: "Division" });
+    t.addEventListener("click", () => {
+      setSearch({ division_key: d.division_key, round_key: "" }, false);
+      boot();
+    });
+    grid.appendChild(t);
+  }
+  content.appendChild(grid);
+}
 
-    const tdPts = document.createElement("td");
-    tdPts.style.textAlign = "right";
-    tdPts.textContent = fmt.num(r.points);
+function renderRoundGrid(selectors) {
+  const rounds = selectors.rounds || [];
+  if (!rounds.length) {
+    content.appendChild(emptyBlock());
+    return;
+  }
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  for (const r of rounds) {
+    const key = r.round_key || r.component_id;
+    const t = tile({ title: r.name || key, subtitle: r.type || r.component_type || "", badge: "Round" });
+    t.addEventListener("click", () => {
+      setSearch({ round_key: key }, false);
+      boot();
+    });
+    grid.appendChild(t);
+  }
+  content.appendChild(grid);
+}
 
-    tr.appendChild(tdRank);
-    tr.appendChild(tdTeam);
-    tr.appendChild(tdPts);
-    el.tableBody.appendChild(tr);
+function renderLeaderboard(data) {
+  const panel = document.createElement("div");
+  panel.className = "panel";
+  panel.innerHTML = `
+    <div class="panel-hd">
+      <div class="h">Leaderboard</div>
+    </div>
+    <div class="panel-bd">
+      <div class="cards-row" style="margin-bottom:12px;">
+        <div class="stat"><div class="k">Teams</div><div class="v">${data.overview?.teams_total ?? (data.table||[]).length}</div></div>
+        <div class="stat"><div class="k">Total Points</div><div class="v">${(data.table||[]).reduce((s,r)=>s+Number(r.points||0),0)}</div></div>
+        <div class="stat"><div class="k">Round</div><div class="v">${data.context?.round_key ?? qs("round_key") ?? ""}</div></div>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:72px;">RANK</th>
+              <th>TEAM</th>
+              <th style="width:120px;" class="right">POINTS</th>
+            </tr>
+          </thead>
+          <tbody id="lbBody"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  const tbody = panel.querySelector("#lbBody");
+  const rows = data.table || [];
+  tbody.innerHTML = rows.map(r => `
+    <tr class="rowlink" data-team-id="${r.team_id}">
+      <td>${r.rank}</td>
+      <td>${escape(r.team_name)}</td>
+      <td class="right">${Number(r.points||0)}</td>
+    </tr>
+  `).join("");
+
+  tbody.addEventListener("click", (e) => {
+    const tr = e.target.closest("tr[data-team-id]");
+    if (!tr) return;
+    const team_id = tr.getAttribute("data-team-id");
+    location.href = `/team/?team_id=${encodeURIComponent(team_id)}`;
+  });
+
+  content.appendChild(panel);
+}
+
+function escape(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+async function boot() {
+  try {
+    const data = await load();
+    render(data);
+  } catch {
+    content.innerHTML = "";
+    content.appendChild(emptyBlock("加载失败"));
   }
 }
 
-function syncUI(){
-  el.viewSelect.value = state.current.view_mode;
-  el.roundSelect.disabled = (state.current.view_mode !== "round");
-  setQS({
-    event_id: state.current.event_id,
-    season_id: state.current.season_id,
-    division_key: state.current.division_key,
-    view: state.current.view_mode,
-    round_key: (state.current.view_mode === "round") ? state.current.round_key : null,
-  });
-}
+// First view default (HPL) without locking user: keep event grid but prefetch uses default on server-side.
+boot();
 
-async function fullReload(){
-  try{
-    setStatus(true, "Loading");
-    await loadEvents();
-    await loadSeasons();
-    await loadDivisions();
-    await loadRounds();
-    syncUI();
-    await renderLeaderboard();
-    setStatus(true, "OK");
-  }catch(e){
-    console.error(e);
-    setStatus(false, "ERROR");
-  }
-}
-
-function wire(){
-  el.eventSelect.addEventListener("change", async () => {
-    state.current.event_id = el.eventSelect.value;
-    state.current.season_id = null;
-    await fullReload();
-  });
-
-  el.seasonSelect.addEventListener("change", async () => {
-    state.current.season_id = el.seasonSelect.value;
-    await fullReload();
-  });
-
-  el.divisionSelect.addEventListener("change", async () => {
-    state.current.division_key = el.divisionSelect.value;
-    await fullReload();
-  });
-
-  el.viewSelect.addEventListener("change", async () => {
-    state.current.view_mode = el.viewSelect.value;
-    await fullReload();
-  });
-
-  el.roundSelect.addEventListener("change", async () => {
-    state.current.round_key = el.roundSelect.value;
-    await fullReload();
-  });
-
-  el.btnRefresh.addEventListener("click", () => fullReload());
-}
-
-wire();
-fullReload();
+window.addEventListener("popstate", () => boot());
