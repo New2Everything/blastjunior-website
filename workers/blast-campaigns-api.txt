@@ -1,24 +1,39 @@
+/**
+ * blast-campaigns-api (Bundle-only, v2 computed)
+ * Public endpoints (ONLY):
+ *   GET /api/public/health
+ *   GET /api/public/campaigns_bundle
+ *   GET /api/public/team_bundle        (list mode if no team_id)
+ *   GET /api/public/player_bundle      (list mode if no player_id)
+ *
+ * Binding: env.DB (Cloudflare D1)
+ */
 export default {
   async fetch(request, env) {
     try {
       const url = new URL(request.url);
+
       if (request.method === "OPTIONS") return corsPreflight();
       if (request.method !== "GET") return json({ error: "Method Not Allowed" }, 405);
 
       switch (url.pathname) {
         case "/api/public/health":
           return json({ ok: true, ts: new Date().toISOString() });
+
         case "/api/public/campaigns_bundle":
           return campaignsBundle(env, url);
+
         case "/api/public/team_bundle":
           return teamBundle(env, url);
+
         case "/api/public/player_bundle":
           return playerBundle(env, url);
+
         default:
           return json({ error: "Not Found" }, 404);
       }
     } catch (e) {
-      return json({ error: e.message }, 500);
+      return json({ error: e?.message || String(e) }, 500);
     }
   }
 };
@@ -30,7 +45,7 @@ function corsPreflight() {
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders(), "content-type": "application/json" }
+    headers: { ...corsHeaders(), "content-type": "application/json; charset=utf-8" }
   });
 }
 
@@ -42,108 +57,375 @@ function corsHeaders() {
   };
 }
 
+async function columns(env, table) {
+  // Runtime schema introspection (tolerant to column drift)
+  const res = await env.DB.prepare(`PRAGMA table_info(${table});`).all();
+  const set = new Set((res.results || []).map(r => r.name));
+  return set;
+}
+
+function pickNameCol(cols, candidates, fallback) {
+  for (const c of candidates) if (cols.has(c)) return c;
+  return fallback;
+}
+
 async function campaignsBundle(env, url) {
+  const eventsCols = await columns(env, "events");
+  const seasonsCols = await columns(env, "seasons");
+  const divisionsCols = await columns(env, "divisions");
+  const scoreCols = await columns(env, "score_components");
+  const teamsCols = await columns(env, "teams");
+
+  const eventNameCol = pickNameCol(eventsCols, ["name_zh", "name", "title"], "event_id");
+  const seasonNameCol = pickNameCol(seasonsCols, ["name", "name_zh", "title"], "season_id");
+  const divisionNameCol = pickNameCol(divisionsCols, ["name", "name_zh", "title"], "division_key");
+  const teamNameCol = pickNameCol(teamsCols, ["name", "canonical_name", "team_name"], "team_id");
+
   const event_id = url.searchParams.get("event_id") || "hpl";
 
   const events = await env.DB.prepare(
-    "SELECT event_id, name_zh AS name FROM events ORDER BY event_id"
+    `SELECT event_id, ${eventNameCol} AS name FROM events ORDER BY event_id`
   ).all();
 
   const seasons = await env.DB.prepare(
-    "SELECT season_id, name, status FROM seasons WHERE event_id = ? ORDER BY start_date DESC"
+    `SELECT season_id, ${seasonNameCol} AS name, ${seasonsCols.has("status") ? "status" : "NULL AS status"} 
+     FROM seasons WHERE event_id = ? 
+     ${seasonsCols.has("start_date") ? "ORDER BY start_date DESC" : "ORDER BY season_id DESC"}`
   ).bind(event_id).all();
 
-  const season_id = url.searchParams.get("season_id") || seasons.results[0]?.season_id;
+  const season_id = url.searchParams.get("season_id") || seasons.results?.[0]?.season_id || null;
 
-  const divisions = await env.DB.prepare(
-    "SELECT division_key, name FROM divisions WHERE season_id = ?"
-  ).bind(season_id).all();
+  const divisions = season_id
+    ? await env.DB.prepare(
+        `SELECT division_key, ${divisionNameCol} AS name 
+         FROM divisions WHERE season_id = ? 
+         ORDER BY division_key`
+      ).bind(season_id).all()
+    : { results: [] };
 
-  const division_key = url.searchParams.get("division_key") || divisions.results[0]?.division_key;
+  const division_key = url.searchParams.get("division_key") || divisions.results?.[0]?.division_key || null;
 
-  const rounds = await env.DB.prepare(
-    "SELECT component_id AS round_key, name, component_type AS type FROM score_components WHERE season_id = ? AND leaderboard_key = ? ORDER BY sort_order"
-  ).bind(season_id, division_key).all();
+  const rounds = (season_id && division_key)
+    ? await env.DB.prepare(
+        `SELECT component_id AS round_key,
+                ${scoreCols.has("name") ? "name" : "component_id AS name"} AS name,
+                ${scoreCols.has("component_type") ? "component_type" : "NULL"} AS type,
+                ${scoreCols.has("sort_order") ? "sort_order" : "0"} AS sort_order
+         FROM score_components
+         WHERE season_id = ? AND leaderboard_key = ?
+         ORDER BY ${scoreCols.has("sort_order") ? "sort_order" : "component_id"} ASC`
+      ).bind(season_id, division_key).all()
+    : { results: [] };
 
-  const round_key = url.searchParams.get("round_key") || rounds.results.slice(-1)[0]?.round_key;
+  const round_key = url.searchParams.get("round_key") || (rounds.results?.length ? rounds.results[rounds.results.length - 1].round_key : null);
 
-  const leaderboard = await env.DB.prepare(
-    "SELECT t.team_id, t.name AS team_name, COALESCE(SUM(p.points),0) AS points      FROM teams t      LEFT JOIN team_component_points p ON p.team_id = t.team_id AND p.component_id = ?      GROUP BY t.team_id      ORDER BY points DESC, t.team_id"
-  ).bind(round_key).all();
+  // Leaderboard for selected round_key (if any)
+  let table = [];
+  if (round_key) {
+    // Prefer limiting universe to registered teams if registrations exists; else fall back to all teams
+    const hasRegistrations = true; // table exists in schema set, but columns may vary
+    let teamIds = [];
+    if (hasRegistrations) {
+      const regCols = await columns(env, "registrations");
+      if (regCols.has("team_id") && regCols.has("season_id") && regCols.has("division_key") && season_id && division_key) {
+        const regTeams = await env.DB.prepare(
+          "SELECT DISTINCT team_id FROM registrations WHERE season_id = ? AND division_key = ?"
+        ).bind(season_id, division_key).all();
+        teamIds = (regTeams.results || []).map(r => r.team_id);
+      }
+    }
+    if (!teamIds.length) {
+      const allTeams = await env.DB.prepare("SELECT team_id FROM teams").all();
+      teamIds = (allTeams.results || []).map(r => r.team_id);
+    }
 
-  const table = leaderboard.results.map((r, i) => ({
-    rank: i + 1,
-    team_id: r.team_id,
-    team_name: r.team_name,
-    points: r.points
-  }));
+    // Points for each team (0 allowed)
+    // D1 doesn't support binding an array directly; compute by querying points table and mapping
+    const ptsRows = await env.DB.prepare(
+      "SELECT team_id, COALESCE(SUM(points),0) AS points FROM team_component_points WHERE component_id = ? GROUP BY team_id"
+    ).bind(round_key).all();
+    const ptsMap = new Map((ptsRows.results || []).map(r => [r.team_id, Number(r.points || 0)]));
+
+    // Team names
+    const namesRows = await env.DB.prepare(
+      `SELECT team_id, ${teamNameCol} AS team_name FROM teams`
+    ).all();
+    const nameMap = new Map((namesRows.results || []).map(r => [r.team_id, r.team_name]));
+
+    table = teamIds.map(id => ({
+      team_id: id,
+      team_name: nameMap.get(id) || id,
+      points: ptsMap.get(id) || 0
+    }))
+    .sort((a,b) => (b.points - a.points) || String(a.team_id).localeCompare(String(b.team_id)) )
+    .map((r, idx) => ({ rank: idx + 1, ...r }));
+  }
+
+  const totalPoints = table.reduce((s, r) => s + (Number(r.points) || 0), 0);
 
   return json({
     context: { event_id, season_id, division_key, round_key },
     selectors: {
-      events: events.results,
-      seasons: seasons.results,
-      divisions: divisions.results,
-      rounds: rounds.results
+      events: events.results || [],
+      seasons: seasons.results || [],
+      divisions: divisions.results || [],
+      rounds: (rounds.results || []).map(r => ({ round_key: r.round_key, name: r.name, type: r.type }))
     },
     overview: {
       teams_total: table.length,
-      teams_scored: table.filter(r => r.points > 0).length,
-      teams_zero_score: table.filter(r => r.points === 0).length
+      total_points: totalPoints
     },
     table
   });
 }
 
 async function teamBundle(env, url) {
-  const team_id = url.searchParams.get("team_id");
-  if (!team_id) throw new Error("team_id required");
+  const teamsCols = await columns(env, "teams");
+  const teamNameCol = pickNameCol(teamsCols, ["name", "canonical_name", "team_name"], "team_id");
 
+  const team_id = url.searchParams.get("team_id");
+
+  // LIST MODE: no team_id => return all teams (for card grid)
+  if (!team_id) {
+    const rows = await env.DB.prepare(`SELECT team_id, ${teamNameCol} AS team_name FROM teams ORDER BY ${teamNameCol}`).all();
+    return json({ mode: "list", teams: rows.results || [] });
+  }
+
+  // DETAIL MODE
   const team = await env.DB.prepare(
-    "SELECT team_id, name FROM teams WHERE team_id = ?"
+    `SELECT team_id, ${teamNameCol} AS team_name ${teamsCols.has("club") ? ", club" : ""} ${teamsCols.has("club_name") ? ", club_name" : ""}
+     FROM teams WHERE team_id = ?`
   ).bind(team_id).first();
 
-  const aliases = await env.DB.prepare(
-    "SELECT alias FROM team_aliases WHERE team_id = ?"
+  const aliasCols = await columns(env, "team_aliases");
+  const aliases = aliasCols.has("alias")
+    ? await env.DB.prepare("SELECT alias FROM team_aliases WHERE team_id = ? ORDER BY alias").bind(team_id).all()
+    : { results: [] };
+
+  const rosterCols = await columns(env, "rosters");
+  const playersCols = await columns(env, "players");
+  const playerNameCol = pickNameCol(playersCols, ["nickname", "name"], "player_id");
+
+  const roster = (rosterCols.has("player_id") && rosterCols.has("team_id"))
+    ? await env.DB.prepare(
+        `SELECT p.player_id,
+                ${playersCols.has("name") ? "p.name" : "NULL"} AS name,
+                ${playersCols.has("nickname") ? "p.nickname" : "NULL"} AS nickname,
+                ${playerNameCol === "nickname" ? "COALESCE(p.nickname,p.name,p.player_id)" : "COALESCE(p.name,p.nickname,p.player_id)"} AS display_name
+         FROM rosters r
+         JOIN players p ON r.player_id = p.player_id
+         WHERE r.team_id = ?
+         ORDER BY display_name`
+      ).bind(team_id).all()
+    : { results: [] };
+
+  // First appearance + per-season final ranks (best effort)
+  const regCols = await columns(env, "registrations");
+  let first_appearance = null;
+  let season_results = [];
+
+  if (regCols.has("team_id") && regCols.has("season_id") && regCols.has("division_key")) {
+    // all participations
+    const regs = await env.DB.prepare(
+      `SELECT DISTINCT ${regCols.has("event_id") ? "event_id" : "NULL AS event_id"}, season_id, division_key
+       FROM registrations WHERE team_id = ?`
+    ).bind(team_id).all();
+
+    // first appearance by any time-ish column if exists
+    const timeCol = regCols.has("created_at") ? "created_at" : (regCols.has("createdTime") ? "createdTime" : null);
+    if (timeCol) {
+      const fa = await env.DB.prepare(
+        `SELECT ${regCols.has("event_id") ? "event_id" : "NULL AS event_id"} AS event_id, season_id, division_key, ${timeCol} AS ts
+         FROM registrations WHERE team_id = ?
+         ORDER BY ${timeCol} ASC LIMIT 1`
+      ).bind(team_id).first();
+      if (fa) first_appearance = { event_id: fa.event_id, season_id: fa.season_id, division_key: fa.division_key, ts: fa.ts };
+    } else {
+      const fa = await env.DB.prepare(
+        `SELECT ${regCols.has("event_id") ? "event_id" : "NULL AS event_id"} AS event_id, season_id, division_key
+         FROM registrations WHERE team_id = ?
+         ORDER BY season_id ASC LIMIT 1`
+      ).bind(team_id).first();
+      if (fa) first_appearance = { event_id: fa.event_id, season_id: fa.season_id, division_key: fa.division_key, ts: null };
+    }
+
+    // compute final rank per (season_id, division_key)
+    for (const r of (regs.results || [])) {
+      const finalComponent = await env.DB.prepare(
+        `SELECT component_id, ${ (await columns(env,"score_components")).has("name") ? "name" : "component_id AS name"} AS name
+         FROM score_components
+         WHERE season_id = ? AND leaderboard_key = ?
+         ORDER BY ${ (await columns(env,"score_components")).has("sort_order") ? "sort_order" : "component_id"} DESC
+         LIMIT 1`
+      ).bind(r.season_id, r.division_key).first();
+
+      if (!finalComponent?.component_id) continue;
+
+      // universe of teams in this season/division
+      const u = await env.DB.prepare(
+        "SELECT DISTINCT team_id FROM registrations WHERE season_id = ? AND division_key = ?"
+      ).bind(r.season_id, r.division_key).all();
+      const universe = (u.results || []).map(x => x.team_id);
+
+      // points map for that component
+      const ptsRows = await env.DB.prepare(
+        "SELECT team_id, COALESCE(SUM(points),0) AS points FROM team_component_points WHERE component_id = ? GROUP BY team_id"
+      ).bind(finalComponent.component_id).all();
+      const ptsMap = new Map((ptsRows.results || []).map(x => [x.team_id, Number(x.points || 0)]));
+
+      const ranked = universe
+        .map(tid => ({ team_id: tid, points: ptsMap.get(tid) || 0 }))
+        .sort((a,b) => (b.points - a.points) || String(a.team_id).localeCompare(String(b.team_id)));
+      const rank = ranked.findIndex(x => x.team_id === team_id) + 1;
+
+      season_results.push({
+        event_id: r.event_id || null,
+        season_id: r.season_id,
+        division_key: r.division_key,
+        final_component_id: finalComponent.component_id,
+        final_component_name: finalComponent.name || finalComponent.component_id,
+        points: ptsMap.get(team_id) || 0,
+        rank: rank || null
+      });
+    }
+
+    // best rank summary
+    season_results.sort((a,b) => (a.rank||9999) - (b.rank||9999));
+  }
+
+  // component points list (raw)
+  const pointsRows = await env.DB.prepare(
+    "SELECT component_id, points FROM team_component_points WHERE team_id = ? ORDER BY component_id"
   ).bind(team_id).all();
 
-  const roster = await env.DB.prepare(
-    "SELECT p.player_id, p.name AS display_name      FROM rosters r JOIN players p ON r.player_id = p.player_id      WHERE r.team_id = ?"
-  ).bind(team_id).all();
-
-  const points = await env.DB.prepare(
-    "SELECT component_id, points FROM team_component_points WHERE team_id = ?"
-  ).bind(team_id).all();
+  const pointsTotal = (pointsRows.results || []).reduce((s, x) => s + Number(x.points || 0), 0);
+  const best = season_results.length ? season_results[0] : null;
+  const bestRankTimes = best ? season_results.filter(x => x.rank === best.rank).length : 0;
 
   return json({
-    team: { ...team, aliases: aliases.results.map(a => a.alias) },
-    summary: {
-      points_total: points.results.reduce((s, r) => s + r.points, 0),
-      components_played: points.results.length
+    mode: "detail",
+    team: {
+      team_id: team?.team_id || team_id,
+      team_name: team?.team_name || team_id,
+      aliases: (aliases.results || []).map(a => a.alias).filter(Boolean),
+      club: team?.club ?? team?.club_name ?? null,
+      first_appearance
     },
-    roster: roster.results,
-    components: points.results
+    summary: {
+      seasons_played: new Set(season_results.map(x => x.season_id)).size || null,
+      players_total: (roster.results || []).length,
+      points_total: pointsTotal,
+      best_rank: best ? { rank: best.rank, times: bestRankTimes, season_id: best.season_id, division_key: best.division_key } : null
+    },
+    season_results,
+    roster: roster.results || [],
+    components: pointsRows.results || []
   });
 }
 
 async function playerBundle(env, url) {
+  const playersCols = await columns(env, "players");
+  const nicknameCol = playersCols.has("nickname") ? "nickname" : (playersCols.has("name") ? "name" : "player_id");
   const player_id = url.searchParams.get("player_id");
-  if (!player_id) throw new Error("player_id required");
+
+  // LIST MODE: no player_id => return all players (for card grid)
+  if (!player_id) {
+    const rows = await env.DB.prepare(
+      `SELECT player_id, ${nicknameCol} AS nickname ${playersCols.has("name") ? ", name" : ", NULL AS name"} 
+       FROM players ORDER BY ${nicknameCol}`
+    ).all();
+    return json({ mode: "list", players: rows.results || [] });
+  }
 
   const player = await env.DB.prepare(
-    "SELECT player_id, name, nickname FROM players WHERE player_id = ?"
+    `SELECT player_id
+            ${playersCols.has("nickname") ? ", nickname" : ", NULL AS nickname"}
+            ${playersCols.has("name") ? ", name" : ", NULL AS name"}
+            ${playersCols.has("age") ? ", age" : ", NULL AS age"}
+            ${playersCols.has("is_pro") ? ", is_pro" : ", NULL AS is_pro"}
+            ${playersCols.has("real_name") ? ", real_name" : ", NULL AS real_name"}
+     FROM players WHERE player_id = ?`
   ).bind(player_id).first();
 
-  const rosters = await env.DB.prepare(
-    "SELECT r.team_id, t.name AS team_name, r.season_id      FROM rosters r JOIN teams t ON r.team_id = t.team_id      WHERE r.player_id = ?"
-  ).bind(player_id).all();
+  const rosterCols = await columns(env, "rosters");
+  const teamsCols = await columns(env, "teams");
+  const teamNameCol = pickNameCol(teamsCols, ["name", "canonical_name", "team_name"], "team_id");
+
+  const rosters = (rosterCols.has("player_id") && rosterCols.has("team_id"))
+    ? await env.DB.prepare(
+        `SELECT r.team_id,
+                t.${teamNameCol} AS team_name
+                ${rosterCols.has("season_id") ? ", r.season_id" : ", NULL AS season_id"}
+         FROM rosters r
+         JOIN teams t ON r.team_id = t.team_id
+         WHERE r.player_id = ?
+         ORDER BY team_name`
+      ).bind(player_id).all()
+    : { results: [] };
+
+  // Best rank (across participations) – best effort if we can infer season/division via registrations
+  // We use team season_results computed logic by calling small helper per unique team_id.
+  const regCols = await columns(env, "registrations");
+  let best_rank = null;
+  if (regCols.has("team_id") && regCols.has("season_id") && regCols.has("division_key")) {
+    const seen = new Set();
+    for (const rr of (rosters.results || [])) {
+      const tid = rr.team_id;
+      if (!tid || seen.has(tid)) continue;
+      seen.add(tid);
+
+      const regs = await env.DB.prepare(
+        "SELECT DISTINCT season_id, division_key FROM registrations WHERE team_id = ?"
+      ).bind(tid).all();
+
+      for (const r of (regs.results || [])) {
+        const scCols = await columns(env, "score_components");
+        const finalComponent = await env.DB.prepare(
+          `SELECT component_id FROM score_components WHERE season_id = ? AND leaderboard_key = ?
+           ORDER BY ${scCols.has("sort_order") ? "sort_order" : "component_id"} DESC LIMIT 1`
+        ).bind(r.season_id, r.division_key).first();
+        if (!finalComponent?.component_id) continue;
+
+        const u = await env.DB.prepare(
+          "SELECT DISTINCT team_id FROM registrations WHERE season_id = ? AND division_key = ?"
+        ).bind(r.season_id, r.division_key).all();
+        const universe = (u.results || []).map(x => x.team_id);
+
+        const ptsRows = await env.DB.prepare(
+          "SELECT team_id, COALESCE(SUM(points),0) AS points FROM team_component_points WHERE component_id = ? GROUP BY team_id"
+        ).bind(finalComponent.component_id).all();
+        const ptsMap = new Map((ptsRows.results || []).map(x => [x.team_id, Number(x.points || 0)]));
+
+        const ranked = universe
+          .map(id => ({ team_id: id, points: ptsMap.get(id) || 0 }))
+          .sort((a,b) => (b.points - a.points) || String(a.team_id).localeCompare(String(b.team_id)));
+
+        const rank = ranked.findIndex(x => x.team_id === tid) + 1;
+        if (rank > 0 && (!best_rank || rank < best_rank.rank)) {
+          best_rank = { rank, team_id: tid, season_id: r.season_id, division_key: r.division_key };
+        }
+      }
+    }
+  }
+
+  const is_pro = Boolean(player?.is_pro);
+  const safe_real_name = is_pro ? (player?.real_name ?? null) : null;
 
   return json({
-    player,
-    summary: {
-      seasons_played: new Set(rosters.results.map(r => r.season_id)).size,
-      teams_played: new Set(rosters.results.map(r => r.team_id)).size
+    mode: "detail",
+    player: {
+      player_id: player?.player_id || player_id,
+      nickname: player?.nickname ?? null,
+      name: player?.name ?? null,
+      real_name: safe_real_name,
+      age: player?.age ?? null,
+      is_pro
     },
-    rosters: rosters.results
+    summary: {
+      seasons_played: new Set((rosters.results || []).map(r => r.season_id).filter(Boolean)).size || null,
+      teams_played: new Set((rosters.results || []).map(r => r.team_id).filter(Boolean)).size || null,
+      best_rank
+    },
+    rosters: rosters.results || []
   });
 }
