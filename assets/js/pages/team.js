@@ -34,7 +34,7 @@ async function renderTeamDetail(team_id) {
   // Persist players seen in roster so Player page has a list even before dedicated index endpoint exists.
   upsertPlayers((data.roster || []).map(p => ({
     player_id: p.player_id,
-    nickname: p.display_name,
+    nickname: p.nickname || p.display_name || p.name || "",
     name: p.name
   })));
 
@@ -77,7 +77,8 @@ async function renderTeamDetail(team_id) {
   rg.className = "grid";
   rg.style.gridTemplateColumns = "repeat(4,1fr)";
   (data.roster || []).forEach(p => {
-    const card = tile({ title: p.display_name || p.player_id, subtitle: p.player_id, badge: "Player" });
+    const display = p.nickname || p.display_name || p.name || p.player_id;
+    const card = tile({ title: display, subtitle: p.player_id, badge: "Player" });
     card.addEventListener("click", () => {
       location.href = `/players/?player_id=${encodeURIComponent(p.player_id)}`;
     });

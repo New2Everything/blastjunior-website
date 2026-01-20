@@ -6,8 +6,9 @@ const content = document.getElementById("content");
 const crumbEl = document.getElementById("crumb");
 
 function normalizeContext(ctx, selectors) {
-  // First entry default: if no event_id in URL, default to hpl (but keep full events list)
-  const event_id = ctx.event_id || qs("event_id") || "hpl";
+  // Selection defaults are decided by the worker (selected.*) when URL params are empty.
+  // Frontend should NOT lock the user to a default event via URL.
+  const event_id = ctx.event_id || qs("event_id") || "";
   const season_id = ctx.season_id || qs("season_id") || selectors.seasons?.[0]?.season_id || "";
   const division_key = ctx.division_key || qs("division_key") || selectors.divisions?.[0]?.division_key || "";
   const round_key = ctx.round_key || qs("round_key") || selectors.rounds?.slice(-1)[0]?.round_key || selectors.rounds?.slice(-1)[0]?.component_id || "";
@@ -48,6 +49,9 @@ async function load() {
 function render(data) {
   const selectors = data.selectors || {};
   const ctx = normalizeContext(data.context || {}, selectors);
+  // Use worker-decided default selection for highlighting (without forcing URL state).
+  const selected = data.selected || data.context?.selected || {};
+  if (!ctx.event_id && selected.event_id) ctx.event_id = selected.event_id;
 
   // Breadcrumb
   const items = [];
@@ -62,15 +66,16 @@ function render(data) {
 
   if (qs("event_id")) {
     const evName = nameBy(selectors.events, "event_id", qs("event_id"), "name");
-    items.push({ label: evName, href: "#", onClick: () => { clearSearch(["season_id","division_key","round_key"]); boot(); } });
+    // Keep breadcrumb informational (avoid accidental drill-down / unexpected jumps).
+    items.push({ label: evName });
   }
   if (qs("season_id")) {
     const snName = nameBy(selectors.seasons, "season_id", qs("season_id"), "name");
-    items.push({ label: snName, href: "#", onClick: () => { clearSearch(["division_key","round_key"]); boot(); } });
+    items.push({ label: snName });
   }
   if (qs("division_key")) {
     const dvName = nameBy(selectors.divisions, "division_key", qs("division_key"), "name");
-    items.push({ label: dvName, href: "#", onClick: () => { clearSearch(["round_key"]); boot(); } });
+    items.push({ label: dvName });
   }
   if (qs("round_key")) {
     const rdName = nameBy(selectors.rounds, "round_key", qs("round_key"), "name");
@@ -80,10 +85,10 @@ function render(data) {
 
   content.innerHTML = "";
 
-  // Default first entry behavior: first open defaults to HPL (but Events remains accessible via breadcrumb)
+  // First entry: show all events (but highlight worker-selected default without forcing URL).
   if (!qs("event_id")) {
-    setSearch({ event_id: "hpl", season_id: "", division_key: "", round_key: "" }, true);
-    boot();
+    const highlightEventId = ctx.event_id || selected.event_id || "hpl";
+    renderEventGrid(selectors, highlightEventId);
     return;
   }
 
@@ -102,7 +107,7 @@ function render(data) {
   renderLeaderboard(data);
 }
 
-function renderEventGrid(selectors) {
+function renderEventGrid(selectors, selectedEventId = "") {
   const events = selectors.events || [];
   if (!events.length) {
     content.appendChild(emptyBlock());
@@ -113,6 +118,7 @@ function renderEventGrid(selectors) {
 
   for (const ev of events) {
     const t = tile({ title: ev.name || ev.event_id, subtitle: ev.event_id, badge: "Event" });
+    if (String(ev.event_id) === String(selectedEventId)) t.classList.add("active");
     t.addEventListener("click", () => {
       setSearch({ event_id: ev.event_id, season_id: "", division_key: "", round_key: "" }, false);
       boot();
