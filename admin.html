@@ -3,241 +3,501 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>管理后台</title>
+  <title>媒体审核后台</title>
   <style>
     body { font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; margin: 24px; background:#f6f7fb;}
     h1 { margin: 0 0 8px; font-size: 40px; }
     .sub { color:#666; margin-bottom: 18px; }
 
-    .tabs { display:flex; gap:10px; margin-bottom:16px; }
-    .tab { padding:8px 14px; border-radius:10px; border:1px solid #ddd; background:#fff; cursor:pointer;}
-    .tab.active { background:#2563eb; color:#fff; border-color:#2563eb;}
-
-    .bar { display:flex; gap:10px; align-items:center; margin: 14px 0 18px; }
-    input, select, textarea {
-      padding: 10px 12px; border-radius: 10px; border:1px solid #ddd;
-      font-family: inherit;
+    /* 顶部 tabs */
+    .tabs { display:flex; gap:10px; align-items:center; margin: 10px 0 18px; }
+    .tab {
+      padding: 10px 14px; border-radius: 999px; border:1px solid #ddd; background:#fff; cursor:pointer;
+      user-select:none;
     }
-    input { width: 360px; }
-    textarea { width:100%; min-height:120px; }
+    .tab.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+
+    .bar { display:flex; gap:10px; align-items:center; margin: 14px 0 18px; flex-wrap:wrap; }
+    input { width: 360px; padding: 10px 12px; border-radius: 10px; border:1px solid #ddd; }
     button { padding: 10px 14px; border-radius: 10px; border:1px solid #ddd; background:#fff; cursor:pointer;}
     button.primary { background:#2563eb; color:#fff; border-color:#2563eb;}
     button.ok { background:#16a34a; color:#fff; border-color:#16a34a;}
+    button.bad { background:#ef4444; color:#fff; border-color:#ef4444;}
     button.warn { background:#f59e0b; color:#fff; border-color:#f59e0b;}
+    button:disabled { opacity:.55; cursor:not-allowed; }
 
     .grid { display:grid; grid-template-columns: 1fr; gap: 14px; }
-    .card { background:#fff; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.06); padding: 14px; }
-    .card h3 { margin:0 0 10px; }
-
-    .row { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
-    .row label { width:160px; color:#555; }
+    .card { background:#fff; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.06); padding: 14px; display:grid; grid-template-columns: 280px 1fr; gap:14px; }
+    .thumb { width: 280px; height: 280px; border-radius: 14px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .meta { color:#333; }
+    .meta .id { font-weight: 800; font-size: 18px; margin-bottom: 6px; }
+    .meta .line { color:#666; margin: 4px 0; }
+    .actions { margin-top: 10px; display:flex; gap:10px; flex-wrap:wrap; }
 
     pre { background:#0b1220; color:#e5e7eb; padding: 12px; border-radius: 12px; overflow:auto; }
-    .muted { color:#777; font-size:13px; }
+
+    /* Writer console */
+    .panel { background:#fff; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.06); padding: 16px; }
+    .panel h2 { margin:0 0 10px; font-size: 22px; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin: 10px 0; }
+    .row label { width: 150px; color:#555; }
+    .row .grow { flex:1; min-width: 280px; }
+    select, textarea {
+      width:100%;
+      padding: 10px 12px; border-radius: 10px; border:1px solid #ddd; background:#fff;
+      font-family: inherit;
+    }
+    textarea { min-height: 180px; }
+    .hint { color:#666; font-size: 13px; line-height: 1.4; }
+    .pill { display:inline-block; padding:3px 8px; border-radius:999px; background:#eef2ff; color:#3730a3; font-size:12px; margin-left:6px; }
+    .split { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 1100px){ .split { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
+  <h1>媒体审核后台</h1>
+  <div class="sub">照片审核走 <code>/media</code>（pending → approve/deny）。approve 后只生成 <code>web/</code> 和 <code>thumb/</code>。</div>
 
-<h1>管理后台</h1>
-<div class="sub">媒体审核 & Writer Worker 控制台</div>
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" id="tabMedia">媒体审核</div>
+    <div class="tab" id="tabWriter">Writer Console</div>
+  </div>
 
-<!-- ========== Tabs ========== -->
-<div class="tabs">
-  <div class="tab active" id="tab-media">媒体审核</div>
-  <div class="tab" id="tab-writer">Writer Console</div>
-</div>
-
-<!-- ========== Token Bar ========== -->
-<div class="bar">
-  <div>管理员口令：</div>
-  <input id="token" type="password" placeholder="输入 ADMIN_TOKEN" />
-  <button id="save">保存到本机</button>
-  <button id="load">本机记忆</button>
-</div>
-
-<!-- ========== Media Panel (原功能，几乎未动) ========== -->
-<div id="panel-media">
+  <!-- Token Bar（复用你原来的 token 逻辑） -->
   <div class="bar">
+    <div>管理员口令：</div>
+    <input id="token" type="password" placeholder="输入 ADMIN_TOKEN" />
+    <button id="save">保存到本机</button>
+    <button id="load">本机记忆</button>
     <button id="refresh" class="primary">刷新待审核</button>
     <div id="count" style="color:#666;"></div>
   </div>
-  <div id="out"></div>
-  <div class="grid" id="list"></div>
-</div>
 
-<!-- ========== Writer Panel ========== -->
-<div id="panel-writer" style="display:none;">
-  <div class="card">
-    <h3>Writer Worker</h3>
-
-    <div class="row">
-      <label>Worker URL</label>
-      <input id="writerUrl" value="https://writerworker.kanjiaming2022.workers.dev" />
-    </div>
-
-    <div class="row">
-      <label>Action</label>
-      <select id="actionSelect"></select>
-    </div>
-
-    <div class="row">
-      <label>说明</label>
-      <div id="actionDesc" class="muted"></div>
-    </div>
-
-    <div class="row">
-      <label>Payload（JSON）</label>
-    </div>
-    <textarea id="payload"></textarea>
-
-    <div class="row">
-      <button class="warn" id="btnDry">Dry-Run（校验）</button>
-      <button class="ok" id="btnReal" disabled>Real-Run（执行）</button>
-    </div>
-
-    <div id="writerOut"></div>
+  <!-- Media panel -->
+  <div id="mediaPanel">
+    <div id="out"></div>
+    <div class="grid" id="list"></div>
   </div>
-</div>
+
+  <!-- Writer panel -->
+  <div id="writerPanel" style="display:none;">
+    <div class="panel">
+      <h2>Writer Worker <span class="pill">强制 dry-run → real-run</span></h2>
+      <div class="hint">
+        如果你点按钮“没反应”，大概率是 <b>CORS</b>（浏览器跨域拦截）。本页会把错误直接显示在输出区。<br/>
+        你需要确保 Writer Worker 响应包含：<code>Access-Control-Allow-Origin</code> / <code>Allow-Methods</code> / <code>Allow-Headers</code> 并支持 <code>OPTIONS</code> 预检。
+      </div>
+
+      <div class="split" style="margin-top:12px;">
+        <div>
+          <div class="row">
+            <label>Worker URL</label>
+            <div class="grow">
+              <input id="writerUrl" style="width:100%;" value="https://writerworker.kanjiaming2022.workers.dev" />
+            </div>
+          </div>
+
+          <div class="row">
+            <label>Action</label>
+            <div class="grow">
+              <select id="actionSelect"></select>
+            </div>
+          </div>
+
+          <div class="row" style="align-items:flex-start;">
+            <label>说明</label>
+            <div class="grow">
+              <div id="actionDesc" class="hint"></div>
+            </div>
+          </div>
+
+          <div class="row">
+            <label>模板</label>
+            <div class="grow" style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button id="btnTplSingle">填充：单条 items</button>
+              <button id="btnTplBatch">填充：批量 items</button>
+              <button id="btnCopyPayload">复制 Payload</button>
+              <button id="btnClearOut">清空输出</button>
+            </div>
+          </div>
+
+          <div class="row">
+            <label>操作</label>
+            <div class="grow" style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="warn" id="btnDry">Dry-Run（校验）</button>
+              <button class="ok" id="btnReal" disabled>Real-Run（执行）</button>
+              <span id="writerStatus" class="hint"></span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="row" style="align-items:flex-start;">
+            <label>Payload (JSON)</label>
+            <div class="grow">
+              <textarea id="payload"></textarea>
+              <div class="hint" style="margin-top:6px;">
+                约定：一律用 <code>items: []</code>。Dry-run 成功后才解锁 Real-run；payload 任意变化会重新上锁。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="writerOut" style="margin-top:12px;"></div>
+    </div>
+  </div>
 
 <script>
-/* ================== Utils ================== */
-const $ = id => document.getElementById(id);
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g,m=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[m]));
-}
-function showOut(el, obj){
-  el.innerHTML = "<pre>"+escapeHtml(JSON.stringify(obj,null,2))+"</pre>";
-}
+  const $ = (id)=>document.getElementById(id);
+  const tokenEl = $("token");
+  const outEl = $("out");
+  const listEl = $("list");
+  const countEl = $("count");
+  const mediaPanel = $("mediaPanel");
+  const writerPanel = $("writerPanel");
 
-/* ================== Token ================== */
-$("save").onclick = ()=>{
-  localStorage.setItem("admin_token", $("token").value || "");
-  alert("已保存");
-};
-$("load").onclick = ()=>{
-  $("token").value = localStorage.getItem("admin_token") || "";
-  alert("已载入");
-};
-$("load").click();
+  // 保留你原来的 INTERNAL_TOKEN（用于 preview）
+  window.INTERNAL_TOKEN = "KidsGame123";
 
-/* ================== Tabs ================== */
-function switchTab(name){
-  $("tab-media").classList.toggle("active", name==="media");
-  $("tab-writer").classList.toggle("active", name==="writer");
-  $("panel-media").style.display = name==="media"?"block":"none";
-  $("panel-writer").style.display = name==="writer"?"block":"none";
-}
-$("tab-media").onclick = ()=>switchTab("media");
-$("tab-writer").onclick = ()=>switchTab("writer");
+  $("save").onclick = ()=> {
+    localStorage.setItem("admin_token", tokenEl.value || "");
+    alert("已保存");
+  };
+  $("load").onclick = ()=> {
+    tokenEl.value = localStorage.getItem("admin_token") || "";
+    alert("已载入");
+  };
+  $("refresh").onclick = ()=> loadList();
 
-/* ================== Media (原逻辑) ================== */
-const outEl = $("out"), listEl = $("list"), countEl = $("count");
-$("refresh").onclick = ()=>loadList();
+  function authHeaders() {
+    const t = (tokenEl.value || "").trim();
+    return t ? { "Authorization": "Bearer " + t } : {};
+  }
 
-function authHeaders(){
-  const t = ($("token").value||"").trim();
-  return t ? {"Authorization":"Bearer "+t}:{};
-}
+  function showOut(obj) {
+    outEl.innerHTML = "<pre>"+escapeHtml(JSON.stringify(obj, null, 2))+"</pre>";
+  }
 
-async function loadList(){
-  outEl.innerHTML=""; listEl.innerHTML=""; countEl.textContent="";
-  if (!($("token").value||"").trim()) return;
-  const r = await fetch("/media/admin/list",{headers:{...authHeaders()}});
-  const j = await r.json(); showOut(outEl,j);
-  if (!j.ok) return;
-  const items=j.items||[]; countEl.textContent=`待审核：${items.length}`;
-  for (const it of items) listEl.appendChild(renderCard(it));
-}
+  async function loadList() {
+    outEl.innerHTML = "";
+    listEl.innerHTML = "";
+    countEl.textContent = "";
 
-function renderCard(it){
-  const d=document.createElement("div"); d.className="card";
-  d.innerHTML=`<div><b>${escapeHtml(it.upload_id)}</b></div>`;
-  return d;
-}
-loadList();
+    if (!(tokenEl.value || "").trim()) return;
 
-/* ================== Writer Console ================== */
-const ACTIONS = {
-  "events.create": "创建赛事",
-  "events.update": "更新赛事",
-  "teams.create": "创建队伍",
-  "teams.update": "更新队伍",
-  "players.create": "创建选手",
-  "players.update": "更新选手",
-  "registrations.create": "创建报名",
-  "rosters.add": "添加阵容",
-  "team_component_points.upsert": "写入积分"
-};
+    const r = await fetch("/media/admin/list", { headers: { ...authHeaders() } });
+    const j = await r.json();
+    showOut(j);
+    if (!j.ok) return;
 
-const actionSelect = $("actionSelect");
-const actionDesc = $("actionDesc");
-const payloadEl = $("payload");
-const outWriter = $("writerOut");
-let lastDryHash = null;
+    const items = j.items || [];
+    countEl.textContent = `待审核：${items.length}`;
+    if (!items.length) return;
 
-for (const k in ACTIONS){
-  const o=document.createElement("option");
-  o.value=k; o.textContent=k;
-  actionSelect.appendChild(o);
-}
-
-function updateAction(){
-  actionDesc.textContent = ACTIONS[actionSelect.value] || "";
-  payloadEl.value = JSON.stringify({
-    // 示例 payload
-    items: [
-      { /* 填写字段 */ }
-    ]
-  }, null, 2);
-  $("btnReal").disabled = true;
-}
-actionSelect.onchange = updateAction;
-updateAction();
-
-function hash(str){ return btoa(unescape(encodeURIComponent(str))).slice(0,20); }
-
-async function send(mode){
-  const token = ($("token").value||"").trim();
-  if (!token) { alert("请先输入 ADMIN_TOKEN"); return; }
-
-  let payload;
-  try { payload = JSON.parse(payloadEl.value); }
-  catch { alert("JSON 格式错误"); return; }
-
-  payload.token = token;
-  payload.mode = mode;
-  payload.action = actionSelect.value;
-
-  const r = await fetch($("writerUrl").value,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(payload)
-  });
-  const j = await r.json();
-  showOut(outWriter,j);
-
-  if (mode==="dry-run"){
-    if (j.ok){
-      lastDryHash = hash(payloadEl.value);
-      $("btnReal").disabled = false;
-    } else {
-      $("btnReal").disabled = true;
+    for (const it of items) {
+      listEl.appendChild(renderCard(it));
     }
-  } else {
-    $("btnReal").disabled = true;
   }
-}
 
-$("btnDry").onclick = ()=>send("dry-run");
-$("btnReal").onclick = ()=>{
-  if (hash(payloadEl.value)!==lastDryHash){
-    alert("Payload 已变更，请重新 dry-run");
-    return;
+  // ✅ 按你原始版本恢复卡片渲染（不动）
+  function renderCard(it) {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const thumb = document.createElement("div");
+    thumb.className = "thumb";
+
+    const img = document.createElement("img");
+    img.alt = "preview";
+    img.src =
+      `/media/admin/preview/${encodeURIComponent(it.upload_id)}`
+      + `?t=${encodeURIComponent(window.INTERNAL_TOKEN)}`;
+
+    thumb.appendChild(img);
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = `
+      <div class="id">${escapeHtml(it.upload_id)}</div>
+      <div class="line">note：${escapeHtml(it.note || "")}</div>
+      <div class="line">createdAt：${escapeHtml(it.created_at || "")}</div>
+      <div class="line">status：${escapeHtml(it.status || "")}</div>
+      <div class="line">预览接口：<code>/media/admin/preview/${escapeHtml(it.upload_id)}</code></div>
+    `;
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const okBtn = document.createElement("button");
+    okBtn.className = "ok";
+    okBtn.textContent = "通过";
+    okBtn.onclick = ()=>approve(it.upload_id);
+
+    const badBtn = document.createElement("button");
+    badBtn.className = "bad";
+    badBtn.textContent = "拒绝";
+    badBtn.onclick = ()=>deny(it.upload_id);
+
+    actions.appendChild(okBtn);
+    actions.appendChild(badBtn);
+    meta.appendChild(actions);
+
+    card.appendChild(thumb);
+    card.appendChild(meta);
+    return card;
   }
-  send("single");
-};
+
+  async function approve(receipt) {
+    if (!confirm(`确认通过：${receipt} ?`)) return;
+    const r = await fetch(`/media/admin/approve/${encodeURIComponent(receipt)}`, {
+      method: "POST",
+      headers: { ...authHeaders() }
+    });
+    const j = await r.json();
+    alert(j.ok
+      ? `已通过：photoId=${j.photoId}\nphotoKey=${j.photoKey}\nweb=${j.web}\nthumb=${j.thumb}`
+      : `失败：${j.error || "unknown"}`
+    );
+    await loadList();
+  }
+
+  async function deny(receipt) {
+    if (!confirm(`确认拒绝并删除：${receipt} ?`)) return;
+    const r = await fetch(`/media/admin/deny/${encodeURIComponent(receipt)}`, {
+      method: "POST",
+      headers: { ...authHeaders() }
+    });
+    const j = await r.json();
+    alert(j.ok ? "已拒绝" : `失败：${j.error || "unknown"}`);
+    await loadList();
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (m)=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+
+  // 初始加载
+  loadList();
+
+  /* =========================
+     Writer Console（新增）
+  ========================= */
+
+  // Tab 切换（不影响媒体审核）
+  $("tabMedia").onclick = ()=>{
+    $("tabMedia").classList.add("active");
+    $("tabWriter").classList.remove("active");
+    mediaPanel.style.display = "";
+    writerPanel.style.display = "none";
+  };
+  $("tabWriter").onclick = ()=>{
+    $("tabWriter").classList.add("active");
+    $("tabMedia").classList.remove("active");
+    mediaPanel.style.display = "none";
+    writerPanel.style.display = "";
+  };
+
+  // Action 配置（B：集中配置对象）
+  const ACTIONS = {
+    "events.create": { desc: "创建赛事（必填 event_id, name_zh；其余选填）", tpl: ()=>({
+      items:[{ event_id:"evt_test_001", name_zh:"测试赛事", name_en:"Test Event" }]
+    })},
+    "events.update": { desc: "更新赛事（必填 event_id；其余按需选填）", tpl: ()=>({
+      items:[{ event_id:"evt_test_001", name_zh:"测试赛事-改名" }]
+    })},
+
+    "teams.create":  { desc: "创建队伍（通常不需要手填 team_id/team_code，按你的 Writer 规则自动生成）", tpl: ()=>({
+      items:[{ canonical_name:"新队伍A", club_id:null, note:null, team_type:"club" }]
+    })},
+    "players.create":{ desc: "创建选手（通常不需要手填 player_id，按你的 Writer 规则自动生成）", tpl: ()=>({
+      items:[{ name:"新选手A", note:null }]
+    })},
+
+    // 你可以把所有 writer worker 支持的 action 都补进来（我先给骨架）
+    "registrations.create": { desc:"创建报名", tpl: ()=>({ items:[{ registration_id:"reg_test_001", season_id:"", team_id:"" }] })},
+    "rosters.add": { desc:"添加阵容", tpl: ()=>({ items:[{ roster_id:"ros_test_001", team_id:"", player_id:"", season_id:"" }] })},
+    "team_component_points.upsert": { desc:"写入/更新组件积分", tpl: ()=>({ items:[{ season_id:"", team_id:"", component_key:"", points:0 }] })}
+  };
+
+  const actionSelect = $("actionSelect");
+  const actionDesc = $("actionDesc");
+  const payloadEl = $("payload");
+  const writerOut = $("writerOut");
+  const statusEl = $("writerStatus");
+  const btnDry = $("btnDry");
+  const btnReal = $("btnReal");
+
+  function nowStr(){ return new Date().toISOString(); }
+
+  function showWriter(obj){
+    writerOut.innerHTML = "<pre>"+escapeHtml(JSON.stringify(obj,null,2))+"</pre>";
+  }
+  function showWriterErr(msg, detail){
+    const obj = { ok:false, error: msg, detail, ts: nowStr() };
+    showWriter(obj);
+  }
+
+  // hash：用于“dry-run 通过后，payload 未变化才能 real-run”
+  function simpleHash(str){
+    let h=0;
+    for (let i=0;i<str.length;i++) h=(h*31 + str.charCodeAt(i))>>>0;
+    return "h"+h.toString(16);
+  }
+  let lastDryHash = null;
+
+  // 初始化 action 下拉
+  function initActions(){
+    actionSelect.innerHTML = "";
+    for (const k of Object.keys(ACTIONS)){
+      const opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = k;
+      actionSelect.appendChild(opt);
+    }
+    actionSelect.value = "events.create";
+    updateActionUI();
+  }
+
+  function updateActionUI(){
+    const cfg = ACTIONS[actionSelect.value];
+    actionDesc.textContent = cfg?.desc || "";
+    const tpl = cfg?.tpl ? cfg.tpl() : { items:[{}] };
+    payloadEl.value = JSON.stringify(tpl, null, 2);
+    lockReal("请选择 dry-run 校验");
+  }
+
+  function lockReal(reason){
+    btnReal.disabled = true;
+    lastDryHash = null;
+    statusEl.textContent = reason ? `状态：${reason}` : "状态：已锁定";
+  }
+  function unlockReal(){
+    btnReal.disabled = false;
+    statusEl.textContent = "状态：dry-run 已通过，可执行 real-run";
+  }
+
+  actionSelect.onchange = updateActionUI;
+
+  // payload 变化 → 自动上锁
+  payloadEl.addEventListener("input", ()=>{
+    lockReal("payload 变更，请重新 dry-run");
+  });
+
+  $("btnTplSingle").onclick = ()=>{
+    const cfg = ACTIONS[actionSelect.value];
+    const tpl = cfg?.tpl ? cfg.tpl() : { items:[{}] };
+    // 单条：强制 items 只有 1 条
+    const one = (tpl.items && tpl.items[0]) ? [tpl.items[0]] : [{}];
+    payloadEl.value = JSON.stringify({ items: one }, null, 2);
+    lockReal("已填充模板，请 dry-run");
+  };
+
+  $("btnTplBatch").onclick = ()=>{
+    const cfg = ACTIONS[actionSelect.value];
+    const tpl = cfg?.tpl ? cfg.tpl() : { items:[{}] };
+    // 批量：给 2 条示例
+    const first = (tpl.items && tpl.items[0]) ? tpl.items[0] : {};
+    payloadEl.value = JSON.stringify({ items: [ first, structuredClone(first) ] }, null, 2);
+    lockReal("已填充批量模板，请 dry-run");
+  };
+
+  $("btnCopyPayload").onclick = async ()=>{
+    try{
+      await navigator.clipboard.writeText(payloadEl.value || "");
+      alert("已复制 payload");
+    }catch{
+      alert("复制失败（浏览器权限限制），你可以手动全选复制");
+    }
+  };
+
+  $("btnClearOut").onclick = ()=>{ writerOut.innerHTML=""; statusEl.textContent=""; };
+
+  async function writerSend(mode){
+    const token = (tokenEl.value || "").trim();
+    if (!token) { alert("请先输入 ADMIN_TOKEN"); return; }
+
+    let payload;
+    try{
+      payload = JSON.parse(payloadEl.value || "{}");
+    }catch(e){
+      showWriterErr("JSON 格式错误", String(e));
+      return;
+    }
+
+    // 强制 items 数组（与你的 writer 约定一致）
+    if (!Array.isArray(payload.items)){
+      showWriterErr("items must be array", "请使用格式：{ \"items\": [ { ... } ] }");
+      return;
+    }
+
+    const body = {
+      token,
+      action: actionSelect.value,
+      mode,
+      items: payload.items
+    };
+
+    // UI 状态
+    btnDry.disabled = true;
+    btnReal.disabled = true;
+    statusEl.textContent = "状态：请求中...";
+
+    const started = performance.now();
+    try{
+      const r = await fetch(($("writerUrl").value || "").trim(), {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(body)
+      });
+
+      const text = await r.text();
+      let j;
+      try { j = JSON.parse(text); } catch { j = { ok:false, error:"非 JSON 响应", raw:text, status:r.status }; }
+
+      j._http = { status: r.status, ms: Math.round(performance.now()-started) };
+      showWriter(j);
+
+      if (mode === "dry-run"){
+        if (j.ok){
+          lastDryHash = simpleHash(payloadEl.value || "");
+          unlockReal();
+        }else{
+          lockReal("dry-run 未通过");
+        }
+      }else{
+        lockReal("执行完成（建议继续 dry-run 再下一次）");
+      }
+    }catch(e){
+      // ✅ 这里会把 CORS / 网络错误直接显示出来（你截图“没反应”的根因）
+      showWriterErr("网络错误 / CORS 被拦截", String(e));
+      lockReal("网络错误");
+    }finally{
+      btnDry.disabled = false;
+      // btnReal 是否解锁由上面逻辑决定
+    }
+  }
+
+  btnDry.onclick = async ()=>{
+    await writerSend("dry-run");
+  };
+
+  btnReal.onclick = async ()=>{
+    const curHash = simpleHash(payloadEl.value || "");
+    if (!lastDryHash || curHash !== lastDryHash){
+      alert("Payload 已变更，请先 dry-run");
+      lockReal("payload 变更，请 dry-run");
+      return;
+    }
+    // real-run：按你之前的 worker 约定，用 single（你也可以改成 real-run 关键字，但要与 worker 一致）
+    await writerSend("single");
+  };
+
+  initActions();
 </script>
 </body>
 </html>
