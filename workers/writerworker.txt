@@ -1,0 +1,1064 @@
+export default {
+  async fetch(req, env) {
+
+    /* =========================================================
+     * [段落 0] 入口与安全：只允许 POST + ADMIN_TOKEN 鉴权
+     * 目的：防止误调用/公网写入；确保写入只有管理员能触发
+     * ========================================================= */
+    if (req.method !== "POST") {
+      return new Response("Method Not Allowed", { status: 405 });
+    }
+
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response("Invalid JSON", { status: 400 });
+    }
+
+    if (!body || body.token !== env.ADMIN_TOKEN) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const mode = body.mode || "single"; // single | batch | dry-run
+    const action = body.action;
+
+    // single -> batch（强制一致性：Single 本质是 items.length=1 的 batch）
+    const items = mode === "single" ? [body.data] : body.items;
+    if (!Array.isArray(items)) {
+      return new Response("items must be array", { status: 400 });
+    }
+
+    // 系统时间（System 字段统一来源）
+    const now = new Date().toISOString();
+
+    /* =========================================================
+     * [段落 1] 规则内核：字段分层 + 未知字段拒绝 + 统一错误码
+     * 目的：严格遵守 exportV2.sql 的 schema；拒绝“猜字段/约定俗成”
+     * ========================================================= */
+    function badRequest(msg) {
+      return new Response(msg, { status: 400 });
+    }
+    function conflict(msg) {
+      return new Response(msg, { status: 409 });
+    }
+    function serverError(msg) {
+      return new Response(msg, { status: 500 });
+    }
+
+    // 1a：必填字段校验
+    function requireFields(obj, required) {
+      for (const f of required) {
+        const v = obj?.[f];
+        if (v === undefined || v === null || (typeof v === "string" && v.trim() === "")) {
+          throw new Error(`Missing required field: ${f}`);
+        }
+      }
+    }
+
+    // 1b：未知字段拒绝（只允许 Required + Optional；System 字段不允许外部覆盖）
+    function rejectUnknownFields(obj, allowed) {
+      if (!obj || typeof obj !== "object") throw new Error("Item must be an object");
+      for (const k of Object.keys(obj)) {
+        if (!allowed.has(k)) {
+          throw new Error(`Unknown field: ${k}`);
+        }
+      }
+    }
+
+    // 1c：仅取允许字段（Optional 有就写，没有就不写）
+    function pick(obj, keys) {
+      const out = {};
+      for (const k of keys) {
+        if (obj[k] !== undefined) out[k] = obj[k];
+      }
+      return out;
+    }
+
+    // 1d：dry-run 不落库（但仍执行校验 & 生成系统 id）
+    async function run(sql, params) {
+      if (mode === "dry-run") return;
+      return env.DB.prepare(sql).bind(...params).run();
+    }
+
+    // 1e：把 D1 的错误映射为 409/500（unique 冲突优先 409；触发器 ABORT 继续透传 message）
+    function mapDbError(e) {
+      const msg = String(e?.message || e || "");
+      // SQLite 典型唯一冲突关键词
+      if (msg.includes("UNIQUE constraint failed") || msg.includes("constraint failed") || msg.includes("PRIMARY KEY")) {
+        return { status: 409, message: msg };
+      }
+      return { status: 500, message: msg };
+    }
+
+    /* =========================================================
+     * [段落 2] Schema（来自 exportV2.sql）：每个表的列集合
+     * 目的：Worker 只允许写入真实存在的列；避免写错字段名/旧版本 schema
+     * ========================================================= */
+    const TABLE_COLS = {
+      teams: new Set([
+        "team_id","canonical_name","club_id","first_seen_season_id","note",
+        "created_at","updated_at","team_type","team_code"
+      ]),
+      players: new Set([
+        "player_id","nickname","display_name","real_name","birth_year","is_active",
+        "notes","created_at","updated_at","club_name","joined_at","gender"
+      ]),
+      events: new Set([
+        "event_id","name_zh","name_en","level","frequency","official_url","description","created_at","updated_at"
+      ]),
+      seasons: new Set([
+        "season_id","event_id","name","year","start_date","end_date","status","notes","created_at","updated_at","season_type"
+      ]),
+      divisions: new Set([
+        "division_id","season_id","division_key","name","sort_order","notes","created_at","updated_at","leaderboard_key"
+      ]),
+      registrations: new Set([
+        "registration_id","season_id","team_id","club_id","division","status","note","created_at"
+      ]),
+      rosters: new Set([
+        "roster_id","season_id","team_id","player_id","role","notes","created_at"
+      ]),
+      score_components: new Set([
+        "component_id","leaderboard_key","name","component_type","start_date","end_date","sort_order","notes","created_at","source_season_id"
+      ]),
+      team_component_points: new Set([
+        "id","registration_id","component_id","points","recorded_at","note"
+      ]),
+      team_aliases: new Set([
+        "alias_id","team_id","alias_name","from_date","to_date","note","created_at"
+      ]),
+      tags: new Set([
+        "tag_id","tag_key","name","tag_type","description","created_at","updated_at"
+      ]),
+      team_tags: new Set([
+        "team_id","tag_id","note","created_at"
+      ]),
+      tournament_outcomes: new Set([
+        "outcome_id","event_id","season_id","division_key","team_id","stage_reached","final_rank",
+        "country_name","country_code","group_name","notes","created_at","updated_at"
+      ]),
+      team_id_map: new Set(["old_team_id","new_team_id"])
+    };
+
+    /* =========================================================
+     * [段落 3] ID 生成策略（抽象层）：Worker 只保证“写入时有合法 id”
+     * 目的：你说的没错——Worker 不关心 id 来源；但可在未提供时生成
+     * ========================================================= */
+    async function nextCodeLike(table, col, prefix, width) {
+      // 例：TEAM001、PLAYER0001
+      // 只扫描以 prefix 开头的 id；如果你混用 UUID 也不会影响递增
+      const { results } = await env.DB.prepare(
+        `SELECT ${col} AS v FROM ${table} WHERE ${col} LIKE ? ORDER BY ${col} DESC LIMIT 1`
+      ).bind(`${prefix}%`).all();
+
+      const last = results?.[0]?.v;
+      const lastN = last ? Number(String(last).slice(prefix.length)) : 0;
+      const nextN = Number.isFinite(lastN) ? lastN + 1 : 1;
+      return prefix + String(nextN).padStart(width, "0");
+    }
+
+    function uuid() {
+      return (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
+    }
+
+    /* =========================================================
+     * [段落 4] Action 白名单与每个 action 的字段分层（Required/Optional/System）
+     * 目的：严格遵守强制规则 v2：必须显式 action；不允许自由表名/自由 SQL
+     * ========================================================= */
+    const ACTIONS = new Set([
+      "teams.create","teams.update",
+      "players.create","players.update",
+      "events.create","events.update",
+      "seasons.create","seasons.update",
+      "divisions.create","divisions.update",
+      "registrations.create","registrations.update",
+      "rosters.add","rosters.remove",
+      "score_components.create","score_components.update",
+      "team_component_points.upsert",
+      "team_aliases.add",
+      "tags.create","tags.update",
+      "team_tags.add","team_tags.remove",
+      "tournament_outcomes.upsert"
+    ]);
+
+    if (!ACTIONS.has(action)) {
+      return badRequest("Unknown action");
+    }
+
+    /* =========================================================
+     * [段落 5] 批处理执行框架：逐条写入 + 汇总 results/errors
+     * 目的：single/batch 一致；失败可定位；不在 Worker 做 DB 已兜底的规则
+     * ========================================================= */
+    const results = [];
+    const errors = [];
+
+    async function processItems(handler) {
+      for (let i = 0; i < items.length; i++) {
+        try {
+          const out = await handler(items[i] ?? {}, i);
+          results.push({ index: i, ...out });
+        } catch (e) {
+          const msg = String(e?.message || e || "");
+          // 参数错误 -> 400（这里先记录，最终整体返回 200 JSON，便于 batch 汇总）
+          errors.push({ index: i, error: msg });
+        }
+      }
+      return Response.json({ ok: errors.length === 0, mode, action, results, errors });
+    }
+
+    /* =========================================================
+     * [段落 6] 各 action 的实现（严格对照 exportV2.sql 的列）
+     * 目的：必填/选填/系统字段清晰；未知字段拒绝；created_at/updated_at 自动维护
+     * ========================================================= */
+
+    // 6.1 teams.create
+    // 必填：canonical_name（允许用 name 作为输入别名，但最终写 canonical_name）
+    // 选填：club_id, first_seen_season_id, note, team_type
+    // 系统：team_code(TEAM001...) + team_id=team_code + created_at/updated_at
+    if (action === "teams.create") {
+      const required = ["canonical_name"];
+      const optional = ["club_id","first_seen_season_id","note","team_type"];
+      const allowed = new Set(["canonical_name","name", ...optional]); // 允许 name 作为别名输入，但不写入 DB
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+
+        const canonical_name = row.canonical_name ?? row.name;
+        requireFields({ canonical_name }, required);
+
+        const team_code = await nextCodeLike("teams", "team_code", "TEAM", 3);
+        const team_id = team_code;
+
+        const data = {
+          team_id,
+          team_code,
+          canonical_name,
+          ...pick(row, optional),
+          created_at: now,
+          updated_at: now
+        };
+
+        try {
+          await run(
+            `INSERT INTO teams (team_id, canonical_name, club_id, first_seen_season_id, note, created_at, updated_at, team_type, team_code)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              data.team_id, data.canonical_name,
+              data.club_id ?? null,
+              data.first_seen_season_id ?? null,
+              data.note ?? null,
+              data.created_at, data.updated_at,
+              data.team_type ?? null,
+              data.team_code
+            ]
+          );
+        } catch (e) {
+          const mapped = mapDbError(e);
+          if (mapped.status === 409) throw new Error(mapped.message);
+          throw new Error(mapped.message);
+        }
+
+        return { team_id, team_code };
+      });
+    }
+
+    // 6.2 teams.update
+    // 必填：team_id
+    // 选填：canonical_name, club_id, first_seen_season_id, note, team_type, team_code（一般不建议改，但 schema 存在就允许）
+    // 系统：updated_at
+    if (action === "teams.update") {
+      const required = ["team_id"];
+      const optional = ["canonical_name","club_id","first_seen_season_id","note","team_type","team_code"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const patch = pick(row, optional);
+        patch.updated_at = now;
+
+        const cols = Object.keys(patch);
+        if (cols.length === 0) throw new Error("No updatable fields provided");
+
+        const sql = `UPDATE teams SET ${cols.map(c => `${c}=?`).join(", ")} WHERE team_id=?`;
+        const params = [...cols.map(c => patch[c] ?? null), row.team_id];
+
+        try {
+          await run(sql, params);
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { team_id: row.team_id, updated_at: now };
+      });
+    }
+
+    // 6.3 players.create
+    // 必填：nickname（player_id 可不填，系统生成 PLAYER0001...；你也可外部传入）
+    // 选填：display_name, real_name, birth_year, is_active, notes, club_name, joined_at, gender
+    // 系统：player_id(如未提供) + created_at/updated_at
+    if (action === "players.create") {
+      const required = ["nickname"];
+      const optional = ["player_id","display_name","real_name","birth_year","is_active","notes","club_name","joined_at","gender"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const player_id = row.player_id ?? await nextCodeLike("players", "player_id", "PLAYER", 4);
+
+        const data = {
+          player_id,
+          nickname: row.nickname,
+          ...pick(row, optional),
+          created_at: now,
+          updated_at: now
+        };
+
+        try {
+          await run(
+            `INSERT INTO players (player_id, nickname, display_name, real_name, birth_year, is_active, notes, created_at, updated_at, club_name, joined_at, gender)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              data.player_id,
+              data.nickname,
+              data.display_name ?? null,
+              data.real_name ?? null,
+              data.birth_year ?? null,
+              data.is_active ?? null,
+              data.notes ?? null,
+              data.created_at,
+              data.updated_at,
+              data.club_name ?? null,
+              data.joined_at ?? null,
+              data.gender ?? null
+            ]
+          );
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { player_id };
+      });
+    }
+
+    // 6.4 players.update
+    // 必填：player_id
+    // 选填：nickname, display_name, real_name, birth_year, is_active, notes, club_name, joined_at, gender
+    // 系统：updated_at
+    if (action === "players.update") {
+      const required = ["player_id"];
+      const optional = ["nickname","display_name","real_name","birth_year","is_active","notes","club_name","joined_at","gender"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const patch = pick(row, optional);
+        patch.updated_at = now;
+
+        const cols = Object.keys(patch);
+        if (cols.length === 0) throw new Error("No updatable fields provided");
+
+        const sql = `UPDATE players SET ${cols.map(c => `${c}=?`).join(", ")} WHERE player_id=?`;
+        const params = [...cols.map(c => patch[c] ?? null), row.player_id];
+
+        try {
+          await run(sql, params);
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { player_id: row.player_id, updated_at: now };
+      });
+    }
+
+    // 6.5 events.create
+    // 必填：event_id, name_zh
+    // 选填：admin 可填 name_en, level, frequency, official_url, description
+    // 系统：created_at/updated_at
+    if (action === "events.create") {
+      const required = ["event_id","name_zh"];
+      const optional = ["name_en","level","frequency","official_url","description"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const data = { ...pick(row, [...required, ...optional]), created_at: now, updated_at: now };
+
+        try {
+          await run(
+            `INSERT INTO events (event_id, name_zh, name_en, level, frequency, official_url, description, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              data.event_id,
+              data.name_zh,
+              data.name_en ?? null,
+              data.level ?? null,
+              data.frequency ?? null,
+              data.official_url ?? null,
+              data.description ?? null,
+              data.created_at,
+              data.updated_at
+            ]
+          );
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { event_id: data.event_id };
+      });
+    }
+
+    // 6.6 events.update
+    // 必填：event_id
+    // 选填：name_zh, name_en, level, frequency, official_url, description
+    // 系统：updated_at
+    if (action === "events.update") {
+      const required = ["event_id"];
+      const optional = ["name_zh","name_en","level","frequency","official_url","description"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const patch = pick(row, optional);
+        patch.updated_at = now;
+
+        const cols = Object.keys(patch);
+        if (cols.length === 0) throw new Error("No updatable fields provided");
+
+        const sql = `UPDATE events SET ${cols.map(c => `${c}=?`).join(", ")} WHERE event_id=?`;
+        const params = [...cols.map(c => patch[c] ?? null), row.event_id];
+
+        try {
+          await run(sql, params);
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { event_id: row.event_id, updated_at: now };
+      });
+    }
+
+    // 6.7 seasons.create
+    // 必填：season_id, event_id, name
+    // 选填：year,start_date,end_date,status,notes,season_type
+    // 系统：created_at/updated_at
+    if (action === "seasons.create") {
+      const required = ["season_id","event_id","name"];
+      const optional = ["year","start_date","end_date","status","notes","season_type"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const data = { ...pick(row, [...required, ...optional]), created_at: now, updated_at: now };
+
+        try {
+          await run(
+            `INSERT INTO seasons (season_id, event_id, name, year, start_date, end_date, status, notes, created_at, updated_at, season_type)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              data.season_id, data.event_id, data.name,
+              data.year ?? null,
+              data.start_date ?? null,
+              data.end_date ?? null,
+              data.status ?? null,
+              data.notes ?? null,
+              data.created_at, data.updated_at,
+              data.season_type ?? null
+            ]
+          );
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { season_id: data.season_id };
+      });
+    }
+
+    // 6.8 seasons.update
+    // 必填：season_id
+    // 选填：event_id,name,year,start_date,end_date,status,notes,season_type
+    // 系统：updated_at
+    if (action === "seasons.update") {
+      const required = ["season_id"];
+      const optional = ["event_id","name","year","start_date","end_date","status","notes","season_type"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const patch = pick(row, optional);
+        patch.updated_at = now;
+
+        const cols = Object.keys(patch);
+        if (cols.length === 0) throw new Error("No updatable fields provided");
+
+        const sql = `UPDATE seasons SET ${cols.map(c => `${c}=?`).join(", ")} WHERE season_id=?`;
+        const params = [...cols.map(c => patch[c] ?? null), row.season_id];
+
+        try {
+          await run(sql, params);
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { season_id: row.season_id, updated_at: now };
+      });
+    }
+
+    // 6.9 divisions.create
+    // 必填：division_id, season_id, name（division_key 可空，但建议提供）
+    // 选填：division_key, sort_order, notes, leaderboard_key
+    // 系统：created_at/updated_at
+    if (action === "divisions.create") {
+      const required = ["division_id","season_id","name"];
+      const optional = ["division_key","sort_order","notes","leaderboard_key"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const data = { ...pick(row, [...required, ...optional]), created_at: now, updated_at: now };
+
+        try {
+          await run(
+            `INSERT INTO divisions (division_id, season_id, division_key, name, sort_order, notes, created_at, updated_at, leaderboard_key)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              data.division_id,
+              data.season_id,
+              data.division_key ?? null,
+              data.name,
+              data.sort_order ?? null,
+              data.notes ?? null,
+              data.created_at,
+              data.updated_at,
+              data.leaderboard_key ?? null
+            ]
+          );
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { division_id: data.division_id };
+      });
+    }
+
+    // 6.10 divisions.update
+    // 必填：division_id
+    // 选填：season_id,division_key,name,sort_order,notes,leaderboard_key
+    // 系统：updated_at
+    if (action === "divisions.update") {
+      const required = ["division_id"];
+      const optional = ["season_id","division_key","name","sort_order","notes","leaderboard_key"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const patch = pick(row, optional);
+        patch.updated_at = now;
+
+        const cols = Object.keys(patch);
+        if (cols.length === 0) throw new Error("No updatable fields provided");
+
+        const sql = `UPDATE divisions SET ${cols.map(c => `${c}=?`).join(", ")} WHERE division_id=?`;
+        const params = [...cols.map(c => patch[c] ?? null), row.division_id];
+
+        try {
+          await run(sql, params);
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { division_id: row.division_id, updated_at: now };
+      });
+    }
+
+    // 6.11 registrations.create
+    // 必填：season_id, team_id（registration_id 可不填，系统 UUID 生成）
+    // 选填：club_id, division, status, note
+    // 系统：registration_id(如未提供) + created_at( NOT NULL，无 default，必须由系统生成 )
+    if (action === "registrations.create") {
+      const required = ["season_id","team_id"];
+      const optional = ["registration_id","club_id","division","status","note"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const registration_id = row.registration_id ?? uuid();
+
+        const data = {
+          registration_id,
+          season_id: row.season_id,
+          team_id: row.team_id,
+          ...pick(row, optional),
+          created_at: now
+        };
+        data.registration_id = registration_id;
+
+        try {
+          await run(
+            `INSERT INTO registrations (registration_id, season_id, team_id, club_id, division, status, note, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              data.registration_id,
+              data.season_id,
+              data.team_id,
+              data.club_id ?? null,
+              data.division ?? null,
+              data.status ?? null,
+              data.note ?? null,
+              data.created_at
+            ]
+          );
+        } catch (e) {
+          const mapped = mapDbError(e);
+          // registrations 有 UNIQUE(season_id,team_id)，冲突时希望明确 409
+          if (mapped.status === 409) throw new Error(mapped.message);
+          throw new Error(mapped.message);
+        }
+
+        return { registration_id, season_id: data.season_id, team_id: data.team_id };
+      });
+    }
+
+    // 6.12 registrations.update
+    // 必填：registration_id
+    // 选填：season_id, team_id, club_id, division, status, note
+    // 系统：无 updated_at 列（schema 没有），所以不维护
+    if (action === "registrations.update") {
+      const required = ["registration_id"];
+      const optional = ["season_id","team_id","club_id","division","status","note"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const patch = pick(row, optional);
+        const cols = Object.keys(patch);
+        if (cols.length === 0) throw new Error("No updatable fields provided");
+
+        const sql = `UPDATE registrations SET ${cols.map(c => `${c}=?`).join(", ")} WHERE registration_id=?`;
+        const params = [...cols.map(c => patch[c] ?? null), row.registration_id];
+
+        try {
+          await run(sql, params);
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { registration_id: row.registration_id };
+      });
+    }
+
+    // 6.13 rosters.add
+    // 必填：season_id, team_id, player_id
+    // 选填：role, notes
+    // 系统：roster_id(UUID，如未提供) + created_at
+    if (action === "rosters.add") {
+      const required = ["season_id","team_id","player_id"];
+      const optional = ["roster_id","role","notes"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const roster_id = row.roster_id ?? uuid();
+
+        const data = {
+          roster_id,
+          season_id: row.season_id,
+          team_id: row.team_id,
+          player_id: row.player_id,
+          ...pick(row, optional),
+          created_at: now
+        };
+        data.roster_id = roster_id;
+
+        try {
+          await run(
+            `INSERT INTO rosters (roster_id, season_id, team_id, player_id, role, notes, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              data.roster_id,
+              data.season_id,
+              data.team_id,
+              data.player_id,
+              data.role ?? null,
+              data.notes ?? null,
+              data.created_at
+            ]
+          );
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { roster_id };
+      });
+    }
+
+    // 6.14 rosters.remove
+    // 必填：roster_id（按主键删除，最明确）
+    if (action === "rosters.remove") {
+      const required = ["roster_id"];
+      const allowed = new Set(required);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        try {
+          await run(`DELETE FROM rosters WHERE roster_id=?`, [row.roster_id]);
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { roster_id: row.roster_id, deleted: true };
+      });
+    }
+
+    // 6.15 score_components.create
+    // 必填：component_id, leaderboard_key, name
+    // 选填：component_type,start_date,end_date,sort_order,notes,source_season_id
+    // 系统：created_at
+    if (action === "score_components.create") {
+      const required = ["component_id","leaderboard_key","name"];
+      const optional = ["component_type","start_date","end_date","sort_order","notes","source_season_id"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const data = { ...pick(row, [...required, ...optional]), created_at: now };
+
+        try {
+          await run(
+            `INSERT INTO score_components (component_id, leaderboard_key, name, component_type, start_date, end_date, sort_order, notes, created_at, source_season_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              data.component_id,
+              data.leaderboard_key,
+              data.name,
+              data.component_type ?? null,
+              data.start_date ?? null,
+              data.end_date ?? null,
+              data.sort_order ?? null,
+              data.notes ?? null,
+              data.created_at,
+              data.source_season_id ?? null
+            ]
+          );
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { component_id: data.component_id };
+      });
+    }
+
+    // 6.16 score_components.update
+    // 必填：component_id
+    // 选填：leaderboard_key,name,component_type,start_date,end_date,sort_order,notes,source_season_id
+    // 系统：无 updated_at 列（schema 没有），所以不维护
+    if (action === "score_components.update") {
+      const required = ["component_id"];
+      const optional = ["leaderboard_key","name","component_type","start_date","end_date","sort_order","notes","source_season_id"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const patch = pick(row, optional);
+        const cols = Object.keys(patch);
+        if (cols.length === 0) throw new Error("No updatable fields provided");
+
+        const sql = `UPDATE score_components SET ${cols.map(c => `${c}=?`).join(", ")} WHERE component_id=?`;
+        const params = [...cols.map(c => patch[c] ?? null), row.component_id];
+
+        try {
+          await run(sql, params);
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { component_id: row.component_id };
+      });
+    }
+
+    // 6.17 team_component_points.upsert
+    // 必填：registration_id, component_id（points 可不填默认 0）
+    // 选填：points, recorded_at, note, id
+    // 系统：id(UUID 如未提供)；recorded_at 若不提供由 DB default，但我们也可填 now
+    // UNIQUE(registration_id, component_id) -> ON CONFLICT DO UPDATE
+    if (action === "team_component_points.upsert") {
+      const required = ["registration_id","component_id"];
+      const optional = ["points","recorded_at","note","id"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const id = row.id ?? uuid();
+        const points = (row.points === undefined || row.points === null) ? 0 : row.points;
+        const recorded_at = row.recorded_at ?? now;
+
+        try {
+          await run(
+            `INSERT INTO team_component_points (id, registration_id, component_id, points, recorded_at, note)
+             VALUES (?, ?, ?, ?, ?, ?)
+             ON CONFLICT(registration_id, component_id)
+             DO UPDATE SET
+               points=excluded.points,
+               recorded_at=excluded.recorded_at,
+               note=excluded.note`,
+            [id, row.registration_id, row.component_id, points, recorded_at, row.note ?? null]
+          );
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { registration_id: row.registration_id, component_id: row.component_id, upserted: true };
+      });
+    }
+
+    // 6.18 team_aliases.add
+    // 必填：team_id, alias_name（alias_id 可不填，系统 UUID 生成）
+    // 选填：from_date,to_date,note
+    // 系统：alias_id + created_at
+    if (action === "team_aliases.add") {
+      const required = ["team_id","alias_name"];
+      const optional = ["alias_id","from_date","to_date","note"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const alias_id = row.alias_id ?? uuid();
+
+        try {
+          await run(
+            `INSERT INTO team_aliases (alias_id, team_id, alias_name, from_date, to_date, note, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              alias_id,
+              row.team_id,
+              row.alias_name,
+              row.from_date ?? null,
+              row.to_date ?? null,
+              row.note ?? null,
+              now
+            ]
+          );
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { alias_id };
+      });
+    }
+
+    // 6.19 tags.create
+    // 必填：tag_key, name, tag_type（tag_id 可不填，系统 UUID 生成）
+    // 选填：description
+    // 系统：created_at/updated_at（schema NOT NULL，有 default；规则要求存在就自动生成）
+    if (action === "tags.create") {
+      const required = ["tag_key","name","tag_type"];
+      const optional = ["tag_id","description"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const tag_id = row.tag_id ?? uuid();
+
+        try {
+          await run(
+            `INSERT INTO tags (tag_id, tag_key, name, tag_type, description, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              tag_id,
+              row.tag_key,
+              row.name,
+              row.tag_type,
+              row.description ?? null,
+              now,
+              now
+            ]
+          );
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { tag_id, tag_key: row.tag_key };
+      });
+    }
+
+    // 6.20 tags.update
+    // 必填：tag_id
+    // 选填：tag_key,name,tag_type,description
+    // 系统：updated_at
+    if (action === "tags.update") {
+      const required = ["tag_id"];
+      const optional = ["tag_key","name","tag_type","description"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const patch = pick(row, optional);
+        patch.updated_at = now;
+
+        const cols = Object.keys(patch);
+        if (cols.length === 0) throw new Error("No updatable fields provided");
+
+        const sql = `UPDATE tags SET ${cols.map(c => `${c}=?`).join(", ")} WHERE tag_id=?`;
+        const params = [...cols.map(c => patch[c] ?? null), row.tag_id];
+
+        try {
+          await run(sql, params);
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { tag_id: row.tag_id, updated_at: now };
+      });
+    }
+
+    // 6.21 team_tags.add
+    // 必填：team_id, tag_id
+    // 选填：note
+    // 系统：created_at
+    // PRIMARY KEY(team_id,tag_id) -> 重复会 409
+    if (action === "team_tags.add") {
+      const required = ["team_id","tag_id"];
+      const optional = ["note"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        try {
+          await run(
+            `INSERT INTO team_tags (team_id, tag_id, note, created_at)
+             VALUES (?, ?, ?, ?)`,
+            [row.team_id, row.tag_id, row.note ?? null, now]
+          );
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { team_id: row.team_id, tag_id: row.tag_id };
+      });
+    }
+
+    // 6.22 team_tags.remove
+    // 必填：team_id, tag_id
+    if (action === "team_tags.remove") {
+      const required = ["team_id","tag_id"];
+      const allowed = new Set(required);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        try {
+          await run(`DELETE FROM team_tags WHERE team_id=? AND tag_id=?`, [row.team_id, row.tag_id]);
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { team_id: row.team_id, tag_id: row.tag_id, deleted: true };
+      });
+    }
+
+    // 6.23 tournament_outcomes.upsert
+    // 必填：event_id, season_id, division_key, team_id, stage_reached（outcome_id 可不填，系统 UUID）
+    // 选填：final_rank,country_name,country_code,group_name,notes
+    // 系统：created_at/updated_at（upsert 时 updated_at 更新）
+    if (action === "tournament_outcomes.upsert") {
+      const required = ["event_id","season_id","division_key","team_id","stage_reached"];
+      const optional = ["outcome_id","final_rank","country_name","country_code","group_name","notes"];
+      const allowed = new Set([...required, ...optional]);
+
+      return processItems(async (row) => {
+        rejectUnknownFields(row, allowed);
+        requireFields(row, required);
+
+        const outcome_id = row.outcome_id ?? uuid();
+
+        try {
+          await run(
+            `INSERT INTO tournament_outcomes
+               (outcome_id, event_id, season_id, division_key, team_id, stage_reached, final_rank, country_name, country_code, group_name, notes, created_at, updated_at)
+             VALUES
+               (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ON CONFLICT(outcome_id)
+             DO UPDATE SET
+               event_id=excluded.event_id,
+               season_id=excluded.season_id,
+               division_key=excluded.division_key,
+               team_id=excluded.team_id,
+               stage_reached=excluded.stage_reached,
+               final_rank=excluded.final_rank,
+               country_name=excluded.country_name,
+               country_code=excluded.country_code,
+               group_name=excluded.group_name,
+               notes=excluded.notes,
+               updated_at=excluded.updated_at`,
+            [
+              outcome_id,
+              row.event_id,
+              row.season_id,
+              row.division_key,
+              row.team_id,
+              row.stage_reached,
+              row.final_rank ?? null,
+              row.country_name ?? null,
+              row.country_code ?? null,
+              row.group_name ?? null,
+              row.notes ?? null,
+              now,
+              now
+            ]
+          );
+        } catch (e) {
+          throw new Error(mapDbError(e).message);
+        }
+
+        return { outcome_id, upserted: true };
+      });
+    }
+
+    /* =========================================================
+     * [段落 7] 理论不可达兜底
+     * 目的：保证所有路径有响应（实际不会走到）
+     * ========================================================= */
+    return serverError("Unhandled action");
+  }
+};

@@ -61,7 +61,10 @@ async function renderTeamDetail(team_id) {
       <div style="margin-top:12px;" class="cards-row">
         <div class="stat"><div class="k">Club</div><div class="v" style="font-size:14px;">-</div></div>
         <div class="stat"><div class="k">First Seen</div><div class="v" style="font-size:14px;">-</div></div>
-        <div class="stat"><div class="k">Best Rank</div><div class="v" style="font-size:14px;">-</div></div>
+        <div class="stat"><div class="k">Best Rank</div><div class="v" style="font-size:14px;">${data.summary?.best_rank ?? "-"}</div></div>
+        <div class="stat"><div class="k">Champions</div><div class="v" style="font-size:14px;">${data.summary?.champion_count ?? 0}</div></div>
+        <div class="stat"><div class="k">Podiums</div><div class="v" style="font-size:14px;">${data.summary?.podium_count ?? 0}</div></div>
+        <div class="stat"><div class="k">Entries</div><div class="v" style="font-size:14px;">${data.summary?.participations ?? 0}</div></div>
       </div>
     </div>
   `;

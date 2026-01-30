@@ -88,23 +88,75 @@ function render(data) {
   // First entry: show all events (but highlight worker-selected default without forcing URL).
   if (!qs("event_id")) {
     const highlightEventId = ctx.event_id || selected.event_id || "hpl";
+    renderOverviewPanel(data, "event");
     renderEventGrid(selectors, highlightEventId);
     return;
   }
 
   if (!qs("season_id")) {
+    renderOverviewPanel(data, "event");
     renderSeasonGrid(selectors, qs("event_id"));
     return;
   }
   if (!qs("division_key")) {
+    renderOverviewPanel(data, "season");
     renderDivisionGrid(selectors, qs("event_id"), qs("season_id"));
     return;
   }
   if (!qs("round_key")) {
+    renderOverviewPanel(data, "division");
     renderRoundGrid(selectors, qs("event_id"), qs("season_id"), qs("division_key"));
     return;
   }
+  renderOverviewPanel(data, "round");
   renderLeaderboard(data);
+}
+
+function renderOverviewPanel(data, level) {
+  const ov = data.overview || {};
+  let stats = [];
+  if (level === "event") {
+    const e = ov.event || {};
+    stats = [
+      { k: "Seasons", v: e.seasons_total ?? "-" },
+      { k: "Teams", v: e.teams_total ?? "-" },
+      { k: "Last Update", v: e.last_update ?? "-" },
+    ];
+  } else if (level === "season") {
+    const s = ov.season || {};
+    stats = [
+      { k: "Divisions", v: s.divisions_total ?? "-" },
+      { k: "Teams", v: s.teams_total ?? "-" },
+      { k: "Range", v: (s.start && s.end) ? `${s.start} ~ ${s.end}` : (s.start || s.end || "-") },
+    ];
+  } else if (level === "division") {
+    const d = ov.division || {};
+    stats = [
+      { k: "Rounds", v: d.rounds_count ?? "-" },
+      { k: "Groups", v: d.round_groups_count ?? "-" },
+      { k: "Current", v: d.current_round_key ?? "-" },
+    ];
+  } else if (level === "round") {
+    const r = ov.round || {};
+    stats = [
+      { k: "Teams", v: r.teams_total ?? "-" },
+      { k: "Scored", v: r.scored_teams ?? "-" },
+      { k: "Points Rows", v: r.has_points_rows ?? "-" },
+    ];
+  }
+  const panel = document.createElement("div");
+  panel.className = "panel";
+  panel.innerHTML = `
+    <div class="panel-hd">
+      <div class="h">Overview</div>
+    </div>
+    <div class="panel-bd">
+      <div class="cards-row">
+        ${stats.map(s => `<div class="stat"><div class="k">${s.k}</div><div class="v">${s.v}</div></div>`).join("")}
+      </div>
+    </div>
+  `;
+  content.appendChild(panel);
 }
 
 function renderEventGrid(selectors, selectedEventId = "") {
