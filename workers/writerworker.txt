@@ -1,33 +1,63 @@
 export default {
   async fetch(req, env) {
+    /* =========================================================
+         * [新增] CORS：允许前端跨域调用本 Writer Worker
+         * ========================================================= */
+        function corsHeaders(request) {
+          const origin = request.headers.get("Origin") || "*";
+          return {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": req.headers.get("Access-Control-Request-Headers") || "Content-Type, Authorization",
+
+            "Access-Control-Max-Age": "86400",
+            "Vary": "Origin"
+          };
+        }
+
+        function withCors(resp) {
+          const h = new Headers(resp.headers);
+          const add = corsHeaders(req);
+          for (const [k, v] of Object.entries(add)) h.set(k, v);
+          return new Response(resp.body, { status: resp.status, statusText: resp.statusText, headers: h });
+        }
+
+        // 预检请求（preflight）
+        if (req.method === "OPTIONS") {
+          return new Response("", { status: 204, headers: corsHeaders(req) });
+        }
+
+
 
     /* =========================================================
      * [段落 0] 入口与安全：只允许 POST + ADMIN_TOKEN 鉴权
      * 目的：防止误调用/公网写入；确保写入只有管理员能触发
      * ========================================================= */
     if (req.method !== "POST") {
-      return new Response("Method Not Allowed", { status: 405 });
+      return withCors(new Response("Method Not Allowed", { status: 405 }));
     }
 
     let body;
     try {
       body = await req.json();
     } catch {
-      return new Response("Invalid JSON", { status: 400 });
+       return withCors(new Response("Invalid JSON", { status: 400 }));
     }
 
     if (!body || body.token !== env.ADMIN_TOKEN) {
-      return new Response("Unauthorized", { status: 401 });
+      return withCors(new Response("Unauthorized", { status: 401 }));
     }
 
-    const mode = body.mode || "single"; // single | batch | dry-run
+    const mode = body.mode || "single"; // single | dry-run（single 表示真实写入，dry-run 表示校验）
     const action = body.action;
 
-    // single -> batch（强制一致性：Single 本质是 items.length=1 的 batch）
-    const items = mode === "single" ? [body.data] : body.items;
+    // ✅ 永远只认 items
+    const items = body.items;
     if (!Array.isArray(items)) {
-      return new Response("items must be array", { status: 400 });
+      return withCors(new Response("items must be array", { status: 400 }));
     }
+
+
 
     // 系统时间（System 字段统一来源）
     const now = new Date().toISOString();
@@ -37,13 +67,13 @@ export default {
      * 目的：严格遵守 exportV2.sql 的 schema；拒绝“猜字段/约定俗成”
      * ========================================================= */
     function badRequest(msg) {
-      return new Response(msg, { status: 400 });
+      return withCors(new Response(msg, { status: 400 }));
     }
     function conflict(msg) {
-      return new Response(msg, { status: 409 });
+      return withCors(new Response(msg, { status: 409 }));
     }
     function serverError(msg) {
-      return new Response(msg, { status: 500 });
+      return withCors(new Response(msg, { status: 500 }));
     }
 
     // 1a：必填字段校验
@@ -204,7 +234,7 @@ export default {
           errors.push({ index: i, error: msg });
         }
       }
-      return Response.json({ ok: errors.length === 0, mode, action, results, errors });
+      return withCors(Response.json({ ok: errors.length === 0, mode, action, results, errors }));
     }
 
     /* =========================================================

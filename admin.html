@@ -314,15 +314,18 @@
     "teams.create":  { desc: "创建队伍（通常不需要手填 team_id/team_code，按你的 Writer 规则自动生成）", tpl: ()=>({
       items:[{ canonical_name:"新队伍A", club_id:null, note:null, team_type:"club" }]
     })},
-    "players.create":{ desc: "创建选手（通常不需要手填 player_id，按你的 Writer 规则自动生成）", tpl: ()=>({
-      items:[{ name:"新选手A", note:null }]
-    })},
+    "players.create":{ desc: "创建选手（必填 nickname；通常不需要手填 player_id）", tpl: ()=>({
+  items:[{ nickname:"新选手A", notes:null }]
+})},
+
 
     // 你可以把所有 writer worker 支持的 action 都补进来（我先给骨架）
     "registrations.create": { desc:"创建报名", tpl: ()=>({ items:[{ registration_id:"reg_test_001", season_id:"", team_id:"" }] })},
     "rosters.add": { desc:"添加阵容", tpl: ()=>({ items:[{ roster_id:"ros_test_001", team_id:"", player_id:"", season_id:"" }] })},
-    "team_component_points.upsert": { desc:"写入/更新组件积分", tpl: ()=>({ items:[{ season_id:"", team_id:"", component_key:"", points:0 }] })}
-  };
+    "team_component_points.upsert": { desc:"写入/更新组件积分（必填 registration_id, component_id）", tpl: ()=>({
+  items:[{ registration_id:"reg_xxx", component_id:"comp_xxx", points:0 }]
+})},
+
 
   const actionSelect = $("actionSelect");
   const actionDesc = $("actionDesc");
