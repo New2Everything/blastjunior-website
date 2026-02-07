@@ -43,7 +43,7 @@
     .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin: 10px 0; }
     .row label { width: 150px; color:#555; }
     .row .grow { flex:1; min-width: 280px; }
-    select, textarea {
+    select, textarea, input[type="text"], input[type="number"] {
       width:100%;
       padding: 10px 12px; border-radius: 10px; border:1px solid #ddd; background:#fff;
       font-family: inherit;
@@ -53,6 +53,18 @@
     .pill { display:inline-block; padding:3px 8px; border-radius:999px; background:#eef2ff; color:#3730a3; font-size:12px; margin-left:6px; }
     .split { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 1100px){ .split { grid-template-columns: 1fr; } }
+    
+    /* Form-specific styles */
+    .form-section { margin: 15px 0; padding: 15px; background: #f8fafc; border-radius: 10px; }
+    .form-section h3 { margin: 0 0 10px; font-size: 16px; color: #333; }
+    .form-row { display: flex; gap: 10px; margin: 8px 0; align-items: center; }
+    .form-row label { min-width: 120px; color: #555; }
+    .form-row input, .form-row select, .form-row textarea { flex: 1; min-width: 200px; }
+    .required::after { content: " *"; color: #ef4444; }
+    .id-preview { background: #eef2ff; padding: 8px; border-radius: 6px; font-family: monospace; margin-top: 5px; }
+    .error { color: #ef4444; font-size: 12px; margin-top: 5px; }
+    .success { color: #16a34a; font-size: 12px; margin-top: 5px; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -84,10 +96,10 @@
   <!-- Writer panel -->
   <div id="writerPanel" style="display:none;">
     <div class="panel">
-      <h2>Writer Worker <span class="pill">强制 dry-run → real-run</span></h2>
+      <h2>Writer Worker <span class="pill">用户友好表单界面</span></h2>
       <div class="hint">
-        如果你点按钮“没反应”，大概率是 <b>CORS</b>（浏览器跨域拦截）。本页会把错误直接显示在输出区。<br/>
-        你需要确保 Writer Worker 响应包含：<code>Access-Control-Allow-Origin</code> / <code>Allow-Methods</code> / <code>Allow-Headers</code> 并支持 <code>OPTIONS</code> 预检。
+        使用下方表单创建或更新数据库记录。系统会自动生成ID并提供完整的表单验证。
+        如果遇到问题，请确保 Writer Worker 响应包含 CORS 头：<code>Access-Control-Allow-Origin</code>。
       </div>
 
       <div class="split" style="margin-top:12px;">
@@ -100,26 +112,56 @@
           </div>
 
           <div class="row">
-            <label>Action</label>
+            <label>操作类型</label>
             <div class="grow">
-              <select id="actionSelect"></select>
-            </div>
-          </div>
-
-          <div class="row" style="align-items:flex-start;">
-            <label>说明</label>
-            <div class="grow">
-              <div id="actionDesc" class="hint"></div>
+              <select id="actionSelect">
+                <optgroup label="赛事管理">
+                  <option value="events.create">创建赛事</option>
+                  <option value="events.update">更新赛事</option>
+                </optgroup>
+                <optgroup label="赛季管理">
+                  <option value="seasons.create">创建赛季</option>
+                  <option value="seasons.update">更新赛季</option>
+                </optgroup>
+                <optgroup label="分组管理">
+                  <option value="divisions.create">创建分组</option>
+                  <option value="divisions.update">更新分组</option>
+                </optgroup>
+                <optgroup label="队伍管理">
+                  <option value="teams.create">创建队伍</option>
+                  <option value="teams.update">更新队伍</option>
+                </optgroup>
+                <optgroup label="选手管理">
+                  <option value="players.create">创建选手</option>
+                  <option value="players.update">更新选手</option>
+                </optgroup>
+                <optgroup label="报名与阵容">
+                  <option value="registrations.create">创建报名</option>
+                  <option value="registrations.update">更新报名</option>
+                  <option value="rosters.add">添加阵容</option>
+                  <option value="rosters.remove">移除阵容</option>
+                </optgroup>
+                <optgroup label="积分与成绩">
+                  <option value="team_component_points.upsert">录入比赛结果</option>
+                  <option value="tournament_outcomes.upsert">录入锦标赛结果</option>
+                </optgroup>
+                <optgroup label="其他操作">
+                  <option value="score_components.create">创建积分组件</option>
+                  <option value="score_components.update">更新积分组件</option>
+                  <option value="team_aliases.add">添加队伍别名</option>
+                  <option value="tags.create">创建标签</option>
+                  <option value="tags.update">更新标签</option>
+                  <option value="team_tags.add">添加队伍标签</option>
+                  <option value="team_tags.remove">移除队伍标签</option>
+                </optgroup>
+              </select>
             </div>
           </div>
 
           <div class="row">
-            <label>模板</label>
-            <div class="grow" style="display:flex; gap:10px; flex-wrap:wrap;">
-              <button id="btnTplSingle">填充：单条 items</button>
-              <button id="btnTplBatch">填充：批量 items</button>
-              <button id="btnCopyPayload">复制 Payload</button>
-              <button id="btnClearOut">清空输出</button>
+            <label>说明</label>
+            <div class="grow">
+              <div id="actionDesc" class="hint"></div>
             </div>
           </div>
 
@@ -128,20 +170,16 @@
             <div class="grow" style="display:flex; gap:10px; flex-wrap:wrap;">
               <button class="warn" id="btnDry">Dry-Run（校验）</button>
               <button class="ok" id="btnReal" disabled>Real-Run（执行）</button>
+              <button id="btnReset">重置表单</button>
               <span id="writerStatus" class="hint"></span>
             </div>
           </div>
         </div>
 
         <div>
-          <div class="row" style="align-items:flex-start;">
-            <label>Payload (JSON)</label>
-            <div class="grow">
-              <textarea id="payload"></textarea>
-              <div class="hint" style="margin-top:6px;">
-                约定：一律用 <code>items: []</code>。Dry-run 成功后才解锁 Real-run；payload 任意变化会重新上锁。
-              </div>
-            </div>
+          <!-- Dynamic form will be generated here -->
+          <div id="dynamicForm">
+            <!-- Form fields will be populated based on selected action -->
           </div>
         </div>
       </div>
@@ -285,7 +323,7 @@
   loadList();
 
   /* =========================
-     Writer Console（新增）
+     Writer Console（重构版）
   ========================= */
 
   // Tab 切换（不影响媒体审核）
@@ -302,39 +340,289 @@
     writerPanel.style.display = "";
   };
 
-  // Action 配置（B：集中配置对象）
-  const ACTIONS = {
-    "events.create": { desc: "创建赛事（必填 event_id, name_zh；其余选填）", tpl: ()=>({
-      items:[{ event_id:"evt_test_001", name_zh:"测试赛事", name_en:"Test Event" }]
-    })},
-    "events.update": { desc: "更新赛事（必填 event_id；其余按需选填）", tpl: ()=>({
-      items:[{ event_id:"evt_test_001", name_zh:"测试赛事-改名" }]
-    })},
-
-    "teams.create":  { desc: "创建队伍（通常不需要手填 team_id/team_code，按你的 Writer 规则自动生成）", tpl: ()=>({
-      items:[{ canonical_name:"新队伍A", club_id:null, note:null, team_type:"club" }]
-    })},
-    "players.create":{ desc: "创建选手（必填 nickname；通常不需要手填 player_id）", tpl: ()=>({
-  items:[{ nickname:"新选手A", notes:null }]
-})},
-
-
-    // 你可以把所有 writer worker 支持的 action 都补进来（我先给骨架）
-    "registrations.create": { desc:"创建报名", tpl: ()=>({ items:[{ registration_id:"reg_test_001", season_id:"", team_id:"" }] })},
-    "rosters.add": { desc:"添加阵容", tpl: ()=>({ items:[{ roster_id:"ros_test_001", team_id:"", player_id:"", season_id:"" }] })},
-    "team_component_points.upsert": { desc:"写入/更新组件积分（必填 registration_id, component_id）", tpl: ()=>({
-  items:[{ registration_id:"reg_xxx", component_id:"comp_xxx", points:0 }]
-})},
-};
-
+  // Action 配置和说明
+  const ACTION_CONFIGS = {
+    "events.create": { 
+      desc: "创建赛事（必填 event_id, name_zh；其余选填）",
+      fields: [
+        { name: "event_id", label: "赛事ID", type: "text", required: true, placeholder: "例如: evt_2026_spring" },
+        { name: "name_zh", label: "赛事中文名", type: "text", required: true, placeholder: "例如: 2026春季超级联赛" },
+        { name: "name_en", label: "赛事英文名", type: "text", required: false, placeholder: "例如: 2026 Spring Super League" },
+        { name: "level", label: "赛事级别", type: "select", options: ["local", "regional", "national", "international"], required: false },
+        { name: "frequency", label: "举办频率", type: "select", options: ["one-off", "weekly", "monthly", "quarterly", "yearly"], required: false },
+        { name: "official_url", label: "官方网址", type: "text", required: false, placeholder: "https://example.com" },
+        { name: "description", label: "赛事描述", type: "textarea", required: false, placeholder: "赛事详细描述..." }
+      ]
+    },
+    "events.update": { 
+      desc: "更新赛事（必填 event_id；其余按需选填）",
+      fields: [
+        { name: "event_id", label: "赛事ID", type: "text", required: true, placeholder: "要更新的赛事ID" },
+        { name: "name_zh", label: "赛事中文名", type: "text", required: false, placeholder: "新的中文名" },
+        { name: "name_en", label: "赛事英文名", type: "text", required: false, placeholder: "新的英文名" },
+        { name: "level", label: "赛事级别", type: "select", options: ["local", "regional", "national", "international"], required: false },
+        { name: "frequency", label: "举办频率", type: "select", options: ["one-off", "weekly", "monthly", "quarterly", "yearly"], required: false },
+        { name: "official_url", label: "官方网址", type: "text", required: false, placeholder: "新的官方网址" },
+        { name: "description", label: "赛事描述", type: "textarea", required: false, placeholder: "新的赛事描述..." }
+      ]
+    },
+    "seasons.create": { 
+      desc: "创建赛季（必填 season_id, event_id, name）",
+      fields: [
+        { name: "season_id", label: "赛季ID", type: "text", required: true, placeholder: "例如: 2026-spring" },
+        { name: "event_id", label: "关联赛事ID", type: "text", required: true, placeholder: "例如: evt_2026_spring" },
+        { name: "name", label: "赛季名称", type: "text", required: true, placeholder: "例如: 2026春季超级联赛" },
+        { name: "year", label: "年份", type: "number", required: false, placeholder: "2026" },
+        { name: "start_date", label: "开始日期", type: "text", required: false, placeholder: "YYYY-MM-DD" },
+        { name: "end_date", label: "结束日期", type: "text", required: false, placeholder: "YYYY-MM-DD" },
+        { name: "status", label: "状态", type: "select", options: ["planned", "active", "completed", "cancelled"], required: false },
+        { name: "season_type", label: "赛季类型", type: "select", options: ["regular", "playoff", "exhibition", "qualifier"], required: false },
+        { name: "notes", label: "备注", type: "textarea", required: false, placeholder: "赛季相关备注..." }
+      ]
+    },
+    "seasons.update": { 
+      desc: "更新赛季（必填 season_id；其余按需选填）",
+      fields: [
+        { name: "season_id", label: "赛季ID", type: "text", required: true, placeholder: "要更新的赛季ID" },
+        { name: "event_id", label: "关联赛事ID", type: "text", required: false, placeholder: "新的赛事ID" },
+        { name: "name", label: "赛季名称", type: "text", required: false, placeholder: "新的赛季名称" },
+        { name: "year", label: "年份", type: "number", required: false, placeholder: "2026" },
+        { name: "start_date", label: "开始日期", type: "text", required: false, placeholder: "YYYY-MM-DD" },
+        { name: "end_date", label: "结束日期", type: "text", required: false, placeholder: "YYYY-MM-DD" },
+        { name: "status", label: "状态", type: "select", options: ["planned", "active", "completed", "cancelled"], required: false },
+        { name: "season_type", label: "赛季类型", type: "select", options: ["regular", "playoff", "exhibition", "qualifier"], required: false },
+        { name: "notes", label: "备注", type: "textarea", required: false, placeholder: "新的备注..." }
+      ]
+    },
+    "divisions.create": { 
+      desc: "创建分组（必填 division_id, season_id, name）",
+      fields: [
+        { name: "division_id", label: "分组ID", type: "text", required: true, placeholder: "例如: div_elite_2026" },
+        { name: "season_id", label: "关联赛季ID", type: "text", required: true, placeholder: "例如: 2026-spring" },
+        { name: "name", label: "分组名称", type: "text", required: true, placeholder: "例如: 精英组" },
+        { name: "division_key", label: "分组键", type: "text", required: false, placeholder: "例如: elite" },
+        { name: "sort_order", label: "排序顺序", type: "number", required: false, placeholder: "1" },
+        { name: "leaderboard_key", label: "排行榜键", type: "text", required: false, placeholder: "例如: elite_2026" },
+        { name: "notes", label: "备注", type: "textarea", required: false, placeholder: "分组相关备注..." }
+      ]
+    },
+    "divisions.update": { 
+      desc: "更新分组（必填 division_id；其余按需选填）",
+      fields: [
+        { name: "division_id", label: "分组ID", type: "text", required: true, placeholder: "要更新的分组ID" },
+        { name: "season_id", label: "关联赛季ID", type: "text", required: false, placeholder: "新的赛季ID" },
+        { name: "name", label: "分组名称", type: "text", required: false, placeholder: "新的分组名称" },
+        { name: "division_key", label: "分组键", type: "text", required: false, placeholder: "新的分组键" },
+        { name: "sort_order", label: "排序顺序", type: "number", required: false, placeholder: "新的排序" },
+        { name: "leaderboard_key", label: "排行榜键", type: "text", required: false, placeholder: "新的排行榜键" },
+        { name: "notes", label: "备注", type: "textarea", required: false, placeholder: "新的备注..." }
+      ]
+    },
+    "teams.create": { 
+      desc: "创建队伍（必填 canonical_name；系统自动生成 team_id/team_code）",
+      fields: [
+        { name: "canonical_name", label: "队伍标准名称", type: "text", required: true, placeholder: "例如: 超级战队A" },
+        { name: "club_id", label: "俱乐部ID", type: "text", required: false, placeholder: "可选的俱乐部ID" },
+        { name: "first_seen_season_id", label: "首次出现赛季", type: "text", required: false, placeholder: "例如: 2026-spring" },
+        { name: "team_type", label: "队伍类型", type: "select", options: ["club", "school", "community", "professional", "amateur"], required: false },
+        { name: "note", label: "备注", type: "textarea", required: false, placeholder: "队伍相关备注..." }
+      ],
+      idInfo: "系统将自动生成 team_id 和 team_code，格式为 TEAM001, TEAM002..."
+    },
+    "teams.update": { 
+      desc: "更新队伍（必填 team_id；其余按需选填）",
+      fields: [
+        { name: "team_id", label: "队伍ID", type: "text", required: true, placeholder: "要更新的队伍ID (TEAMxxx)" },
+        { name: "canonical_name", label: "队伍标准名称", type: "text", required: false, placeholder: "新的标准名称" },
+        { name: "club_id", label: "俱乐部ID", type: "text", required: false, placeholder: "新的俱乐部ID" },
+        { name: "first_seen_season_id", label: "首次出现赛季", type: "text", required: false, placeholder: "新的首次出现赛季" },
+        { name: "team_type", label: "队伍类型", type: "select", options: ["club", "school", "community", "professional", "amateur"], required: false },
+        { name: "team_code", label: "队伍代码", type: "text", required: false, placeholder: "新的队伍代码" },
+        { name: "note", label: "备注", type: "textarea", required: false, placeholder: "新的备注..." }
+      ]
+    },
+    "players.create": { 
+      desc: "创建选手（必填 nickname；系统自动生成 player_id）",
+      fields: [
+        { name: "nickname", label: "选手昵称", type: "text", required: true, placeholder: "例如: 小明" },
+        { name: "display_name", label: "显示名称", type: "text", required: false, placeholder: "例如: 明星选手小明" },
+        { name: "real_name", label: "真实姓名", type: "text", required: false, placeholder: "例如: 张小明" },
+        { name: "birth_year", label: "出生年份", type: "number", required: false, placeholder: "2010" },
+        { name: "is_active", label: "是否活跃", type: "select", options: ["true", "false"], required: false },
+        { name: "gender", label: "性别", type: "select", options: ["male", "female", "other"], required: false },
+        { name: "club_name", label: "俱乐部名称", type: "text", required: false, placeholder: "例如: 超级俱乐部" },
+        { name: "joined_at", label: "加入时间", type: "text", required: false, placeholder: "YYYY-MM-DD" },
+        { name: "notes", label: "备注", type: "textarea", required: false, placeholder: "选手相关备注..." }
+      ],
+      idInfo: "系统将自动生成 player_id，格式为 PLAYER0001, PLAYER0002..."
+    },
+    "players.update": { 
+      desc: "更新选手（必填 player_id；其余按需选填）",
+      fields: [
+        { name: "player_id", label: "选手ID", type: "text", required: true, placeholder: "要更新的选手ID (PLAYERxxxx)" },
+        { name: "nickname", label: "选手昵称", type: "text", required: false, placeholder: "新的昵称" },
+        { name: "display_name", label: "显示名称", type: "text", required: false, placeholder: "新的显示名称" },
+        { name: "real_name", label: "真实姓名", type: "text", required: false, placeholder: "新的真实姓名" },
+        { name: "birth_year", label: "出生年份", type: "number", required: false, placeholder: "新的出生年份" },
+        { name: "is_active", label: "是否活跃", type: "select", options: ["true", "false"], required: false },
+        { name: "gender", label: "性别", type: "select", options: ["male", "female", "other"], required: false },
+        { name: "club_name", label: "俱乐部名称", type: "text", required: false, placeholder: "新的俱乐部名称" },
+        { name: "joined_at", label: "加入时间", type: "text", required: false, placeholder: "新的加入时间" },
+        { name: "notes", label: "备注", type: "textarea", required: false, placeholder: "新的备注..." }
+      ]
+    },
+    "registrations.create": { 
+      desc: "创建报名（必填 season_id, team_id；系统自动生成 registration_id）",
+      fields: [
+        { name: "season_id", label: "赛季ID", type: "text", required: true, placeholder: "例如: 2026-spring" },
+        { name: "team_id", label: "队伍ID", type: "text", required: true, placeholder: "例如: TEAM001" },
+        { name: "club_id", label: "俱乐部ID", type: "text", required: false, placeholder: "可选的俱乐部ID" },
+        { name: "division", label: "分组", type: "text", required: false, placeholder: "例如: elite" },
+        { name: "status", label: "状态", type: "select", options: ["registered", "confirmed", "withdrawn", "disqualified"], required: false },
+        { name: "note", label: "备注", type: "textarea", required: false, placeholder: "报名相关备注..." }
+      ],
+      idInfo: "系统将自动生成 registration_id (UUID格式)"
+    },
+    "registrations.update": { 
+      desc: "更新报名（必填 registration_id；其余按需选填）",
+      fields: [
+        { name: "registration_id", label: "报名ID", type: "text", required: true, placeholder: "要更新的报名ID" },
+        { name: "season_id", label: "赛季ID", type: "text", required: false, placeholder: "新的赛季ID" },
+        { name: "team_id", label: "队伍ID", type: "text", required: false, placeholder: "新的队伍ID" },
+        { name: "club_id", label: "俱乐部ID", type: "text", required: false, placeholder: "新的俱乐部ID" },
+        { name: "division", label: "分组", type: "text", required: false, placeholder: "新的分组" },
+        { name: "status", label: "状态", type: "select", options: ["registered", "confirmed", "withdrawn", "disqualified"], required: false },
+        { name: "note", label: "备注", type: "textarea", required: false, placeholder: "新的备注..." }
+      ]
+    },
+    "rosters.add": { 
+      desc: "添加阵容（必填 season_id, team_id, player_id；系统自动生成 roster_id）",
+      fields: [
+        { name: "season_id", label: "赛季ID", type: "text", required: true, placeholder: "例如: 2026-spring" },
+        { name: "team_id", label: "队伍ID", type: "text", required: true, placeholder: "例如: TEAM001" },
+        { name: "player_id", label: "选手ID", type: "text", required: true, placeholder: "例如: PLAYER0001" },
+        { name: "role", label: "角色", type: "text", required: false, placeholder: "例如: captain, member" },
+        { name: "notes", label: "备注", type: "textarea", required: false, placeholder: "阵容相关备注..." }
+      ],
+      idInfo: "系统将自动生成 roster_id (UUID格式)"
+    },
+    "rosters.remove": { 
+      desc: "移除阵容（必填 roster_id）",
+      fields: [
+        { name: "roster_id", label: "阵容ID", type: "text", required: true, placeholder: "要移除的阵容ID" }
+      ]
+    },
+    "team_component_points.upsert": { 
+      desc: "录入比赛结果（必填 registration_id, component_id；points 默认为0）",
+      fields: [
+        { name: "registration_id", label: "报名ID", type: "text", required: true, placeholder: "例如: UUID格式的报名ID" },
+        { name: "component_id", label: "积分组件ID", type: "text", required: true, placeholder: "例如: comp_round1_2026" },
+        { name: "points", label: "获得积分", type: "number", required: false, placeholder: "0", defaultValue: "0" },
+        { name: "recorded_at", label: "记录时间", type: "text", required: false, placeholder: "YYYY-MM-DD 或留空使用当前时间" },
+        { name: "note", label: "备注", type: "textarea", required: false, placeholder: "比赛结果备注..." }
+      ],
+      idInfo: "系统将自动生成记录ID (UUID格式)，如果存在相同 registration_id + component_id 的记录将更新"
+    },
+    "tournament_outcomes.upsert": { 
+      desc: "录入锦标赛结果（必填 event_id, season_id, division_key, team_id, stage_reached）",
+      fields: [
+        { name: "event_id", label: "赛事ID", type: "text", required: true, placeholder: "例如: evt_2026_spring" },
+        { name: "season_id", label: "赛季ID", type: "text", required: true, placeholder: "例如: 2026-spring" },
+        { name: "division_key", label: "分组键", type: "text", required: true, placeholder: "例如: elite" },
+        { name: "team_id", label: "队伍ID", type: "text", required: true, placeholder: "例如: TEAM001" },
+        { name: "stage_reached", label: "达到阶段", type: "text", required: true, placeholder: "例如: final, semi-final, quarter-final" },
+        { name: "final_rank", label: "最终排名", type: "number", required: false, placeholder: "1" },
+        { name: "country_name", label: "国家名称", type: "text", required: false, placeholder: "例如: 中国" },
+        { name: "country_code", label: "国家代码", type: "text", required: false, placeholder: "例如: CN" },
+        { name: "group_name", label: "小组名称", type: "text", required: false, placeholder: "例如: A组" },
+        { name: "notes", label: "备注", type: "textarea", required: false, placeholder: "锦标赛结果备注..." }
+      ],
+      idInfo: "系统将自动生成 outcome_id (UUID格式)"
+    },
+    "score_components.create": { 
+      desc: "创建积分组件（必填 component_id, leaderboard_key, name）",
+      fields: [
+        { name: "component_id", label: "组件ID", type: "text", required: true, placeholder: "例如: comp_round1_2026" },
+        { name: "leaderboard_key", label: "排行榜键", type: "text", required: true, placeholder: "例如: elite_2026" },
+        { name: "name", label: "组件名称", type: "text", required: true, placeholder: "例如: 第一轮比赛" },
+        { name: "component_type", label: "组件类型", type: "select", options: ["match", "round", "tournament", "bonus"], required: false },
+        { name: "start_date", label: "开始日期", type: "text", required: false, placeholder: "YYYY-MM-DD" },
+        { name: "end_date", label: "结束日期", type: "text", required: false, placeholder: "YYYY-MM-DD" },
+        { name: "sort_order", label: "排序顺序", type: "number", required: false, placeholder: "1" },
+        { name: "source_season_id", label: "源赛季ID", type: "text", required: false, placeholder: "例如: 2026-spring" },
+        { name: "notes", label: "备注", type: "textarea", required: false, placeholder: "积分组件备注..." }
+      ]
+    },
+    "score_components.update": { 
+      desc: "更新积分组件（必填 component_id；其余按需选填）",
+      fields: [
+        { name: "component_id", label: "组件ID", type: "text", required: true, placeholder: "要更新的组件ID" },
+        { name: "leaderboard_key", label: "排行榜键", type: "text", required: false, placeholder: "新的排行榜键" },
+        { name: "name", label: "组件名称", type: "text", required: false, placeholder: "新的组件名称" },
+        { name: "component_type", label: "组件类型", type: "select", options: ["match", "round", "tournament", "bonus"], required: false },
+        { name: "start_date", label: "开始日期", type: "text", required: false, placeholder: "新的开始日期" },
+        { name: "end_date", label: "结束日期", type: "text", required: false, placeholder: "新的结束日期" },
+        { name: "sort_order", label: "排序顺序", type: "number", required: false, placeholder: "新的排序" },
+        { name: "source_season_id", label: "源赛季ID", type: "text", required: false, placeholder: "新的源赛季ID" },
+        { name: "notes", label: "备注", type: "textarea", required: false, placeholder: "新的备注..." }
+      ]
+    },
+    "team_aliases.add": { 
+      desc: "添加队伍别名（必填 team_id, alias_name；系统自动生成 alias_id）",
+      fields: [
+        { name: "team_id", label: "队伍ID", type: "text", required: true, placeholder: "例如: TEAM001" },
+        { name: "alias_name", label: "别名", type: "text", required: true, placeholder: "例如: 超级战队" },
+        { name: "from_date", label: "生效开始日期", type: "text", required: false, placeholder: "YYYY-MM-DD" },
+        { name: "to_date", label: "生效结束日期", type: "text", required: false, placeholder: "YYYY-MM-DD" },
+        { name: "note", label: "备注", type: "textarea", required: false, placeholder: "别名相关备注..." }
+      ],
+      idInfo: "系统将自动生成 alias_id (UUID格式)"
+    },
+    "tags.create": { 
+      desc: "创建标签（必填 tag_key, name, tag_type；系统自动生成 tag_id）",
+      fields: [
+        { name: "tag_key", label: "标签键", type: "text", required: true, placeholder: "例如: region_north" },
+        { name: "name", label: "标签名称", type: "text", required: true, placeholder: "例如: 北方赛区" },
+        { name: "tag_type", label: "标签类型", type: "select", options: ["region", "category", "status", "custom"], required: true },
+        { name: "description", label: "标签描述", type: "textarea", required: false, placeholder: "标签详细描述..." }
+      ],
+      idInfo: "系统将自动生成 tag_id (UUID格式)"
+    },
+    "tags.update": { 
+      desc: "更新标签（必填 tag_id；其余按需选填）",
+      fields: [
+        { name: "tag_id", label: "标签ID", type: "text", required: true, placeholder: "要更新的标签ID" },
+        { name: "tag_key", label: "标签键", type: "text", required: false, placeholder: "新的标签键" },
+        { name: "name", label: "标签名称", type: "text", required: false, placeholder: "新的标签名称" },
+        { name: "tag_type", label: "标签类型", type: "select", options: ["region", "category", "status", "custom"], required: false },
+        { name: "description", label: "标签描述", type: "textarea", required: false, placeholder: "新的标签描述..." }
+      ]
+    },
+    "team_tags.add": { 
+      desc: "添加队伍标签（必填 team_id, tag_id）",
+      fields: [
+        { name: "team_id", label: "队伍ID", type: "text", required: true, placeholder: "例如: TEAM001" },
+        { name: "tag_id", label: "标签ID", type: "text", required: true, placeholder: "例如: UUID格式的标签ID" },
+        { name: "note", label: "备注", type: "textarea", required: false, placeholder: "标签关联备注..." }
+      ]
+    },
+    "team_tags.remove": { 
+      desc: "移除队伍标签（必填 team_id, tag_id）",
+      fields: [
+        { name: "team_id", label: "队伍ID", type: "text", required: true, placeholder: "例如: TEAM001" },
+        { name: "tag_id", label: "标签ID", type: "text", required: true, placeholder: "例如: UUID格式的标签ID" }
+      ]
+    }
+  };
 
   const actionSelect = $("actionSelect");
   const actionDesc = $("actionDesc");
-  const payloadEl = $("payload");
+  const dynamicForm = $("dynamicForm");
   const writerOut = $("writerOut");
   const statusEl = $("writerStatus");
   const btnDry = $("btnDry");
   const btnReal = $("btnReal");
+  const btnReset = $("btnReset");
 
   function nowStr(){ return new Date().toISOString(); }
 
@@ -354,27 +642,6 @@
   }
   let lastDryHash = null;
 
-  // 初始化 action 下拉
-  function initActions(){
-    actionSelect.innerHTML = "";
-    for (const k of Object.keys(ACTIONS)){
-      const opt = document.createElement("option");
-      opt.value = k;
-      opt.textContent = k;
-      actionSelect.appendChild(opt);
-    }
-    actionSelect.value = "events.create";
-    updateActionUI();
-  }
-
-  function updateActionUI(){
-    const cfg = ACTIONS[actionSelect.value];
-    actionDesc.textContent = cfg?.desc || "";
-    const tpl = cfg?.tpl ? cfg.tpl() : { items:[{}] };
-    payloadEl.value = JSON.stringify(tpl, null, 2);
-    lockReal("请选择 dry-run 校验");
-  }
-
   function lockReal(reason){
     btnReal.disabled = true;
     lastDryHash = null;
@@ -385,65 +652,189 @@
     statusEl.textContent = "状态：dry-run 已通过，可执行 real-run";
   }
 
-  actionSelect.onchange = updateActionUI;
+  // 生成表单字段
+  function createFormField(fieldConfig) {
+    const row = document.createElement('div');
+    row.className = 'form-row';
+    
+    const label = document.createElement('label');
+    label.textContent = fieldConfig.label;
+    if (fieldConfig.required) {
+      label.classList.add('required');
+    }
+    row.appendChild(label);
+    
+    let input;
+    if (fieldConfig.type === 'textarea') {
+      input = document.createElement('textarea');
+      input.rows = 3;
+    } else if (fieldConfig.type === 'select') {
+      input = document.createElement('select');
+      const emptyOption = document.createElement('option');
+      emptyOption.value = '';
+      emptyOption.textContent = '请选择...';
+      input.appendChild(emptyOption);
+      fieldConfig.options.forEach(option => {
+        const optionEl = document.createElement('option');
+        optionEl.value = option;
+        optionEl.textContent = option;
+        input.appendChild(optionEl);
+      });
+    } else {
+      input = document.createElement('input');
+      input.type = fieldConfig.type || 'text';
+    }
+    
+    input.name = fieldConfig.name;
+    input.id = `field_${fieldConfig.name}`;
+    if (fieldConfig.placeholder) {
+      input.placeholder = fieldConfig.placeholder;
+    }
+    if (fieldConfig.defaultValue) {
+      input.value = fieldConfig.defaultValue;
+    }
+    
+    row.appendChild(input);
+    
+    // 添加错误提示区域
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error';
+    errorDiv.id = `error_${fieldConfig.name}`;
+    row.appendChild(errorDiv);
+    
+    return row;
+  }
 
-  // payload 变化 → 自动上锁
-  payloadEl.addEventListener("input", ()=>{
-    lockReal("payload 变更，请重新 dry-run");
+  // 生成完整表单
+  function generateForm(action) {
+    const config = ACTION_CONFIGS[action];
+    if (!config) {
+      dynamicForm.innerHTML = '<div class="hint">未找到对应的操作配置</div>';
+      return;
+    }
+    
+    dynamicForm.innerHTML = '';
+    actionDesc.textContent = config.desc;
+    
+    const formSection = document.createElement('div');
+    formSection.className = 'form-section';
+    
+    const title = document.createElement('h3');
+    title.textContent = '数据输入';
+    formSection.appendChild(title);
+    
+    config.fields.forEach(field => {
+      formSection.appendChild(createFormField(field));
+    });
+    
+    // 添加ID生成信息（如果有）
+    if (config.idInfo) {
+      const idInfoDiv = document.createElement('div');
+      idInfoDiv.className = 'id-preview';
+      idInfoDiv.textContent = `ID生成规则: ${config.idInfo}`;
+      formSection.appendChild(idInfoDiv);
+    }
+    
+    dynamicForm.appendChild(formSection);
+  }
+
+  // 获取表单数据
+  function getFormData() {
+    const formData = {};
+    const inputs = dynamicForm.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+      if (input.type === 'checkbox') {
+        formData[input.name] = input.checked;
+      } else if (input.type === 'number' && input.value) {
+        formData[input.name] = Number(input.value);
+      } else if (input.value.trim()) {
+        formData[input.name] = input.value.trim();
+      }
+    });
+    return formData;
+  }
+
+  // 表单验证
+  function validateForm(action) {
+    const config = ACTION_CONFIGS[action];
+    let isValid = true;
+    
+    // 清除之前的错误
+    dynamicForm.querySelectorAll('.error').forEach(el => el.textContent = '');
+    
+    config.fields.forEach(field => {
+      const input = document.getElementById(`field_${field.name}`);
+      const errorEl = document.getElementById(`error_${field.name}`);
+      
+      if (field.required && (!input.value || input.value.trim() === '')) {
+        errorEl.textContent = `${field.label} 是必填项`;
+        isValid = false;
+      }
+      
+      // 验证数字类型
+      if (field.type === 'number' && input.value && isNaN(Number(input.value))) {
+        errorEl.textContent = `${field.label} 必须是有效数字`;
+        isValid = false;
+      }
+      
+      // 验证日期格式（简单验证）
+      if ((field.name.includes('date') || field.name === 'recorded_at') && input.value) {
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(input.value) && input.value !== 'now') {
+          errorEl.textContent = `${field.label} 格式应为 YYYY-MM-DD`;
+          isValid = false;
+        }
+      }
+    });
+    
+    return isValid;
+  }
+
+  // 重置表单
+  function resetForm() {
+    const inputs = dynamicForm.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+      if (input.type === 'checkbox') {
+        input.checked = false;
+      } else {
+        input.value = '';
+      }
+    });
+    dynamicForm.querySelectorAll('.error').forEach(el => el.textContent = '');
+    lockReal("表单已重置，请重新填写");
+  }
+
+  // 初始化
+  actionSelect.onchange = () => {
+    generateForm(actionSelect.value);
+    lockReal("请选择 dry-run 校验");
+  };
+
+  btnReset.onclick = resetForm;
+
+  // payload 变化检测（通过表单输入事件）
+  dynamicForm.addEventListener('input', () => {
+    lockReal("表单内容已变更，请重新 dry-run");
   });
 
-  $("btnTplSingle").onclick = ()=>{
-    const cfg = ACTIONS[actionSelect.value];
-    const tpl = cfg?.tpl ? cfg.tpl() : { items:[{}] };
-    // 单条：强制 items 只有 1 条
-    const one = (tpl.items && tpl.items[0]) ? [tpl.items[0]] : [{}];
-    payloadEl.value = JSON.stringify({ items: one }, null, 2);
-    lockReal("已填充模板，请 dry-run");
-  };
-
-  $("btnTplBatch").onclick = ()=>{
-    const cfg = ACTIONS[actionSelect.value];
-    const tpl = cfg?.tpl ? cfg.tpl() : { items:[{}] };
-    // 批量：给 2 条示例
-    const first = (tpl.items && tpl.items[0]) ? tpl.items[0] : {};
-    payloadEl.value = JSON.stringify({ items: [ first, structuredClone(first) ] }, null, 2);
-    lockReal("已填充批量模板，请 dry-run");
-  };
-
-  $("btnCopyPayload").onclick = async ()=>{
-    try{
-      await navigator.clipboard.writeText(payloadEl.value || "");
-      alert("已复制 payload");
-    }catch{
-      alert("复制失败（浏览器权限限制），你可以手动全选复制");
-    }
-  };
-
-  $("btnClearOut").onclick = ()=>{ writerOut.innerHTML=""; statusEl.textContent=""; };
-
-  async function writerSend(mode){
+  async function writerSend(mode) {
     const token = (tokenEl.value || "").trim();
-    if (!token) { alert("请先输入 ADMIN_TOKEN"); return; }
+    if (!token) { 
+      alert("请先输入 ADMIN_TOKEN"); 
+      return; 
+    }
 
-    let payload;
-    try{
-      payload = JSON.parse(payloadEl.value || "{}");
-    }catch(e){
-      showWriterErr("JSON 格式错误", String(e));
+    if (!validateForm(actionSelect.value)) {
+      showWriterErr("表单验证失败", "请检查必填项和格式");
       return;
     }
 
-    // 强制 items 数组（与你的 writer 约定一致）
-    if (!Array.isArray(payload.items)){
-      showWriterErr("items must be array", "请使用格式：{ \"items\": [ { ... } ] }");
-      return;
-    }
-
+    const formData = getFormData();
     const body = {
       token,
       action: actionSelect.value,
       mode,
-      items: payload.items
+      items: [formData]
     };
 
     // UI 状态
@@ -452,56 +843,72 @@
     statusEl.textContent = "状态：请求中...";
 
     const started = performance.now();
-    try{
+    try {
       const r = await fetch(($("writerUrl").value || "").trim(), {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
       });
 
       const text = await r.text();
       let j;
-      try { j = JSON.parse(text); } catch { j = { ok:false, error:"非 JSON 响应", raw:text, status:r.status }; }
+      try { 
+        j = JSON.parse(text); 
+      } catch { 
+        j = { ok: false, error: "非 JSON 响应", raw: text, status: r.status }; 
+      }
 
-      j._http = { status: r.status, ms: Math.round(performance.now()-started) };
+      j._http = { status: r.status, ms: Math.round(performance.now() - started) };
       showWriter(j);
 
-      if (mode === "dry-run"){
-        if (j.ok){
-          lastDryHash = simpleHash(payloadEl.value || "");
+      if (mode === "dry-run") {
+        if (j.ok) {
+          lastDryHash = simpleHash(JSON.stringify(formData));
           unlockReal();
-        }else{
+        } else {
           lockReal("dry-run 未通过");
         }
-      }else{
+      } else {
         lockReal("执行完成（建议继续 dry-run 再下一次）");
+        // 如果执行成功，可以重置表单或保持当前状态
+        if (j.ok) {
+          const successMsg = document.createElement('div');
+          successMsg.className = 'success';
+          successMsg.textContent = '操作成功完成！';
+          dynamicForm.appendChild(successMsg);
+          setTimeout(() => {
+            successMsg.remove();
+          }, 3000);
+        }
       }
-    }catch(e){
+    } catch (e) {
       // ✅ 这里会把 CORS / 网络错误直接显示出来（你截图“没反应”的根因）
       showWriterErr("网络错误 / CORS 被拦截", String(e));
       lockReal("网络错误");
-    }finally{
+    } finally {
       btnDry.disabled = false;
       // btnReal 是否解锁由上面逻辑决定
     }
   }
 
-  btnDry.onclick = async ()=>{
+  btnDry.onclick = async () => {
     await writerSend("dry-run");
   };
 
-  btnReal.onclick = async ()=>{
-    const curHash = simpleHash(payloadEl.value || "");
-    if (!lastDryHash || curHash !== lastDryHash){
-      alert("Payload 已变更，请先 dry-run");
-      lockReal("payload 变更，请 dry-run");
+  btnReal.onclick = async () => {
+    const currentData = JSON.stringify(getFormData());
+    const curHash = simpleHash(currentData);
+    if (!lastDryHash || curHash !== lastDryHash) {
+      alert("表单内容已变更，请先 dry-run");
+      lockReal("表单内容变更，请 dry-run");
       return;
     }
     // real-run：按你之前的 worker 约定，用 single（你也可以改成 real-run 关键字，但要与 worker 一致）
     await writerSend("single");
   };
 
-  initActions();
+  // 初始化第一个表单
+  generateForm(actionSelect.value);
 </script>
 </body>
 </html>
