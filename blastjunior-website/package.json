@@ -1,0 +1,1 @@
+{"name":"blastjunior-website","version":"0.0.1","scripts":{"dev":"vite dev","build":"vite build","preview":"vite preview"},"dependencies":{"svelte":"^4.0.0","@sveltejs/kit":"^2.0.0"},"devDependencies":{"vite":"^5.0.0","@sveltejs/adapter-cloudflare":"^4.0.0"}}

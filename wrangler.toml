@@ -1,0 +1,10 @@
+name = "blastjunior-website"
+main = ".svelte-kit/cloudflare/_worker.js"
+compatibility_date = "2024-01-01"
+
+[build]
+command = "npm run build"
+
+[site]
+bucket = ".svelte-kit/cloudflare"
+entry-point = ".svelte-kit/cloudflare"
