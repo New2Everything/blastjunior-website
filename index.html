@@ -305,7 +305,7 @@
                 
                 showToast('已提交！如需同步到网站，请在此对话中告诉我', 'success');
                 // 显示联系提示
-                alert('消息已提交！\n\n如需同步到网站，请在本对话框中告诉我，\n我会帮你审核并发布到网站～\n\n或者直接在这里聊天也行！');
+                // 已移除提示
                 input.value = ''; input.style.height = 'auto';
             } catch (e) { showToast('提交失败: ' + e.message); } finally { sendBtn.disabled = false; }
         }
