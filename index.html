@@ -168,8 +168,9 @@
         </div>
     </footer>
     <script>
-        // 消息存储：GitHub Raw URL (公开可读)
-        const MESSAGES_URL = 'https://raw.githubusercontent.com/New2Everything/blastjunior-website/main/messages.json';
+        // 使用 blast-comments-api Worker 存储社区消息
+        const API_SUBMIT = 'https://blast-comments-api.kanjiaming2022.workers.dev/community';
+        const API_LIST = 'https://blast-comments-api.kanjiaming2022.workers.dev/community';
         const LOCAL_KEY = 'blxst_messages';
         const MAX_MESSAGES = 300;
         const WARNING_THRESHOLD = 280;
@@ -212,18 +213,21 @@
         async function loadMessages() {
             const container = document.getElementById('chatMessages');
             try {
-                const resp = await fetch(MESSAGES_URL + '?t=' + Date.now());
+                // 从 Worker API 获取消息
+                const resp = await fetch(API_LIST);
                 if (resp.ok) { 
-                    const messages = await resp.json(); 
-                    renderMessages(messages); 
-                    localStorage.setItem(LOCAL_KEY, JSON.stringify(messages)); 
-                    // 更新在线状态
-                    updateOnlineStatus();
-                    return; 
+                    const data = await resp.json(); 
+                    if (data.messages) {
+                        renderMessages(data.messages); 
+                        localStorage.setItem(LOCAL_KEY, JSON.stringify(data.messages)); 
+                        updateOnlineStatus();
+                        return; 
+                    }
                 }
             } catch (e) { 
-                console.log('GitHub 获取失败，使用缓存'); 
+                console.log('API 获取失败，使用缓存'); 
             }
+            // 回退到本地缓存
             const cached = localStorage.getItem(LOCAL_KEY);
             if (cached) renderMessages(JSON.parse(cached));
             else renderMessages([{ id: 1, type: 'system', name: '系统', avatar: '📢', content: '欢迎来到兰星少年社区！', time: new Date().toISOString() }]);
@@ -250,11 +254,27 @@
             } catch (e) { console.error('归档失败:', e); }
         }
         
-        // 保存功能 - 由于跨域限制，消息将通过管理员审核后同步
-        async function saveMessages(messages) {
-            // 暂时存本地，由管理员（我）手动同步到 GitHub
-            localStorage.setItem(LOCAL_KEY, JSON.stringify(messages));
-            return true;
+        // 保存到 Worker API
+        async function saveMessages(message) {
+            try {
+                const resp = await fetch(API_SUBMIT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: message.content,
+                        nickname: message.name
+                    })
+                });
+                const data = await resp.json();
+                if (data.ok) {
+                    // 刷新消息列表
+                    await loadMessages();
+                    return true;
+                }
+            } catch (e) {
+                console.error('保存失败:', e);
+            }
+            return false;
         }
         
         async function sendMessage() {
