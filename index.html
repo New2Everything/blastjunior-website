@@ -147,7 +147,7 @@
             <div class="chat-input-container">
                 <div class="chat-input-wrapper">
                     <input type="text" class="nickname-input" id="nicknameInput" placeholder="游客" maxlength="12">
-                    <textarea class="chat-input" id="messageInput" placeholder="说点什么..." rows="1"></textarea>
+                    <textarea class="chat-input" id="messageInput" placeholder="说点什么... (提交后在此通知小虾同步)" rows="1"></textarea>
                     <button class="chat-send-btn" id="sendBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/></svg></button>
                 </div>
             </div>
@@ -282,7 +282,9 @@
                 renderMessages(messages);
                 localStorage.setItem(LOCAL_KEY, JSON.stringify(messages));
                 
-                showToast('消息已提交！将尽快同步到网站', 'success');
+                showToast('已提交！如需同步到网站，请在此对话中告诉我', 'success');
+                // 显示联系提示
+                alert('消息已提交！\n\n如需同步到网站，请在本对话框中告诉我，\n我会帮你审核并发布到网站～\n\n或者直接在这里聊天也行！');
                 input.value = ''; input.style.height = 'auto';
             } catch (e) { showToast('提交失败: ' + e.message); } finally { sendBtn.disabled = false; }
         }
