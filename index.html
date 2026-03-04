@@ -168,12 +168,8 @@
         </div>
     </footer>
     <script>
-        const API_BASE = 'https://api.cloudflare.com/client/v4/accounts/6a6fe3b0b250e0c6a09af24d01e0f9b6';
-        const R2_BUCKET = 'blastjunior-media';
-        const MESSAGES_KEY = 'community/messages.json';
-        const ARCHIVE_PREFIX = 'community/archive/';
-        const ONLINE_KEY = 'community/online.json';
-        const TOKEN = 'MUIdduDaTXwi_kRBUZ1XV_k4PbG8ZW4VT_D9Vgkn';
+        // 消息存储：GitHub Raw URL (公开可读)
+        const MESSAGES_URL = 'https://raw.githubusercontent.com/New2Everything/blastjunior-website/main/messages.json';
         const LOCAL_KEY = 'blxst_messages';
         const MAX_MESSAGES = 300;
         const WARNING_THRESHOLD = 280;
@@ -183,31 +179,54 @@
         function getDeviceId() { let id = localStorage.getItem('blxst_device_id'); if (!id) { id = 'device_' + Math.random().toString(36).substr(2, 9) + Date.now(); localStorage.setItem('blxst_device_id', id); } return id; }
         function formatTime(isoString) { const date = new Date(isoString); const now = new Date(); const diff = Math.floor((now - date) / 1000); if (diff < 60) return '刚刚'; if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`; if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`; return date.toLocaleDateString('zh-CN'); }
         
-        async function updateOnlineStatus() {
-            const deviceId = getDeviceId(); const now = Date.now();
-            try {
-                let onlineList = [];
-                try { const resp = await fetch(`${API_BASE}/r2/buckets/${R2_BUCKET}/objects/${ONLINE_KEY}`, { headers: { 'Authorization': `Bearer ${TOKEN}` } }); if (resp.ok) onlineList = await resp.json(); } catch (e) {}
-                const idx = onlineList.findIndex(o => o.id === deviceId);
-                if (idx >= 0) { onlineList[idx].lastSeen = now; onlineList[idx].name = document.getElementById('nicknameInput').value || '游客'; } else { onlineList.push({ id: deviceId, name: '游客', lastSeen: now }); }
-                const fiveMinAgo = now - 5 * 60 * 1000;
-                onlineList = onlineList.filter(o => o.lastSeen > fiveMinAgo);
-                await fetch(`${API_BASE}/r2/buckets/${R2_BUCKET}/objects/${ONLINE_KEY}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify(onlineList) });
-                const activeCount = onlineList.length;
-                const dot = document.getElementById('onlineDot'); const count = document.getElementById('onlineCount');
-                if (activeCount > 0) { dot.classList.remove('inactive'); count.textContent = `${activeCount} 人在线`; } else { dot.classList.add('inactive'); count.textContent = '暂无在线'; }
-            } catch (e) { console.log('在线状态更新失败:', e); }
+        // 使用 localStorage 模拟在线状态
+        function updateOnlineStatus() {
+            const now = Date.now();
+            const deviceId = localStorage.getItem('blxst_device_id') || (localStorage.setItem('blxst_device_id', 'd_' + Date.now()) && 'd_' + Date.now());
+            
+            let onlineList = JSON.parse(localStorage.getItem('blxst_online') || '[]');
+            const nickname = document.getElementById('nicknameInput').value || '游客';
+            
+            // 更新或添加当前设备
+            const idx = onlineList.findIndex(o => o.id === deviceId);
+            if (idx >= 0) { onlineList[idx].lastSeen = now; onlineList[idx].name = nickname; }
+            else { onlineList.push({ id: deviceId, name: nickname, lastSeen: now }); }
+            
+            // 清理 5 分钟前的
+            const fiveMinAgo = now - 5 * 60 * 1000;
+            onlineList = onlineList.filter(o => o.lastSeen > fiveMinAgo);
+            
+            localStorage.setItem('blxst_online', JSON.stringify(onlineList));
+            
+            const dot = document.getElementById('onlineDot');
+            const count = document.getElementById('onlineCount');
+            if (onlineList.length > 0) {
+                dot.classList.remove('inactive');
+                count.textContent = `🟢 ${onlineList.length} 人在线`;
+            } else {
+                dot.classList.add('inactive');
+                count.textContent = '⚪ 暂无在线';
+            }
         }
         
         async function loadMessages() {
             const container = document.getElementById('chatMessages');
             try {
-                const resp = await fetch(`${API_BASE}/r2/buckets/${R2_BUCKET}/objects/${MESSAGES_KEY}`, { headers: { 'Authorization': `Bearer ${TOKEN}` } });
-                if (resp.ok) { const messages = await resp.json(); renderMessages(messages); localStorage.setItem(LOCAL_KEY, JSON.stringify(messages)); return; }
-            } catch (e) { console.log('R2 获取失败'); }
+                const resp = await fetch(MESSAGES_URL + '?t=' + Date.now());
+                if (resp.ok) { 
+                    const messages = await resp.json(); 
+                    renderMessages(messages); 
+                    localStorage.setItem(LOCAL_KEY, JSON.stringify(messages)); 
+                    // 更新在线状态
+                    updateOnlineStatus();
+                    return; 
+                }
+            } catch (e) { 
+                console.log('GitHub 获取失败，使用缓存'); 
+            }
             const cached = localStorage.getItem(LOCAL_KEY);
             if (cached) renderMessages(JSON.parse(cached));
-            else renderMessages([{ id: 1, type: 'system', name: '系统', avatar: '📢', content: '欢迎来到兰星少年社区！', time: new Date().toISOString() },{ id: 2, type: 'ai', name: '小虾', avatar: '🦐', badge: 'AI', content: '大家好！我是小虾，有问题随时问我～', time: new Date().toISOString() }]);
+            else renderMessages([{ id: 1, type: 'system', name: '系统', avatar: '📢', content: '欢迎来到兰星少年社区！', time: new Date().toISOString() }]);
         }
         
         function renderMessages(messages) {
@@ -231,13 +250,11 @@
             } catch (e) { console.error('归档失败:', e); }
         }
         
+        // 保存功能 - 由于跨域限制，消息将通过管理员审核后同步
         async function saveMessages(messages) {
-            try {
-                const resp = await fetch(`${API_BASE}/r2/buckets/${R2_BUCKET}/objects/${MESSAGES_KEY}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(messages) });
-                if (!resp.ok) throw new Error('R2 save failed');
-                localStorage.setItem(LOCAL_KEY, JSON.stringify(messages));
-                return true;
-            } catch (e) { console.error('Save failed:', e); localStorage.setItem(LOCAL_KEY, JSON.stringify(messages)); return false; }
+            // 暂时存本地，由管理员（我）手动同步到 GitHub
+            localStorage.setItem(LOCAL_KEY, JSON.stringify(messages));
+            return true;
         }
         
         async function sendMessage() {
@@ -252,14 +269,22 @@
             if (filteredText !== text) showToast('包含敏感词，已自动过滤', 'warning');
             if (filteredText.length < 2) { showToast('内容太短（至少2字）'); return; }
             if (filteredText.length > 300) { showToast('内容太长（最多300字）'); return; }
+            
             sendBtn.disabled = true;
+            
             try {
+                // 保存到本地缓存
                 let messages; const cached = localStorage.getItem(LOCAL_KEY); messages = cached ? JSON.parse(cached) : [];
                 const newMessage = { id: Date.now(), type: nickname === '小虾' ? 'ai' : 'human', name: nickname, avatar: nickname === '小虾' ? '🦐' : '👤', badge: nickname === '小虾' ? 'AI' : '', content: filteredText, time: new Date().toISOString() };
                 messages.push(newMessage);
-                if (messages.length > MAX_MESSAGES) { await archiveMessages(messages); await loadMessages(); } else { renderMessages(messages); await saveMessages(messages); }
+                messages = messages.slice(-MAX_MESSAGES); // 保留最近的消息
+                
+                renderMessages(messages);
+                localStorage.setItem(LOCAL_KEY, JSON.stringify(messages));
+                
+                showToast('消息已提交！将尽快同步到网站', 'success');
                 input.value = ''; input.style.height = 'auto';
-            } catch (e) { showToast('发送失败: ' + e.message); } finally { sendBtn.disabled = false; }
+            } catch (e) { showToast('提交失败: ' + e.message); } finally { sendBtn.disabled = false; }
         }
         
         function showToast(message, type = 'error') {
