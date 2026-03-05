@@ -278,6 +278,9 @@
             return false;
         }
         
+        // 安全审核 API
+        const SAFE_API = 'https://blast-safe-api.kanjiaming2022.workers.dev/';
+        
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const nicknameInput = document.getElementById('nicknameInput');
@@ -290,6 +293,27 @@
             if (filteredText !== text) showToast('包含敏感词，已自动过滤', 'warning');
             if (filteredText.length < 2) { showToast('内容太短（至少2字）'); return; }
             if (filteredText.length > 300) { showToast('内容太长（最多300字）'); return; }
+            
+            // 安全审核检查
+            try {
+                const safeResp = await fetch(SAFE_API + 'check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: filteredText, nickname: nickname })
+                });
+                const safeResult = await safeResp.json();
+                
+                if (!safeResult.approved) {
+                    showToast('内容不符合社区规范，请修改后重试', 'error');
+                    return;
+                }
+                if (safeResult.flagged && safeResult.findings) {
+                    console.log('内容已标记:', safeResult.findings);
+                }
+            } catch (e) {
+                console.error('安全审核失败:', e);
+                // 安全审核失败时，允许继续（不影响用户体验）
+            }
             
             sendBtn.disabled = true;
             
