@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>选手列表 - 兰星少年 HADO 俱乐部</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B35;
+            --secondary: #00B4D8;
+            --bg-light: #F8FAFC;
+            --bg-white: #FFFFFF;
+            --text-dark: #1E293B;
+            --text-gray: #64748B;
+            --border: #E2E8F0;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --radius: 16px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
+        
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), #FF8A5C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        .page-header { margin-bottom: 2rem; }
+        .page-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; }
+        .page-subtitle { color: var(--text-gray); }
+        
+        .filters { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .filter-select { padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-white); font-size: 0.9rem; min-width: 150px; }
+        
+        .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
+        
+        .player-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; text-align: center; box-shadow: var(--shadow); transition: transform 0.2s; text-decoration: none; color: inherit; display: block; }
+        .player-card:hover { transform: translateY(-4px); }
+        
+        .player-rank { position: absolute; top: 1rem; right: 1rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.5rem; color: var(--primary); }
+        
+        .player-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #FF8A5C); margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; color: white; position: relative; }
+        .player-avatar .badge { position: absolute; bottom: -5px; right: -5px; background: #FFD700; width: 24px; height: 24px; border-radius: 50%; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
+        
+        .player-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem; }
+        .player-team { font-size: 0.85rem; color: var(--secondary); font-weight: 600; margin-bottom: 0.5rem; }
+        .player-title { display: inline-block; background: var(--primary); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-bottom: 1rem; }
+        
+        .player-stats { display: flex; justify-content: center; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+        .player-stat { text-align: center; }
+        .player-stat-value { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; color: var(--text-dark); }
+        .player-stat-label { font-size: 0.7rem; color: var(--text-gray); }
+        
+        .badges { display: flex; justify-content: center; gap: 0.5rem; margin-top: 0.75rem; }
+        .badge-icon { font-size: 1.2rem; }
+        
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .players-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">⚡</div>
+                <span>兰星少年</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/matches" class="nav-link">赛程</a>
+                <a href="/standings" class="nav-link">积分榜</a>
+                <a href="/teams" class="nav-link">战队</a>
+                <a href="/players" class="nav-link active">选手</a>
+                <a href="/honor" class="nav-link">荣誉室</a>
+                <a href="/gallery" class="nav-link">画廊</a>
+                <a href="/join" class="nav-link">加入</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">⭐ 选手列表</h1>
+            <p class="page-subtitle">共有 48 名选手</p>
+        </div>
+        
+        <div class="filters">
+            <select class="filter-select">
+                <option>全部赛季</option>
+                <option>2026春季</option>
+                <option>2025秋季</option>
+            </select>
+            <select class="filter-select">
+                <option>全部战队</option>
+                <option>烈焰战队</option>
+                <option>冠军战队</option>
+                <option>星光战队</option>
+            </select>
+            <select class="filter-select">
+                <option>全部位置</option>
+                <option>前锋</option>
+                <option>中场</option>
+                <option>后卫</option>
+                <option>守门员</option>
+            </select>
+        </div>
+        
+        <div class="players-grid">
+            <a href="/players/1" class="player-card" style="position: relative;">
+                <div class="player-avatar">🦁<div class="badge">🏆</div></div>
+                <div class="player-name">小狮子</div>
+                <div class="player-team">烈焰战队</div>
+                <div class="player-title">得分王</div>
+                <div class="player-stats">
+                    <div class="player-stat"><div class="player-stat-value">28</div><div class="player-stat-label">进球</div></div>
+                    <div class="player-stat"><div class="player-stat-value">12</div><div class="player-stat-label">助攻</div></div>
+                </div>
+                <div class="badges"><span class="badge-icon">🔥</span><span class="badge-icon">⭐</span></div>
+            </a>
+            
+            <a href="/players/2" class="player-card">
+                <div class="player-avatar">⚡</div>
+                <div class="player-name">闪电侠</div>
+                <div class="player-team">冠军战队</div>
+                <div class="player-title">MVP</div>
+                <div class="player-stats">
+                    <div class="player-stat"><div class="player-stat-value">25</div><div class="player-stat-label">进球</div></div>
+                    <div class="player-stat"><div class="player-stat-value">15</div><div class="player-stat-label">助攻</div></div>
+                </div>
+                <div class="badges"><span class="badge-icon">👑</span></div>
+            </a>
+            
+            <a href="/players/3" class="player-card">
+                <div class="player-avatar">🛡️</div>
+                <div class="player-name">铁壁</div>
+                <div class="player-team">铁壁战队</div>
+                <div class="player-title">最佳守门</div>
+                <div class="player-stats">
+                    <div class="player-stat"><div class="player-stat-value">0</div><div class="player-stat-label">场均失球</div></div>
+                    <div class="player-stat"><div class="player-stat-value">95%</div><div class="player-stat-label">扑救率</div></div>
+                </div>
+                <div class="badges"><span class="badge-icon">🛡️</span></div>
+            </a>
+            
+            <a href="/players/4" class="player-card">
+                <div class="player-avatar">🌟</div>
+                <div class="player-name">小星星</div>
+                <div class="player-team">星光战队</div>
+                <div class="player-title">新星</div>
+                <div class="player-stats">
+                    <div class="player-stat"><div class="player-stat-value">18</div><div class="player-stat-label">进球</div></div>
+                    <div class="player-stat"><div class="player-stat-value">8</div><div class="player-stat-label">助攻</div></div>
+                </div>
+                <div class="badges"><span class="badge-icon">🌟</span></div>
+            </a>
+            
+            <a href="/players/5" class="player-card">
+                <div class="player-avatar">🔥</div>
+                <div class="player-name">火拳</div>
+                <div class="player-team">烈焰战队</div>
+                <div class="player-title">前锋</div>
+                <div class="player-stats">
+                    <div class="player-stat"><div class="player-stat-value">22</div><div class="player-stat-label">进球</div></div>
+                    <div class="player-stat"><div class="player-stat-value">10</div><div class="player-stat-label">助攻</div></div>
+                </div>
+                <div class="badges"><span class="badge-icon">🔥</span></div>
+            </a>
+            
+            <a href="/players/6" class="player-card">
+                <div class="player-avatar">🏃</div>
+                <div class="player-name">追风</div>
+                <div class="player-team">雷霆战队</div>
+                <div class="player-title">最快新人</div>
+                <div class="player-stats">
+                    <div class="player-stat"><div class="player-stat-value">15</div><div class="player-stat-label">进球</div></div>
+                    <div class="player-stat"><div class="player-stat-value">6</div><div class="player-stat-label">助攻</div></div>
+                </div>
+                <div class="badges"><span class="badge-icon">⚡</span></div>
+            </a>
+            
+            <a href="/players/7" class="player-card">
+                <div class="player-avatar">🎯</div>
+                <div class="player-name">神射手</div>
+                <div class="player-team">冠军战队</div>
+                <div class="player-title">射正率王</div>
+                <div class="player-stats">
+                    <div class="player-stat"><div class="player-stat-value">20</div><div class="player-stat-label">进球</div></div>
+                    <div class="player-stat"><div class="player-stat-value">89%</div><div class="player-stat-label">射正率</div></div>
+                </div>
+                <div class="badges"><span class="badge-icon">🎯</span></div>
+            </a>
+            
+            <a href="/players/8" class="player-card">
+                <div class="player-avatar">💪</div>
+                <div class="player-name">小钢炮</div>
+                <div class="player-team">海浪战队</div>
+                <div class="player-title">力量型</div>
+                <div class="player-stats">
+                    <div class="player-stat"><div class="player-stat-value">16</div><div class="player-stat-label">进球</div></div>
+                    <div class="player-stat"><div class="player-stat-value">7</div><div class="player-stat-label">助攻</div></div>
+                </div>
+                <div class="badges"><span class="badge-icon">💪</span></div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
