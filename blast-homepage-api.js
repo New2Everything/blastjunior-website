@@ -1,5 +1,5 @@
 // blast-homepage-api - 首页数据聚合API
-// 数据来源：D1 + R2
+// 数据来源：D1(新闻/赞助商) + R2(其他数据)
 
 const STATIC_API = 'https://blast-static-api.kanjiaming2022.workers.dev';
 
@@ -18,37 +18,37 @@ export default {
         return withCors(await getHomeData(env));
       }
       
-      // 新闻
+      // 新闻 (D1)
       if (path === "/news") {
         return withCors(await getNews(env));
       }
       
-      // 赞助商
+      // 赞助商 (D1)
       if (path === "/sponsors") {
         return withCors(await getSponsors(env));
       }
       
-      // 战队
+      // 战队 (R2)
       if (path === "/teams") {
         return withCors(await getTeams(env));
       }
       
-      // 选手
+      // 选手 (R2)
       if (path === "/players") {
         return withCors(await getPlayers(env));
       }
       
-      // 比赛
+      // 比赛 (R2)
       if (path === "/matches") {
         return withCors(await getMatches(env));
       }
       
-      // 积分榜
+      // 积分榜 (R2)
       if (path === "/standings") {
         return withCors(await getStandings(env));
       }
       
-      // 画廊
+      // 画廊 (R2)
       if (path === "/gallery") {
         return withCors(await getGallery(env));
       }
@@ -61,17 +61,29 @@ export default {
 };
 
 async function getHomeData(env) {
-  let news = [], sponsors = [], matches = [];
-  
+  // 从D1获取新闻
+  let news = [];
   try {
     const result = await env.DB.prepare("SELECT * FROM news WHERE status = 'published' ORDER BY date DESC LIMIT 5").all();
     news = result.results || [];
   } catch (e) { console.error("News error:", e); }
 
+  // 从D1获取赞助商
+  let sponsors = [];
   try {
     const result = await env.DB.prepare("SELECT * FROM sponsors WHERE status = 'active' ORDER BY sort_order LIMIT 10").all();
     sponsors = result.results || [];
   } catch (e) { console.error("Sponsors error:", e); }
+
+  // 从R2获取比赛数据
+  let matches = [];
+  try {
+    const obj = await env.BUCKET.get("data/matches.json");
+    if (obj) {
+      const data = JSON.parse(await obj.text());
+      matches = data.filter(m => m.status === 'finished').slice(0, 3);
+    }
+  } catch (e) { console.error("Matches error:", e); }
 
   // 从R2获取聊天消息
   let messages = [];
@@ -89,17 +101,6 @@ async function getHomeData(env) {
       url: `${STATIC_API}/${obj.key}`
     }));
   } catch (e) { console.error(e); }
-
-  // 尝试从D1获取比赛
-  try {
-    const result = await env.DB.prepare("SELECT * FROM matches WHERE status = 'finished' ORDER BY match_time DESC LIMIT 3").all();
-    matches = result.results || [];
-  } catch (e) { 
-    // 表可能不存在，使用默认数据
-    matches = [
-      { id: "1", league: "2026春季联赛", group_name: "U12", team1_name: "烈焰", team2_name: "星光", score1: 3, score2: 1, status: "finished", match_time: "今天 14:30" }
-    ];
-  }
 
   return jsonResponse({
     ok: true,
@@ -135,67 +136,60 @@ async function getSponsors(env) {
 
 async function getTeams(env) {
   try {
-    const result = await env.DB.prepare("SELECT * FROM teams ORDER BY points DESC").all();
-    if (result.results && result.results.length > 0) {
-      return jsonResponse({ ok: true, data: result.results });
+    const obj = await env.BUCKET.get("data/teams.json");
+    if (obj) {
+      const data = JSON.parse(await obj.text());
+      return jsonResponse({ ok: true, data });
     }
   } catch (e) { console.error(e); }
   
-  // 默认数据
-  return jsonResponse({ ok: true, data: [
-    { id: "1", name: "烈焰战队", tag: "U12 竞技组", color: "fire", wins: 7, points: 22 },
-    { id: "2", name: "冠军战队", tag: "U15 竞技组", color: "gold", wins: 6, points: 20 },
-    { id: "3", name: "星光战队", tag: "U12 竞技组", color: "blue", wins: 5, points: 17 }
-  ]});
+  return jsonResponse({ ok: true, data: [] });
 }
 
 async function getPlayers(env) {
   try {
-    const result = await env.DB.prepare("SELECT * FROM players ORDER BY goals DESC").all();
-    if (result.results && result.results.length > 0) {
-      return jsonResponse({ ok: true, data: result.results });
+    const obj = await env.BUCKET.get("data/players.json");
+    if (obj) {
+      const data = JSON.parse(await obj.text());
+      return jsonResponse({ ok: true, data });
     }
   } catch (e) { console.error(e); }
   
-  return jsonResponse({ ok: true, data: [
-    { id: "1", name: "小狮子", team_id: "1", title: "得分王", goals: 28, assists: 12 },
-    { id: "2", name: "闪电侠", team_id: "2", title: "MVP", goals: 25, assists: 15 }
-  ]});
+  return jsonResponse({ ok: true, data: [] });
 }
 
 async function getMatches(env) {
   try {
-    const result = await env.DB.prepare("SELECT * FROM matches ORDER BY match_time DESC").all();
-    if (result.results && result.results.length > 0) {
-      return jsonResponse({ ok: true, data: result.results });
+    const obj = await env.BUCKET.get("data/matches.json");
+    if (obj) {
+      const data = JSON.parse(await obj.text());
+      return jsonResponse({ ok: true, data });
     }
   } catch (e) { console.error(e); }
   
-  return jsonResponse({ ok: true, data: [
-    { id: "1", league: "2026春季联赛", group_name: "U12", team1_name: "烈焰", team2_name: "星光", score1: 3, score2: 1, status: "finished", match_time: "2026-03-05 14:30" }
-  ]});
+  return jsonResponse({ ok: true, data: [] });
 }
 
 async function getStandings(env) {
   try {
-    const result = await env.DB.prepare("SELECT * FROM teams ORDER BY points DESC").all();
-    if (result.results && result.results.length > 0) {
-      const standings = result.results.map((t, i) => ({
+    const obj = await env.BUCKET.get("data/teams.json");
+    if (obj) {
+      const data = JSON.parse(await obj.text());
+      const standings = data.map((t, i) => ({
         rank: i + 1,
         team: t.name,
-        wins: t.wins,
+        wins: t.wins || 0,
         draws: t.draws || 0,
         losses: t.losses || 0,
-        goals: (t.wins * 2) - t.losses,
-        points: t.points
-      }));
+        goals: ((t.wins || 0) * 2) - (t.losses || 0),
+        points: t.points || 0
+      })).sort((a, b) => b.points - a.points);
+      
       return jsonResponse({ ok: true, data: standings });
     }
   } catch (e) { console.error(e); }
   
-  return jsonResponse({ ok: true, data: [
-    { rank: 1, team: "烈焰", wins: 7, draws: 1, losses: 0, goals: 22, points: 22 }
-  ]});
+  return jsonResponse({ ok: true, data: [] });
 }
 
 async function getGallery(env) {
