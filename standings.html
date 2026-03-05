@@ -25,12 +25,10 @@
         .filters { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
         .filter-select { padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-white); font-size: 0.9rem; min-width: 140px; }
         
-        /* League Tabs */
         .league-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
         .league-tab { padding: 0.75rem 1.5rem; background: var(--bg-white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; color: var(--text-gray); }
         .league-tab.active { background: var(--primary); color: white; }
         
-        /* Standings Card */
         .standings-card { background: var(--bg-white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
         .standings-header { background: linear-gradient(135deg, var(--primary), #FF8A5C); padding: 1.5rem; color: white; }
         .standings-header h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 900; margin-bottom: 0.25rem; }
@@ -58,18 +56,15 @@
         .stat-lose { color: var(--danger); }
         .stat-pts { color: var(--primary); font-weight: 900; font-size: 1.1rem; }
         
-        /* Rules */
         .rules-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); }
         .rules-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
         .rules-list { display: flex; flex-direction: column; gap: 0.5rem; }
         .rules-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--text-gray); }
         .rules-icon { color: var(--secondary); }
         
-        @media (max-width: 768px) {
-            .nav-links { display: none; }
-            .standings-table { font-size: 0.85rem; }
-            .standings-table th, .standings-table td { padding: 0.75rem 0.5rem; }
-        }
+        .loading { text-align: center; padding: 2rem; color: var(--text-gray); }
+        
+        @media (max-width: 768px) { .nav-links { display: none; } .standings-table { font-size: 0.85rem; } }
     </style>
 </head>
 <body>
@@ -123,87 +118,8 @@
                         <th>积分</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td class="rank rank-1">1</td>
-                        <td><div class="team-cell"><div class="team-logo">🔥</div><span class="team-name">烈焰战队</span></div></td>
-                        <td>8</td>
-                        <td class="stat-num stat-win">7</td>
-                        <td class="stat-num stat-draw">1</td>
-                        <td class="stat-num stat-lose">0</td>
-                        <td>+15</td>
-                        <td class="stat-pts">22</td>
-                    </tr>
-                    <tr>
-                        <td class="rank rank-2">2</td>
-                        <td><div class="team-cell"><div class="team-logo">🏆</div><span class="team-name">冠军战队</span></div></td>
-                        <td>8</td>
-                        <td class="stat-num stat-win">6</td>
-                        <td class="stat-num stat-draw">2</td>
-                        <td class="stat-num stat-lose">0</td>
-                        <td>+12</td>
-                        <td class="stat-pts">20</td>
-                    </tr>
-                    <tr>
-                        <td class="rank rank-3">3</td>
-                        <td><div class="team-cell"><div class="team-logo">🌟</div><span class="team-name">星光战队</span></div></td>
-                        <td>8</td>
-                        <td class="stat-num stat-win">5</td>
-                        <td class="stat-num stat-draw">2</td>
-                        <td class="stat-num stat-lose">1</td>
-                        <td>+8</td>
-                        <td class="stat-pts">17</td>
-                    </tr>
-                    <tr>
-                        <td class="rank">4</td>
-                        <td><div class="team-cell"><div class="team-logo">⚡</div><span class="team-name">雷霆战队</span></div></td>
-                        <td>8</td>
-                        <td class="stat-num stat-win">4</td>
-                        <td class="stat-num stat-draw">1</td>
-                        <td class="stat-num stat-lose">3</td>
-                        <td>+3</td>
-                        <td class="stat-pts">13</td>
-                    </tr>
-                    <tr>
-                        <td class="rank">5</td>
-                        <td><div class="team-cell"><div class="team-logo">🛡️</div><span class="team-name">铁壁战队</span></div></td>
-                        <td>8</td>
-                        <td class="stat-num stat-win">3</td>
-                        <td class="stat-num stat-draw">2</td>
-                        <td class="stat-num stat-lose">3</td>
-                        <td>0</td>
-                        <td class="stat-pts">11</td>
-                    </tr>
-                    <tr>
-                        <td class="rank">6</td>
-                        <td><div class="team-cell"><div class="team-logo">🌊</div><span class="team-name">海浪战队</span></div></td>
-                        <td>8</td>
-                        <td class="stat-num stat-win">2</td>
-                        <td class="stat-num stat-draw">1</td>
-                        <td class="stat-num stat-lose">5</td>
-                        <td>-8</td>
-                        <td class="stat-pts">7</td>
-                    </tr>
-                    <tr>
-                        <td class="rank">7</td>
-                        <td><div class="team-cell"><div class="team-logo">🦅</div><span class="team-name">雄鹰战队</span></div></td>
-                        <td>8</td>
-                        <td class="stat-num stat-win">1</td>
-                        <td class="stat-num stat-draw">1</td>
-                        <td class="stat-num stat-lose">6</td>
-                        <td>-12</td>
-                        <td class="stat-pts">4</td>
-                    </tr>
-                    <tr>
-                        <td class="rank">8</td>
-                        <td><div class="team-cell"><div class="team-logo">🌙</div><span class="team-name">新月战队</span></div></td>
-                        <td>8</td>
-                        <td class="stat-num stat-win">0</td>
-                        <td class="stat-num stat-draw">0</td>
-                        <td class="stat-num stat-lose">8</td>
-                        <td>-18</td>
-                        <td class="stat-pts">0</td>
-                    </tr>
+                <tbody id="standingsBody">
+                    <tr><td colspan="8" class="loading">加载中...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -219,5 +135,47 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+        
+        async function loadStandings() {
+            try {
+                const resp = await fetch(API_BASE + '/standings');
+                const result = await resp.json();
+                if (!result.ok) throw new Error(result.error);
+                
+                renderStandings(result.data || []);
+            } catch (e) {
+                console.error('加载积分榜失败:', e);
+                document.getElementById('standingsBody').innerHTML = '<tr><td colspan="8" class="loading">加载失败</td></tr>';
+            }
+        }
+        
+        function renderStandings(standings) {
+            if (!standings.length) {
+                document.getElementById('standingsBody').innerHTML = '<tr><td colspan="8" class="loading">暂无数据</td></tr>';
+                return;
+            }
+            
+            const html = standings.map(s => {
+                const rankClass = s.rank <= 3 ? `rank-${s.rank}` : '';
+                return `<tr>
+                    <td class="rank ${rankClass}">${s.rank}</td>
+                    <td><div class="team-cell"><div class="team-logo">⚔️</div><span class="team-name">${s.team}</span></div></td>
+                    <td>${s.wins + s.draws + s.losses}</td>
+                    <td class="stat-num stat-win">${s.wins}</td>
+                    <td class="stat-num stat-draw">${s.draws}</td>
+                    <td class="stat-num stat-lose">${s.losses}</td>
+                    <td>${s.goals > 0 ? '+' + s.goals : s.goals}</td>
+                    <td class="stat-pts">${s.points}</td>
+                </tr>`;
+            }).join('');
+            
+            document.getElementById('standingsBody').innerHTML = html;
+        }
+        
+        loadStandings();
+    </script>
 </body>
 </html>

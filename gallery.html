@@ -19,8 +19,8 @@
         .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
         
         .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
-        .page-header { margin-bottom: 1.5rem; }
-        .page-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; }
+        .page-header { margin-bottom: 1.5 .page-title { font-family: 'rem; }
+       Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; }
         .page-subtitle { color: var(--text-gray); }
         
         .filters { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
@@ -30,17 +30,16 @@
         
         .album-card { background: var(--bg-white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s; text-decoration: none; color: inherit; display: block; }
         .album-card:hover { transform: translateY(-4px); }
-        .album-cover { height: 180px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 4rem; }
-        .album-cover.赛事 { background: linear-gradient(135deg, #EF4444, #F97316); }
-        .album-cover.训练 { background: linear-gradient(135deg, #3B82F6, #60A5FA); }
-        .album-cover.活动 { background: linear-gradient(135deg, #8B5CF6, #A78BFA); }
-        .album-cover.人物 { background: linear-gradient(135deg, #10B981, #34D399); }
+        .album-cover { height: 180px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 4rem; overflow: hidden; background: linear-gradient(135deg, var(--primary), #FF8A5C); }
+        .album-cover img { width: 100%; height: 100%; object-fit: cover; }
         .album-count { position: absolute; bottom: 0.75rem; right: 0.75rem; background: rgba(0,0,0,0.6); color: white; padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.8rem; font-weight: 600; }
         
         .album-info { padding: 1.25rem; }
         .album-tag { display: inline-block; background: var(--secondary); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-bottom: 0.5rem; }
         .album-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem; }
         .album-meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-gray); }
+        
+        .loading { text-align: center; padding: 3rem; color: var(--text-gray); font-size: 1.1rem; }
         
         @media (max-width: 768px) { .nav-links { display: none; } }
     </style>
@@ -68,66 +67,56 @@
         </div>
         
         <div class="filters">
-            <select class="filter-select"><option>全部类型</option><option>赛事</option><option>训练</option><option>活动</option><option>人物</option></select>
+            <select class="filter-select" id="typeFilter"><option value="">全部类型</option><option>赛事</option><option>训练</option><option>活动</option><option>人物</option></select>
             <select class="filter-select"><option>2026春季</option><option>2025秋季</option></select>
             <select class="filter-select"><option>最新</option><option>最热</option></select>
         </div>
         
-        <div class="gallery-grid">
-            <a href="/gallery/1" class="album-card">
-                <div class="album-cover 赛事">⚽<span class="album-count">📷 32</span></div>
-                <div class="album-info">
-                    <span class="album-tag">赛事</span>
-                    <h3 class="album-title">2026春季联赛开幕战</h3>
-                    <div class="album-meta"><span>3月1日</span><span>256人浏览</span></div>
-                </div>
-            </a>
-            
-            <a href="/gallery/2" class="album-card">
-                <div class="album-cover 训练">🏋️<span class="album-count">📷 18</span></div>
-                <div class="album-info">
-                    <span class="album-tag">训练</span>
-                    <h3 class="album-title">周末训练营</h3>
-                    <div class="album-meta"><span>2月28日</span><span>128人浏览</span></div>
-                </div>
-            </a>
-            
-            <a href="/gallery/3" class="album-card">
-                <div class="album-cover 活动">🎉<span class="album-count">📷 45</span></div>
-                <div class="album-info">
-                    <span class="album-tag">活动</span>
-                    <h3 class="album-title">颁奖典礼</h3>
-                    <div class="album-meta"><span>2月25日</span><span>324人浏览</span></div>
-                </div>
-            </a>
-            
-            <a href="/gallery/4" class="album-card">
-                <div class="album-cover 人物">⭐<span class="album-count">📷 12</span></div>
-                <div class="album-info">
-                    <span class="album-tag">人物</span>
-                    <h3 class="album-title">明星选手写真</h3>
-                    <div class="album-meta"><span>2月20日</span><span>189人浏览</span></div>
-                </div>
-            </a>
-            
-            <a href="/gallery/5" class="album-card">
-                <div class="album-cover 赛事">🏆<span class="album-count">📷 28</span></div>
-                <div class="album-info">
-                    <span class="album-tag">赛事</span>
-                    <h3 class="album-title">半决赛集锦</h3>
-                    <div class="album-meta"><span>2月18日</span><span>412人浏览</span></div>
-                </div>
-            </a>
-            
-            <a href="/gallery/6" class="album-card">
-                <div class="album-cover 活动">🎊<span class="album-count">📷 56</span></div>
-                <div class="album-info">
-                    <span class="album-tag">活动</span>
-                    <h3 class="album-title">年会盛典</h3>
-                    <div class="album-meta"><span>2月15日</span><span>567人浏览</span></div>
-                </div>
-            </a>
+        <div class="gallery-grid" id="galleryGrid">
+            <div class="loading">加载中...</div>
         </div>
     </div>
+    
+    <script>
+        const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+        
+        async function loadGallery() {
+            try {
+                const resp = await fetch(API_BASE + '/gallery');
+                const result = await resp.json();
+                if (!result.ok) throw new Error(result.error);
+                
+                renderAlbums(result.data || []);
+            } catch (e) {
+                console.error('加载画廊失败:', e);
+                document.getElementById('galleryGrid').innerHTML = '<div class="loading">加载失败，请刷新重试</div>';
+            }
+        }
+        
+        function renderAlbums(albums) {
+            if (!albums.length) {
+                document.getElementById('galleryGrid').innerHTML = '<div class="loading">暂无相册</div>';
+                return;
+            }
+            
+            const html = albums.map(album => `
+                <a href="/gallery/${album.id}" class="album-card">
+                    <div class="album-cover">
+                        ${album.cover ? `<img src="${album.cover}" alt="${album.title}">` : '📷'}
+                        <span class="album-count">📷 ${album.count || 0}</span>
+                    </div>
+                    <div class="album-info">
+                        <span class="album-tag">${album.type || '赛事'}</span>
+                        <h3 class="album-title">${album.title}</h3>
+                        <div class="album-meta"><span>${album.date || ''}</span></div>
+                    </div>
+                </a>
+            `).join('');
+            
+            document.getElementById('galleryGrid').innerHTML = html;
+        }
+        
+        loadGallery();
+    </script>
 </body>
 </html>
