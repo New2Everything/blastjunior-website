@@ -96,10 +96,24 @@ D1          R2
   - sponsors：赞助商表
   - media：媒体表
 
-### 待初始化D1表
-- teams（战队）
-- players（选手）
-- matches（比赛）
+### 数据分离原则（按设计白皮书）
+| 数据类型 | 定义 | 存储 | 访问方式 |
+|----------|------|------|----------|
+| 可变化数据 | 赛果/积分/比赛记录 | R2 JSON | Worker API |
+| 可统计数据 | 在线人数/浏览量 | R2 JSON | Worker API |
+| 可追溯数据 | 积分榜/排名 | R2 JSON | Worker API |
+| 新闻/赞助商 | 公告类内容 | D1 | Worker API |
+| 媒体文件 | 照片/视频 | R2 | Worker API |
+| 品牌表达 | Slogan/介绍文字 | 静态HTML | 直接渲染 |
+
+**规则**：
+- 所有变化数据必须经由Worker API，禁止前端直连D1/R2/KV
+- 品牌表达文字允许占位，与数据模块严格隔离
+
+### R2业务数据（当前）
+- data/teams.json - 战队数据
+- data/players.json - 选手数据
+- data/matches.json - 比赛数据
 
 ---
 
