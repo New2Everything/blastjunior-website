@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>烈焰战队 - 兰星少年 HADO 俱乐部</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B35;
+            --primary-light: #FF8A5C;
+            --secondary: #00B4D8;
+            --bg-light: #F8FAFC;
+            --bg-white: #FFFFFF;
+            --text-dark: #1E293B;
+            --text-gray: #64748B;
+            --success: #10B981;
+            --danger: #EF4444;
+            --border: #E2E8F0;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --radius: 16px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
+        
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover { background: var(--primary); color: white; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        
+        /* Team Header */
+        .team-header { background: linear-gradient(135deg, #EF4444, #F97316); border-radius: var(--radius); padding: 2rem; color: white; margin-bottom: 1.5rem; position: relative; overflow: hidden; }
+        .team-header::before { content: ''; position: absolute; top: -50%; right: -10%; width: 50%; height: 200%; background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M20 20L25 15L30 20L25 25z'/%3E%3C/g%3E%3C/svg%3E"); opacity: 0.5; }
+        .team-header-content { position: relative; z-index: 1; display: flex; align-items: center; gap: 1.5rem; }
+        .team-logo { width: 100px; height: 100px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .team-info h1 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; }
+        .team-tag { display: inline-block; background: rgba(255,255,255,0.2); padding: 0.3rem 0.75rem; border-radius: 50px; font-size: 0.85rem; margin-bottom: 0.75rem; }
+        .team-stats-row { display: flex; gap: 2rem; }
+        .team-stat { text-align: center; }
+        .team-stat-value { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 900; }
+        .team-stat-label { font-size: 0.8rem; opacity: 0.8; }
+        
+        /* Section */
+        .section { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+        .section-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        
+        /* Recent Matches */
+        .match-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .match-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--bg-light); border-radius: 12px; }
+        .match-teams { display: flex; align-items: center; gap: 1rem; flex: 1; }
+        .match-team { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+        .match-team-logo { width: 32px; height: 32px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .match-score { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; }
+        .match-score.win { color: var(--success); }
+        .match-score.lose { color: var(--danger); }
+        .match-info { text-align: right; }
+        .match-league { font-size: 0.8rem; color: var(--text-gray); }
+        .match-time { font-size: 0.85rem; color: var(--primary); font-weight: 600; }
+        
+        /* Members */
+        .members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
+        .member-card { text-align: center; padding: 1rem; background: var(--bg-light); border-radius: 12px; text-decoration: none; color: inherit; transition: transform 0.2s; }
+        .member-card:hover { transform: translateY(-3px); }
+        .member-avatar { width: 60px; height: 60px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 50%; margin: 0 auto 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; color: white; }
+        .member-name { font-weight: 600; margin-bottom: 0.25rem; }
+        .member-role { font-size: 0.8rem; color: var(--text-gray); }
+        
+        /* Honor */
+        .honor-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .honor-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-light); border-radius: 12px; }
+        .honor-icon { font-size: 2rem; }
+        .honor-info { flex: 1; }
+        .honor-name { font-weight: 600; margin-bottom: 0.25rem; }
+        .honor-time { font-size: 0.8rem; color: var(--text-gray); }
+        
+        /* Gallery */
+        .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+        .gallery-item { aspect-ratio: 1; background: linear-gradient(135deg, var(--secondary), var(--primary-light)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; transition: transform 0.2s; }
+        .gallery-item:hover { transform: scale(1.05); }
+        
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .team-header-content { flex-direction: column; text-align: center; }
+            .team-stats-row { justify-content: center; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">⚡</div>
+                <span>兰星少年</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/matches" class="nav-link">赛程</a>
+                <a href="/standings" class="nav-link">积分榜</a>
+                <a href="/teams" class="nav-link">战队</a>
+                <a href="/players" class="nav-link">选手</a>
+                <a href="/gallery" class="nav-link">画廊</a>
+                <a href="/join" class="nav-link">加入</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <!-- Team Header -->
+        <div class="team-header">
+            <div class="team-header-content">
+                <div class="team-logo">🔥</div>
+                <div class="team-info">
+                    <h1>烈焰战队</h1>
+                    <div class="team-tag">U12 竞技组</div>
+                    <div class="team-stats-row">
+                        <div class="team-stat">
+                            <div class="team-stat-value">22</div>
+                            <div class="team-stat-label">积分</div>
+                        </div>
+                        <div class="team-stat">
+                            <div class="team-stat-value">7</div>
+                            <div class="team-stat-label">胜场</div>
+                        </div>
+                        <div class="team-stat">
+                            <div class="team-stat-value">1</div>
+                            <div class="team-stat-label">平局</div>
+                        </div>
+                        <div class="team-stat">
+                            <div class="team-stat-value">0</div>
+                            <div class="team-stat-label">负场</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Matches -->
+        <section class="section">
+            <h2 class="section-title">⚔️ 最近战绩</h2>
+            <div class="match-list">
+                <div class="match-item">
+                    <div class="match-teams">
+                        <div class="match-team"><div class="match-team-logo">🔥</div>烈焰</div>
+                        <div class="match-score win">3 : 1</div>
+                        <div class="match-team"><div class="match-team-logo">⚡</div>雷霆</div>
+                    </div>
+                    <div class="match-info">
+                        <div class="match-league">2026春季联赛</div>
+                        <div class="match-time">今天 14:30</div>
+                    </div>
+                </div>
+                <div class="match-item">
+                    <div class="match-teams">
+                        <div class="match-team"><div class="match-team-logo">🌟</div>星光</div>
+                        <div class="match-score win">2 : 1</div>
+                        <div class="match-team"><div class="match-team-logo">🔥</div>烈焰</div>
+                    </div>
+                    <div class="match-info">
+                        <div class="match-league">2026春季联赛</div>
+                        <div class="match-time">昨天 16:00</div>
+                    </div>
+                </div>
+                <div class="match-item">
+                    <div class="match-teams">
+                        <div class="match-team"><div class="match-team-logo">🔥</div>烈焰</div>
+                        <div class="match-score win">4 : 0</div>
+                        <div class="match-team"><div class="match-team-logo">🏆</div>冠军</div>
+                    </div>
+                    <div class="match-info">
+                        <div class="match-league">2026春季联赛</div>
+                        <div class="match-time">3月3日</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Members -->
+        <section class="section">
+            <h2 class="section-title">👥 成员名单 (8人)</h2>
+            <div class="members-grid">
+                <a href="/players/1" class="member-card">
+                    <div class="member-avatar">🦁</div>
+                    <div class="member-name">小狮子</div>
+                    <div class="member-role">队长</div>
+                </a>
+                <a href="/players/5" class="member-card">
+                    <div class="member-avatar">🔥</div>
+                    <div class="member-name">火拳</div>
+                    <div class="member-role">前锋</div>
+                </a>
+                <a href="/players/9" class="member-card">
+                    <div class="member-avatar">⚡</div>
+                    <div class="member-name">快男</div>
+                    <div class="member-role">中场</div>
+                </a>
+                <a href="/players/10" class="member-card">
+                    <div class="member-avatar">🏃</div>
+                    <div class="member-name">追风</div>
+                    <div class="member-role">前锋</div>
+                </a>
+                <a href="/players/11" class="member-card">
+                    <div class="member-avatar">🛡️</div>
+                    <div class="member-name">盾王</div>
+                    <div class="member-role">后卫</div>
+                </a>
+                <a href="/players/12" class="member-card">
+                    <div class="member-avatar">🌟</div>
+                    <div class="member-name">新星</div>
+                    <div class="member-role">新人</div>
+                </a>
+            </div>
+        </section>
+        
+        <!-- Honor -->
+        <section class="section">
+            <h2 class="section-title">🏆 荣誉室</h2>
+            <div class="honor-list">
+                <div class="honor-item">
+                    <div class="honor-icon">🥇</div>
+                    <div class="honor-info">
+                        <div class="honor-name">2025秋季联赛冠军</div>
+                        <div class="honor-time">2025年12月</div>
+                    </div>
+                </div>
+                <div class="honor-item">
+                    <div class="honor-icon">🥈</div>
+                    <div class="honor-info">
+                        <div class="honor-name">2025夏季赛季军</div>
+                        <div class="honor-time">2025年8月</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Gallery -->
+        <section class="section">
+            <h2 class="section-title">📸 相册 (24张)</h2>
+            <div class="gallery-grid">
+                <div class="gallery-item">⚽</div>
+                <div class="gallery-item">🏃</div>
+                <div class="gallery-item">🎉</div>
+                <div class="gallery-item">🏆</div>
+                <div class="gallery-item">👏</div>
+                <div class="gallery-item">🎊</div>
+                <div class="gallery-item">📸</div>
+                <div class="gallery-item">+16</div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

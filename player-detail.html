@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小狮子 - 兰星少年 HADO 俱乐部</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B35;
+            --primary-light: #FF8A5C;
+            --secondary: #00B4D8;
+            --bg-light: #F8FAFC;
+            --bg-white: #FFFFFF;
+            --text-dark: #1E293B;
+            --text-gray: #64748B;
+            --success: #10B981;
+            --border: #E2E8F0;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --radius: 16px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
+        
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover { background: var(--primary); color: white; }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 1.5rem; }
+        
+        /* Player Header */
+        .player-header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: var(--radius); padding: 2rem; color: white; margin-bottom: 1.5rem; text-align: center; }
+        .player-avatar-large { width: 120px; height: 120px; background: white; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: 900; color: var(--primary); box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+        .player-name { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 0.25rem; }
+        .player-team { font-size: 1.1rem; opacity: 0.9; margin-bottom: 0.5rem; }
+        .player-title-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 0.3rem 0.75rem; border-radius: 50px; font-size: 0.9rem; font-weight: 600; }
+        
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.25rem; text-align: center; box-shadow: var(--shadow); }
+        .stat-value { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; color: var(--primary); }
+        .stat-label { font-size: 0.85rem; color: var(--text-gray); margin-top: 0.25rem; }
+        
+        /* Section */
+        .section { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+        .section-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+        
+        /* Badges */
+        .badges-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .badge-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--bg-light); border-radius: 50px; }
+        .badge-icon { font-size: 1.5rem; }
+        .badge-name { font-weight: 600; }
+        
+        /* Match History */
+        .match-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .match-row { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--bg-light); border-radius: 12px; }
+        .match-teams { display: flex; align-items: center; gap: 0.75rem; flex: 1; }
+        .match-team { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+        .match-team-logo { width: 28px; height: 28px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+        .match-score { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.1rem; }
+        .match-score.win { color: var(--success); }
+        .match-result { font-size: 0.85rem; color: var(--text-gray); }
+        
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo"><div class="logo-icon">⚡</div><span>兰星少年</span></a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/matches" class="nav-link">赛程</a>
+                <a href="/teams" class="nav-link">战队</a>
+                <a href="/players" class="nav-link">选手</a>
+                <a href="/gallery" class="nav-link">画廊</a>
+                <a href="/join" class="nav-link">加入</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <!-- Player Header -->
+        <div class="player-header">
+            <div class="player-avatar-large">🦁</div>
+            <h1 class="player-name">小狮子</h1>
+            <div class="player-team">🔥 烈焰战队</div>
+            <div class="player-title-badge">⭐ 得分王</div>
+        </div>
+        
+        <!-- Season Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">28</div>
+                <div class="stat-label">进球</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">12</div>
+                <div class="stat-label">助攻</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">40</div>
+                <div class="stat-label">直接参与</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">8</div>
+                <div class="stat-label">出场</div>
+            </div>
+        </div>
+        
+        <!-- Badges -->
+        <section class="section">
+            <h2 class="section-title">🏅 徽章成就</h2>
+            <div class="badges-grid">
+                <div class="badge-item"><span class="badge-icon">🔥</span><span class="badge-name">火之之子</span></div>
+                <div class="badge-item"><span class="badge-icon">⚡</span><span class="badge-name">闪电进球</span></div>
+                <div class="badge-item"><span class="badge-icon">🎯</span><span class="badge-name">百步穿杨</span></div>
+                <div class="badge-item"><span class="badge-icon">🏆</span><span class="badge-name">冠军成员</span></div>
+            </div>
+        </section>
+        
+        <!-- Milestones -->
+        <section class="section">
+            <h2 class="section-title">🌟 里程碑</h2>
+            <div class="match-list">
+                <div class="match-row">
+                    <div class="match-teams">
+                        <div class="match-team"><div class="match-team-logo">🦁</div>小狮子</div>
+                    </div>
+                    <div class="match-score win">⚽ 第1球</div>
+                    <div class="match-result">2026-02-15</div>
+                </div>
+                <div class="match-row">
+                    <div class="match-teams">
+                        <div class="match-team"><div class="match-team-logo">🦁</div>小狮子</div>
+                    </div>
+                    <div class="match-score win">🎯 首个帽子戏法</div>
+                    <div class="match-result">2026-02-28</div>
+                </div>
+                <div class="match-row">
+                    <div class="match-teams">
+                        <div class="match-team"><div class="match-team-logo">🦁</div>小狮子</div>
+                    </div>
+                    <div class="match-score win">🏆 获得得分王</div>
+                    <div class="match-result">2026-03-01</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Recent Matches -->
+        <section class="section">
+            <h2 class="section-title">⚔️ 最近比赛</h2>
+            <div class="match-list">
+                <div class="match-row">
+                    <div class="match-teams">
+                        <div class="match-team"><div class="match-team-logo">🔥</div>烈焰</div>
+                        <div class="match-score win">3 : 1</div>
+                        <div class="match-team"><div class="match-team-logo">⚡</div>雷霆</div>
+                    </div>
+                    <div class="match-result">今天 14:30</div>
+                </div>
+                <div class="match-row">
+                    <div class="match-teams">
+                        <div class="match-team"><div class="match-team-logo">🌟</div>星光</div>
+                        <div class="match-score win">2 : 1</div>
+                        <div class="match-team"><div class="match-team-logo">🔥</div>烈焰</div>
+                    </div>
+                    <div class="match-result">昨天 16:00</div>
+                </div>
+                <div class="match-row">
+                    <div class="match-teams">
+                        <div class="match-team"><div class="match-team-logo">🔥</div>烈焰</div>
+                        <div class="match-score win">4 : 0</div>
+                        <div class="match-team"><div class="match-team-logo">🏆</div>冠军</div>
+                    </div>
+                    <div class="match-result">3月3日</div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
