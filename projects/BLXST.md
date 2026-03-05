@@ -103,6 +103,31 @@ D1          R2
 
 ---
 
+## ⚠️ 关键经验：D1数据库访问
+
+**问题**：直接调用Cloudflare API查询D1会返回"Route not found"
+
+**原因**：D1的API路径格式与Workers/KV不同，官方文档中的路径可能不正确
+
+**解决方案**：使用 `wrangler` CLI操作D1
+
+```bash
+# 方式1：通过Worker + D1绑定查询（推荐）
+# 1. 创建带D1绑定的Worker
+# 2. 在Worker里执行: await env.DB.prepare("SELECT * FROM table").all()
+
+# 方式2：wrangler CLI（适合直接操作）
+CLOUDFLARE_API_TOKEN="xxx" CLOUDFLARE_ACCOUNT_ID="xxx" \
+  wrangler d1 execute <database_id> --remote --command="SELECT * FROM table"
+```
+
+**经验总结**：
+- 不能用 `curl` 直接查D1 API
+- 必须通过Worker+D1绑定，或者wrangler CLI
+- D1绑定格式：`[[d1_databases]] binding = "DB" database_name = "xxx" database_id = "xxx"`
+
+---
+
 ## 待完成
 
 | 功能 | 优先级 |
