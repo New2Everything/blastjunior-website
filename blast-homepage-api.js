@@ -18,7 +18,7 @@ export default {
         return withCors(await getHomeData(env));
       }
       
-      // 新闻列表
+      // 新闻
       if (path === "/news") {
         return withCors(await getNews(env));
       }
@@ -28,16 +28,30 @@ export default {
         return withCors(await getSponsors(env));
       }
       
-      // 赛程
-      if (path === "/matches") return withCors(await getMatches(env));
-      // 积分榜
-      if (path === "/standings") return withCors(await getStandings(env));
       // 战队
-      if (path === "/teams") return withCors(await getTeams(env));
+      if (path === "/teams") {
+        return withCors(await getTeams(env));
+      }
+      
       // 选手
-      if (path === "/players") return withCors(await getPlayers(env));
+      if (path === "/players") {
+        return withCors(await getPlayers(env));
+      }
+      
+      // 比赛
+      if (path === "/matches") {
+        return withCors(await getMatches(env));
+      }
+      
+      // 积分榜
+      if (path === "/standings") {
+        return withCors(await getStandings(env));
+      }
+      
       // 画廊
-      if (path === "/gallery") return withCors(await getGallery(env));
+      if (path === "/gallery") {
+        return withCors(await getGallery(env));
+      }
 
       return withCors(jsonResponse({ ok: false, error: "Not found" }, 404));
     } catch (err) {
@@ -47,15 +61,13 @@ export default {
 };
 
 async function getHomeData(env) {
-  // 从D1获取新闻
-  let news = [];
+  let news = [], sponsors = [], matches = [];
+  
   try {
     const result = await env.DB.prepare("SELECT * FROM news WHERE status = 'published' ORDER BY date DESC LIMIT 5").all();
     news = result.results || [];
   } catch (e) { console.error("News error:", e); }
 
-  // 从D1获取赞助商
-  let sponsors = [];
   try {
     const result = await env.DB.prepare("SELECT * FROM sponsors WHERE status = 'active' ORDER BY sort_order LIMIT 10").all();
     sponsors = result.results || [];
@@ -66,7 +78,7 @@ async function getHomeData(env) {
   try {
     const msgObj = await env.BUCKET.get("community/messages.json");
     if (msgObj) messages = JSON.parse(await msgObj.text()).slice(0, 10);
-  } catch (e) { console.error("Messages error:", e); }
+  } catch (e) { console.error(e); }
 
   // 从R2获取精选照片
   let featuredPhotos = [];
@@ -76,13 +88,25 @@ async function getHomeData(env) {
       key: obj.key,
       url: `${STATIC_API}/${obj.key}`
     }));
-  } catch (e) { console.error("Photos error:", e); }
+  } catch (e) { console.error(e); }
+
+  // 尝试从D1获取比赛
+  try {
+    const result = await env.DB.prepare("SELECT * FROM matches WHERE status = 'finished' ORDER BY match_time DESC LIMIT 3").all();
+    matches = result.results || [];
+  } catch (e) { 
+    // 表可能不存在，使用默认数据
+    matches = [
+      { id: "1", league: "2026春季联赛", group_name: "U12", team1_name: "烈焰", team2_name: "星光", score1: 3, score2: 1, status: "finished", match_time: "今天 14:30" }
+    ];
+  }
 
   return jsonResponse({
     ok: true,
     data: {
       news,
       sponsors,
+      matches,
       messages,
       onlineCount: Math.floor(Math.random() * 20) + 5,
       featuredPhotos,
@@ -109,42 +133,69 @@ async function getSponsors(env) {
   }
 }
 
-async function getMatches(env) {
-  const matches = [
-    { id: 1, league: "2026春季联赛", group: "U12", team1: "烈焰", team2: "星光", score1: 3, score2: 1, status: "finished", time: "今天 14:30" },
-    { id: 2, league: "2026春季联赛", group: "U15", team1: "冠军", team2: "雷霆", score1: 2, score2: 2, status: "finished", time: "昨天 16:00" },
-    { id: 3, league: "2026春季联赛", group: "U12", team1: "烈焰", team2: "星光", status: "upcoming", time: "3月7日 14:30" }
-  ];
-  return jsonResponse({ ok: true, data: matches });
-}
-
-async function getStandings(env) {
-  const standings = [
-    { rank: 1, team: "烈焰", wins: 7, draws: 1, losses: 0, goals: 22, points: 22 },
-    { rank: 2, team: "冠军", wins: 6, draws: 2, losses: 0, goals: 20, points: 20 },
-    { rank: 3, team: "星光", wins: 5, draws: 2, losses: 1, goals: 17, points: 17 },
-    { rank: 4, team: "雷霆", wins: 4, draws: 1, losses: 3, goals: 13, points: 13 }
-  ];
-  return jsonResponse({ ok: true, data: standings });
-}
-
 async function getTeams(env) {
-  const teams = [
-    { id: 1, name: "烈焰", tag: "U12 竞技组", wins: 7, points: 22, color: "fire" },
-    { id: 2, name: "冠军", tag: "U15 竞技组", wins: 6, points: 20, color: "gold" },
-    { id: 3, name: "星光", tag: "U12 竞技组", wins: 5, points: 17, color: "blue" },
-    { id: 4, name: "雷霆", tag: "U15 训练组", wins: 4, points: 13, color: "purple" }
-  ];
-  return jsonResponse({ ok: true, data: teams });
+  try {
+    const result = await env.DB.prepare("SELECT * FROM teams ORDER BY points DESC").all();
+    if (result.results && result.results.length > 0) {
+      return jsonResponse({ ok: true, data: result.results });
+    }
+  } catch (e) { console.error(e); }
+  
+  // 默认数据
+  return jsonResponse({ ok: true, data: [
+    { id: "1", name: "烈焰战队", tag: "U12 竞技组", color: "fire", wins: 7, points: 22 },
+    { id: "2", name: "冠军战队", tag: "U15 竞技组", color: "gold", wins: 6, points: 20 },
+    { id: "3", name: "星光战队", tag: "U12 竞技组", color: "blue", wins: 5, points: 17 }
+  ]});
 }
 
 async function getPlayers(env) {
-  const players = [
-    { id: 1, name: "小狮子", team: "烈焰", title: "得分王", goals: 28, assists: 12 },
-    { id: 2, name: "闪电侠", team: "冠军", title: "MVP", goals: 25, assists: 15 },
-    { id: 3, name: "铁壁", team: "铁壁", title: "最佳守门", goals: 0, saves: 95 }
-  ];
-  return jsonResponse({ ok: true, data: players });
+  try {
+    const result = await env.DB.prepare("SELECT * FROM players ORDER BY goals DESC").all();
+    if (result.results && result.results.length > 0) {
+      return jsonResponse({ ok: true, data: result.results });
+    }
+  } catch (e) { console.error(e); }
+  
+  return jsonResponse({ ok: true, data: [
+    { id: "1", name: "小狮子", team_id: "1", title: "得分王", goals: 28, assists: 12 },
+    { id: "2", name: "闪电侠", team_id: "2", title: "MVP", goals: 25, assists: 15 }
+  ]});
+}
+
+async function getMatches(env) {
+  try {
+    const result = await env.DB.prepare("SELECT * FROM matches ORDER BY match_time DESC").all();
+    if (result.results && result.results.length > 0) {
+      return jsonResponse({ ok: true, data: result.results });
+    }
+  } catch (e) { console.error(e); }
+  
+  return jsonResponse({ ok: true, data: [
+    { id: "1", league: "2026春季联赛", group_name: "U12", team1_name: "烈焰", team2_name: "星光", score1: 3, score2: 1, status: "finished", match_time: "2026-03-05 14:30" }
+  ]});
+}
+
+async function getStandings(env) {
+  try {
+    const result = await env.DB.prepare("SELECT * FROM teams ORDER BY points DESC").all();
+    if (result.results && result.results.length > 0) {
+      const standings = result.results.map((t, i) => ({
+        rank: i + 1,
+        team: t.name,
+        wins: t.wins,
+        draws: t.draws || 0,
+        losses: t.losses || 0,
+        goals: (t.wins * 2) - t.losses,
+        points: t.points
+      }));
+      return jsonResponse({ ok: true, data: standings });
+    }
+  } catch (e) { console.error(e); }
+  
+  return jsonResponse({ ok: true, data: [
+    { rank: 1, team: "烈焰", wins: 7, draws: 1, losses: 0, goals: 22, points: 22 }
+  ]});
 }
 
 async function getGallery(env) {
