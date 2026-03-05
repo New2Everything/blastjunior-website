@@ -146,11 +146,11 @@ CLOUDFLARE_API_TOKEN="xxx" CLOUDFLARE_ACCOUNT_ID="xxx" \
 
 | 功能 | 优先级 |
 |------|--------|
-| D1表初始化（teams/players/matches） | P0 |
-| AI自动发布赛果 | P0 |
-| 战队详情页数据对接 | P1 |
-| 选手详情页数据对接 | P1 |
-| 新闻详情页 | P1 |
+| 比赛复盘页 | P1 | ✅ |
+| 一键分享卡 | P1 |
+| 关注订阅 | P1 |
+| 搜索与标签 | P1 |
+| AI自动发赛果 | P0 |
 
 ---
 
