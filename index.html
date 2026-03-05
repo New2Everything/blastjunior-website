@@ -252,8 +252,8 @@
                 document.getElementById('messageInput').addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
                 document.getElementById('messageInput').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 100) + 'px'; });
             } else {
-                navAuth.innerHTML = '<a href="#" class="btn btn-login" onclick="showModal('login')">登录</a><a href="#" class="btn btn-register" onclick="showModal('register')">注册</a>';
-                chatInput.innerHTML = '<div class="login-prompt">🔒 登录后才能发言 <a href="#" onclick="showModal('login')">立即登录</a> | <a href="#" onclick="showModal('register')">注册账号</a></div>';
+                navAuth.innerHTML = '<a href="#" class="btn btn-login" onclick="showModal(\'login\')">登录</a><a href="#" class="btn btn-register" onclick="showModal(\'register\')">注册</a>';
+                chatInput.innerHTML = '<div class="login-prompt">🔒 登录后才能发言 <a href="#" onclick="showModal(\'login\')">立即登录</a> | <a href="#" onclick="showModal(\'register\')">注册账号</a></div>';
             }
         }
         
