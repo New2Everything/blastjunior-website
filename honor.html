@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>荣誉室 - 兰星少年 HADO 俱乐部</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #FF6B35; --primary-light: #FF8A5C; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --gold: #FFD700; --silver: #C0C0C0; --bronze: #CD7F32; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        .page-header { text-align: center; padding: 3rem 1.5rem; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: var(--radius); color: white; margin-bottom: 2rem; }
+        .page-title { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 900; margin-bottom: 0.5rem; }
+        .page-subtitle { font-size: 1.1rem; opacity: 0.9; }
+        
+        /* Tabs */
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; }
+        .tab { padding: 0.75rem 1.5rem; background: var(--bg-white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; color: var(--text-gray); }
+        .tab.active { background: var(--primary); color: white; }
+        
+        /* Champion */
+        .champion-section { background: var(--bg-white); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); margin-bottom: 2rem; text-align: center; }
+        .champion-trophy { font-size: 5rem; margin-bottom: 1rem; }
+        .champion-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 900; color: var(--gold); margin-bottom: 0.5rem; }
+        .champion-team { font-size: 2rem; font-weight: 700; }
+        .champion-season { color: var(--text-gray); margin-top: 0.5rem; }
+        
+        /* Awards Grid */
+        .awards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        
+        .award-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); text-align: center; }
+        .award-rank { font-size: 3rem; margin-bottom: 0.5rem; }
+        .award-rank.gold { color: var(--gold); }
+        .award-rank.silver { color: var(--silver); }
+        .award-rank.bronze { color: var(--bronze); }
+        .award-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem; }
+        .award-team { color: var(--text-gray); font-size: 0.9rem; }
+        .award-stat { color: var(--primary); font-weight: 600; margin-top: 0.5rem; }
+        
+        /* Personal Stats */
+        .stats-section { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); }
+        .stats-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+        .stats-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-light); border-radius: 8px; }
+        .stat-player { display: flex; align-items: center; gap: 0.75rem; }
+        .stat-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; }
+        .stat-name { font-weight: 600; }
+        .stat-value { font-family: 'Outfit', sans-serif; font-weight: 900; color: var(--primary); font-size: 1.25rem; }
+        
+        .loading { text-align: center; padding: 3rem; color: var(--text-gray); }
+        
+        @media (max-width: 768px) { .nav-links { display: none; } }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo"><div class="logo-icon">⚡</div><span>兰星少年</span></a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/matches" class="nav-link">赛程</a>
+                <a href="/standings" class="nav-link">积分榜</a>
+                <a href="/teams" class="nav-link">战队</a>
+                <a href="/players" class="nav-link">选手</a>
+                <a href="/gallery" class="nav-link">画廊</a>
+                <a href="/honor" class="nav-link active">荣誉</a>
+                <a href="/join" class="nav-link">加入</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">🏆 荣誉室</h1>
+            <p class="page-subtitle">记录每一次荣耀时刻</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active">2026春季</button>
+            <button class="tab">2025秋季</button>
+            <button class="tab">2025夏季</button>
+        </div>
+        
+        <!-- 冠军 -->
+        <div class="champion-section">
+            <div class="champion-trophy">🏆</div>
+            <div class="champion-title">冠军</div>
+            <div class="champion-team">烈焰战队</div>
+            <div class="champion-season">2026春季联赛 U12 竞技组</div>
+        </div>
+        
+        <!-- 榜单 -->
+        <div class="awards-grid">
+            <div class="award-card">
+                <div class="award-rank gold">🥇</div>
+                <div class="award-name">烈焰战队</div>
+                <div class="award-team">U12 竞技组</div>
+                <div class="award-stat">22分</div>
+            </div>
+            <div class="award-card">
+                <div class="award-rank silver">🥈</div>
+                <div class="award-name">冠军战队</div>
+                <div class="award-team">U15 竞技组</div>
+                <div class="award-stat">20分</div>
+            </div>
+            <div class="award-card">
+                <div class="award-rank bronze">🥉</div>
+                <div class="award-name">星光战队</div>
+                <div class="award-team">U12 竞技组</div>
+                <div class="award-stat">17分</div>
+            </div>
+        </div>
+        
+        <!-- 个人榜单 -->
+        <div class="stats-section" style="margin-top: 1.5rem;">
+            <h3 class="stats-title">⭐ 个人榜单</h3>
+            <div class="stats-list" id="statsList">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+        
+        async function loadStats() {
+            try {
+                const resp = await fetch(API_BASE + '/players');
+                const result = await resp.json();
+                if (!result.ok) throw new Error();
+                
+                const players = result.data || [];
+                const topScorers = [...players].sort((a, b) => (b.goals || 0) - (a.goals || 0)).slice(0, 5);
+                const topAssists = [...players].sort((a, b) => (b.assists || 0) - (a.assists || 0)).slice(0, 5);
+                
+                let html = '<h4 style="margin-bottom:0.75rem;color:var(--text-gray);">🏅 射手榜</h4>';
+                html += topScorers.map((p, i) => `
+                    <div class="stat-row">
+                        <div class="stat-player">
+                            <div class="stat-avatar">${i+1}</div>
+                            <span class="stat-name">${p.name}</span>
+                        </div>
+                        <span class="stat-value">${p.goals || 0}球</span>
+                    </div>
+                `).join('');
+                
+                html += '<h4 style="margin:1.5rem 0 0.75rem;color:var(--text-gray);">🅰️ 助攻榜</h4>';
+                html += topAssists.map((p, i) => `
+                    <div class="stat-row">
+                        <div class="stat-player">
+                            <div class="stat-avatar">${i+1}</div>
+                            <span class="stat-name">${p.name}</span>
+                        </div>
+                        <span class="stat-value">${p.assists || 0}次</span>
+                    </div>
+                `).join('');
+                
+                document.getElementById('statsList').innerHTML = html;
+            } catch (e) {
+                document.getElementById('statsList').innerHTML = '<div class="loading">加载失败</div>';
+            }
+        }
+        
+        loadStats();
+    </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
-name = "blast-d1-query"
-main = "blast-d1-query.js"
+name = "blast-d1-admin"
+main = "blast-d1-admin.js"
 compatibility_date = "2024-12-01"
 
 [[d1_databases]]

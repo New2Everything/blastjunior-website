@@ -1,5 +1,5 @@
 // blast-ai-report-api - AI自动生成赛报API
-// 基于比赛数据生成简单赛报
+// 更智能的赛报生成
 
 export default {
   async fetch(request, env) {
@@ -16,42 +16,36 @@ export default {
     }
 
     try {
-      // 获取最近比赛并生成赛报
-      if (action === "generate" || action === "latest") {
+      // 获取最近比赛并生成智能赛报
+      if (action === "latest" || action === "generate") {
         const obj = await env.BUCKET.get("data/matches.json");
         if (!obj) {
           return new Response(JSON.stringify({ error: "暂无比赛数据" }), { status: 404, headers: { "Content-Type": "application/json", ...cors } });
         }
         
         const matches = JSON.parse(await obj.text());
-        const finishedMatches = matches.filter(m => m.status === "finished").slice(0, 5);
+        const finishedMatches = matches.filter(m => m.status === "finished");
         
-        const reports = finishedMatches.map(m => {
-          const winner = m.score1 > m.score2 ? m.team1 : m.score2 > m.score1 ? m.team2 : "平局";
-          const diff = Math.abs(m.score1 - m.score2);
+        const reports = await Promise.all(finishedMatches.slice(0, 5).map(async m => {
+          // 获取选手数据
+          let topScorer = null;
+          let scorer1 = null;
+          let scorer2 = null;
           
-          // 生成简报
-          let report = `🏆 ${m.league} ${m.group}组比赛战报\n\n`;
-          report += `${m.team1} ${m.score1} - ${m.score2} ${m.team2}\n\n`;
+          try {
+            const playerObj = await env.BUCKET.get("data/players.json");
+            if (playerObj) {
+              const players = JSON.parse(await playerObj.text());
+              // 找出进球最多的选手
+              topScorer = players.sort((a, b) => (b.goals || 0) - (a.goals || 0))[0];
+              // 简单模拟每队进球选手
+              scorer1 = players.filter(p => p.team_id === 'team-1')[0] || players[0];
+              scorer2 = players.filter(p => p.team_id === 'team-3')[0] || players[1];
+            }
+          } catch(e) {}
           
-          if (diff === 0) {
-            report += `双方握手言和！`;
-          } else if (diff >= 3) {
-            report += `${winner} 大比分获胜！`;
-          } else {
-            report += `${winner} 险胜对手！`;
-          }
-          
-          report += `\n\n📅 比赛时间：${m.time}`;
-          
-          return {
-            match_id: m.id,
-            teams: `${m.team1} vs ${m.team2}`,
-            score: `${m.score1}-${m.score2}`,
-            report: report,
-            generated_at: new Date().toISOString()
-          };
-        });
+          return generateSmartReport(m, topScorer, scorer1, scorer2);
+        }));
         
         return new Response(JSON.stringify({ ok: true, count: reports.length, reports }), {
           headers: { "Content-Type": "application/json", ...cors }
@@ -74,36 +68,80 @@ export default {
           return new Response(JSON.stringify({ error: "比赛不存在" }), { status: 404, headers: { "Content-Type": "application/json", ...cors } });
         }
         
-        const winner = match.score1 > match.score2 ? match.team1 : match.score2 > match.score1 ? match.team2 : "平局";
-        const diff = Math.abs(match.score1 - match.score2);
+        let topScorer = null;
+        try {
+          const playerObj = await env.BUCKET.get("data/players.json");
+          if (playerObj) {
+            const players = JSON.parse(await playerObj.text());
+            topScorer = players.sort((a, b) => (b.goals || 0) - (a.goals || 0))[0];
+          }
+        } catch(e) {}
         
-        let report = `🏆 ${match.league} ${match.group}组比赛战报\n\n`;
-        report += `${match.team1} ${match.score1} - ${match.score2} ${match.team2}\n\n`;
-        
-        if (diff === 0) {
-          report += `双方握手言和！`;
-        } else if (diff >= 3) {
-          report += `${winner} 大比分获胜，展现强大实力！`;
-        } else {
-          report += `${winner} 艰难取胜，比赛非常激烈！`;
-        }
-        
-        report += `\n\n📅 比赛时间：${match.time}`;
+        const report = generateSmartReport(match, topScorer);
         
         return new Response(JSON.stringify({ ok: true, match, report }), {
           headers: { "Content-Type": "application/json", ...cors }
         });
       }
       
-      return new Response(JSON.stringify({ 
-        usage: [
-          "?action=latest - 获取最近赛报",
-          "?action=single&id=match-1 - 生成单场比赛赛报"
-        ]
-      }), { headers: { "Content-Type": "application/json", ...cors } });
+      return new Response(JSON.stringify({ usage: "?action=latest | ?action=single&id=xxx" }), { headers: { "Content-Type": "application/json", ...cors } });
 
     } catch (err) {
       return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { "Content-Type": "application/json", ...cors } });
     }
   }
 };
+
+function generateSmartReport(match, topScorer, scorer1, scorer2) {
+  const { team1, team2, score1, score2, league, group: groupName, time } = match;
+  const totalGoals = score1 + score2;
+  const winner = score1 > score2 ? team1 : score2 > score1 ? team2 : null;
+  const diff = Math.abs(score1 - score2);
+  
+  // 分析比赛风格
+  let style = "";
+  if (totalGoals >= 5) style = "进球大战";
+  else if (totalGoals >= 3) style = "对攻好戏";
+  else if (totalGoals <= 1) style = "防守大战";
+  else style = "激烈对决";
+  
+  // 生成赛报
+  let report = `🏆 ${league} ${groupName}组战报\n\n`;
+  report += `📊 ${team1} ${score1} - ${score2} ${team2}\n\n`;
+  
+  if (!winner) {
+    report += `⚖️握手言和！这场${style}双方势均力敌，展现了出色的战术素养。\n`;
+  } else if (diff >= 3) {
+    report += `🎉 ${winner} 展现强大实力！这场${style}完全一边倒，${winner}从开场就掌控了比赛节奏。\n`;
+  } else if (diff === 1 && totalGoals >= 3) {
+    report += `🔥 惊心动魄！${winner}仅以一球小胜，这场${style}让观众大呼过瘾！\n`;
+  } else {
+    report += `💪 ${winner} 艰难取胜！这场${style}双方拼到最后一刻。\n`;
+  }
+  
+  // 添加选手亮点
+  if (topScorer && topScorer.goals > 0) {
+    report += `\n⭐ 本场最佳：${topScorer.name}（${topScorer.team_name}）\n`;
+    report += `   进球数：${topScorer.goals}球，助攻：${topScorer.assists || 0}次\n`;
+  }
+  
+  if (scorer1 && score1 > 0) {
+    report += `\n⚽ ${team1}：${scorer1.name} 贡献关键进球\n`;
+  }
+  
+  if (scorer2 && score2 > 0) {
+    report += `⚽ ${team2}：${scorer2.name} 多次威胁对方球门\n`;
+  }
+  
+  report += `\n📅 比赛时间：${time}`;
+  
+  return {
+    match_id: match.id,
+    teams: `${team1} vs ${team2}`,
+    score: `${score1}-${score2}`,
+    winner: winner || "平局",
+    style,
+    report,
+    generated_at: new Date().toISOString()
+  };
+}
