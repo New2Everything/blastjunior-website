@@ -1,14 +1,11 @@
 # BLXST - 兰星少年俱乐部官网
 
-##概述
+## 概述
 
- 项目**定位**：无人值守 AI 运营管理官网（对外好逛好玩；对内可管理可追溯）
-
-**风格**：明亮运动风（Bright Sports）
-
-**用户**：成员 / 家长 / 粉丝 / 潜在新人 / 赞助合作方
-
-**设计白皮书**：见 `BLXST-design.md`
+- **项目定位**：无人值守 AI 运营管理官网（对外好逛好玩；对内可管理可追溯）
+- **风格**：明亮运动风（Bright Sports）
+- **用户**：成员 / 家长 / 粉丝 / 潜在新人 / 赞助合作方
+- **设计白皮书**：见 `BLXST-design.md`
 
 ---
 
@@ -21,80 +18,100 @@
   - 行动点亮色：`#00B4D8`（蓝色）
   - 对抗色：红/蓝（仅用于对阵/比分）
 
-### P0功能（当前阶段）
-- [x] 首页聚合：赛果/倒计时/本周活动/相册视频/最新故事
-- [x] 赛程赛果：列表筛选/比赛详情
-- [x] 积分榜：赛季/组别筛选
-- [x] 战队页：简介/排名/近期战绩/成员/相册/荣誉
-- [x] 选手页：头像/昵称/称号/本赛季数据/里程碑/相册/徽章
-- [x] 画廊：时间线/标签/自动封面
-- [x] 加入我们：报名/活动/合作入口
-- [x] AI运营后台：草稿箱→自动审核→发布
-
-### 信息架构
-**一级导航（8栏）**：Home / Matches / Standings / Teams / Players / Honor Room / Gallery / Join
-
-### 安全红线
-- 严禁色情/暴力/政治敏感等违法内容
-- 姓名/头像展示规则固定
-- 真实姓名不公开，但可公开昵称
+### P0功能
+- [x] 首页聚合：赛果/新闻/赞助商/相册
+- [x] 赛程赛果：列表/筛选
+- [x] 积分榜：排名/组别筛选
+- [x] 战队列表：卡片展示
+- [x] 选手列表：卡片展示
+- [x] 画廊：相册卡片
+- [x] 加入我们：报名表单/FAQ
+- [x] AI运营后台：草稿→审核→发布
 
 ---
 
-## 当前进度
+## 当前进度（2026-03-05）
 
 ### ✅ 已完成
-| 功能 | 说明 |
-|------|------|
-| 首页 | 明亮运动风格，8栏导航 |
-| 赛程赛果 | 比赛卡片展示 |
-| 积分榜 | 排名表格 |
-| 明星选手 | 选手卡片 |
-| 精彩故事 | 故事卡片 |
-| 画廊 | 相册卡片 |
-| 加入我们 | CTA行动区 |
 
-### 📋 待开发
-| 功能 | 优先级 |
-|------|--------|
-| 战队详情页 | P0 |
-| 选手详情页 | P0 |
-| 赛程筛选功能 | P0 |
-| 积分榜筛选 | P0 |
-| AI自动发赛果 | P0 |
-| 复盘页 | P1 |
-| 分享卡 | P1 |
-| 关注订阅 | P1 |
+#### 页面（9个）
+| 页面 | URL | 数据来源 |
+|------|-----|----------|
+| 首页 | / | API→D1+R2 |
+| 赛程 | /matches.html | API |
+| 积分榜 | /standings.html | API |
+| 战队列表 | /teams.html | API |
+| 选手列表 | /players.html | API |
+| 画廊 | /gallery.html | API→R2 |
+| 加入我们 | /join.html | 静态 |
+| 战队详情 | /team-detail.html | 静态 |
+| 选手详情 | /player-detail.html | 静态 |
+
+#### 技术架构
+| 组件 | 状态 |
+|------|------|
+| Pages 部署 | ✅ blastjunior.com |
+| blast-homepage-api | ✅ 数据聚合API |
+| blast-auth-api | ✅ 登录注册 |
+| blast-safe-api | ✅ 内容审核 |
+| blast-static-api | ✅ R2公开访问 |
+| D1 数据库 | ✅ 3个表（news/sponsors/media） |
+| R2 存储 | ✅ 照片/聊天记录 |
+
+#### D1数据（真实）
+- **news表**：5条新闻（官网上线、济州岛比赛、运营团队等）
+- **sponsors表**：3个赞助商（东方富海、味动力、Joma）
+- **media表**：目前为空
+
+#### R2数据
+- community/messages.json（真实聊天记录）
+- public/（HADO照片）
 
 ---
 
 ## 技术架构
 
 ### Workers
-| Worker | 用途 | 状态 |
+| Worker | 域名 | 用途 |
 |--------|------|------|
-| blast-auth-api | 用户登录注册 | ✅ |
-| blast-safe-api | 内容安全审核 | ✅ |
-| blast-comments-api | 评论系统 | ✅ |
-| blast-static-api | R2公开访问 | ✅ |
-| blast-campaigns-api | 活动API | ✅ |
+| blast-homepage-api | kanjiaming2022.workers.dev | 统一数据API |
+| blast-auth-api | kanjiaming2022.workers.dev | 用户登录注册 |
+| blast-safe-api | kanjiaming2022.workers.dev | 内容安全审核 |
+| blast-static-api | kanjiaming2022.workers.dev | R2公开访问 |
 
-### 存储
-- **R2**：blastjunior-media（图片/视频）
-- **KV**：用户会话、待审核内容
-- **D1**：SQL数据库（待使用）
+### 数据流（按白皮书第14点）
+```
+用户浏览器 → Pages（静态页）
+     ↓
+Worker API（blast-homepage-api）
+     ↓
+┌─────┴─────┐
+D1          R2
+(新闻/赞助商)  (照片/聊天)
+```
 
-### 部署
-- GitHub → Cloudflare Pages → blastjunior.com
+### D1数据库
+- **blastjunior-content-db** (uuid: 9e484b49...)
+  - news：新闻表
+  - sponsors：赞助商表
+  - media：媒体表
+
+### 待初始化D1表
+- teams（战队）
+- players（选手）
+- matches（比赛）
 
 ---
 
-## Skills使用
+## 待完成
 
-### Website Builder
-- 竞品调研：参考皇家马德里、Liquipedia
-- 工作流：需求→开发→测试→部署→迭代
-- 三次原则：3次解决不了的Bug汇报
+| 功能 | 优先级 |
+|------|--------|
+| D1表初始化（teams/players/matches） | P0 |
+| AI自动发布赛果 | P0 |
+| 战队详情页数据对接 | P1 |
+| 选手详情页数据对接 | P1 |
+| 新闻详情页 | P1 |
 
 ---
 
@@ -105,3 +122,4 @@
 - [x] 导航：8栏完整
 - [x] 色彩：符合白皮书规范
 - [x] 无控制台错误
+- [x] API数据流接通（D1+R2）
