@@ -1,4 +1,5 @@
 // blast-homepage-api - 首页数据聚合API
+// 数据来源：D1 + R2
 
 const STATIC_API = 'https://blast-static-api.kanjiaming2022.workers.dev';
 
@@ -12,13 +13,30 @@ export default {
     }
 
     try {
+      // 首页聚合
       if (path === "/" || path === "/home") {
         return withCors(await getHomeData(env));
       }
+      
+      // 新闻列表
+      if (path === "/news") {
+        return withCors(await getNews(env));
+      }
+      
+      // 赞助商
+      if (path === "/sponsors") {
+        return withCors(await getSponsors(env));
+      }
+      
+      // 赛程
       if (path === "/matches") return withCors(await getMatches(env));
+      // 积分榜
       if (path === "/standings") return withCors(await getStandings(env));
+      // 战队
       if (path === "/teams") return withCors(await getTeams(env));
+      // 选手
       if (path === "/players") return withCors(await getPlayers(env));
+      // 画廊
       if (path === "/gallery") return withCors(await getGallery(env));
 
       return withCors(jsonResponse({ ok: false, error: "Not found" }, 404));
@@ -29,12 +47,28 @@ export default {
 };
 
 async function getHomeData(env) {
+  // 从D1获取新闻
+  let news = [];
+  try {
+    const result = await env.DB.prepare("SELECT * FROM news WHERE status = 'published' ORDER BY date DESC LIMIT 5").all();
+    news = result.results || [];
+  } catch (e) { console.error("News error:", e); }
+
+  // 从D1获取赞助商
+  let sponsors = [];
+  try {
+    const result = await env.DB.prepare("SELECT * FROM sponsors WHERE status = 'active' ORDER BY sort_order LIMIT 10").all();
+    sponsors = result.results || [];
+  } catch (e) { console.error("Sponsors error:", e); }
+
+  // 从R2获取聊天消息
   let messages = [];
   try {
     const msgObj = await env.BUCKET.get("community/messages.json");
     if (msgObj) messages = JSON.parse(await msgObj.text()).slice(0, 10);
-  } catch (e) { console.error(e); }
+  } catch (e) { console.error("Messages error:", e); }
 
+  // 从R2获取精选照片
   let featuredPhotos = [];
   try {
     const list = await env.BUCKET.list({ prefix: "public/", maxKeys: 6 });
@@ -42,17 +76,37 @@ async function getHomeData(env) {
       key: obj.key,
       url: `${STATIC_API}/${obj.key}`
     }));
-  } catch (e) { console.error(e); }
+  } catch (e) { console.error("Photos error:", e); }
 
   return jsonResponse({
     ok: true,
     data: {
+      news,
+      sponsors,
       messages,
       onlineCount: Math.floor(Math.random() * 20) + 5,
       featuredPhotos,
       stats: { totalMatches: 24, totalPlayers: 48, totalTeams: 8 }
     }
   });
+}
+
+async function getNews(env) {
+  try {
+    const result = await env.DB.prepare("SELECT * FROM news WHERE status = 'published' ORDER BY date DESC LIMIT 20").all();
+    return jsonResponse({ ok: true, data: result.results || [] });
+  } catch (e) {
+    return jsonResponse({ ok: false, error: e.message }, 500);
+  }
+}
+
+async function getSponsors(env) {
+  try {
+    const result = await env.DB.prepare("SELECT * FROM sponsors WHERE status = 'active' ORDER BY sort_order").all();
+    return jsonResponse({ ok: true, data: result.results || [] });
+  } catch (e) {
+    return jsonResponse({ ok: false, error: e.message }, 500);
+  }
 }
 
 async function getMatches(env) {

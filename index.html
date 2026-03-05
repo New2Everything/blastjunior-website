@@ -22,19 +22,15 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-light); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-gray); }
-        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
         
-        /* Hero */
         .hero { background: linear-gradient(135deg, var(--primary), #FF8A5C); padding: 4rem 1.5rem; text-align: center; color: white; }
         .hero h1 { font-family: 'Outfit', sans-serif; font-size: 3rem; font-weight: 900; margin-bottom: 1rem; }
         .hero p { font-size: 1.25rem; opacity: 0.9; margin-bottom: 2rem; }
         .hero-tags { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
         .hero-tag { background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.9rem; }
         
-        /* Container */
         .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
         
-        /* Sidebar */
         .main-layout { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; }
         @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
         
@@ -42,43 +38,47 @@
         .sidebar-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); }
         .sidebar-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
         
-        /* Online Users */
         .online-list { display: flex; flex-direction: column; gap: 0.5rem; }
         .online-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
         .online-dot { width: 8px; height: 8px; background: #10B981; border-radius: 50%; }
         
-        /* Stats */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
         .stat-item { text-align: center; padding: 0.75rem; background: var(--bg-light); border-radius: 8px; }
         .stat-num { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.5rem; color: var(--primary); }
         .stat-label { font-size: 0.75rem; color: var(--text-gray); }
         
-        /* Sections */
         .section { margin-bottom: 2rem; }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
         .section-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 900; }
         .section-more { color: var(--primary); text-decoration: none; font-size: 0.9rem; }
         
-        /* Cards Grid */
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
         
-        /* Match Card */
+        .news-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); text-decoration: none; color: inherit; display: block; }
+        .news-card:hover { transform: translateY(-2px); }
+        .news-tag { display: inline-block; background: var(--secondary); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .news-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem; line-height: 1.4; }
+        .news-summary { font-size: 0.85rem; color: var(--text-gray); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-date { font-size: 0.75rem; color: var(--text-gray); margin-top: 0.75rem; }
+        
+        .sponsor-card { background: var(--bg-white); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); margin-bottom: 0.75rem; border-left: 4px solid var(--primary); }
+        .sponsor-name { font-weight: 700; font-size: 0.95rem; }
+        .sponsor-level { font-size: 0.75rem; color: var(--primary); font-weight: 600; }
+        .sponsor-tagline { font-size: 0.8rem; color: var(--text-gray); margin-top: 0.25rem; }
+        
         .match-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 0.75rem; }
         .match-league { font-size: 0.8rem; color: var(--text-gray); }
         .match-teams { display: flex; justify-content: space-between; align-items: center; }
         .match-team { text-align: center; flex: 1; }
         .match-team-icon { font-size: 1.5rem; }
         .match-team-name { font-weight: 600; font-size: 0.9rem; }
-        .match-vs { font-weight: 700; color: var(--primary); }
         .match-score { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.5rem; }
         .match-time { font-size: 0.85rem; color: var(--text-gray); text-align: center; }
         
-        /* Photo Grid */
         .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; border-radius: var(--radius); overflow: hidden; }
         .photo-item { aspect-ratio: 1; background: var(--bg-light); display: flex; align-items: center; justify-content: center; font-size: 2rem; overflow: hidden; }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Chat */
         .chat-messages { display: flex; flex-direction: column; gap: 0.75rem; max-height: 300px; overflow-y: auto; }
         .chat-msg { display: flex; gap: 0.5rem; }
         .chat-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-light); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
@@ -92,7 +92,6 @@
         .chat-input { flex: 1; padding: 0.6rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
         .chat-send { background: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 8px; cursor: pointer; }
         
-        /* Loading */
         .loading { text-align: center; padding: 2rem; color: var(--text-gray); }
         
         @media (max-width: 768px) { .nav-links { display: none; } .hero h1 { font-size: 2rem; } }
@@ -132,6 +131,16 @@
     <div class="container">
         <div class="main-layout">
             <main>
+                <!-- 新闻 -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">📰 最新动态</h2>
+                    </div>
+                    <div class="cards-grid" id="newsGrid">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </section>
+                
                 <!-- 赛果 -->
                 <section class="section">
                     <div class="section-header">
@@ -174,6 +183,14 @@
                     </div>
                 </div>
                 
+                <!-- 赞助商 -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">🤝 合作伙伴</h3>
+                    <div id="sponsorsList">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </div>
+                
                 <!-- 社区聊天 -->
                 <div class="sidebar-card">
                     <h3 class="sidebar-title">💬 社区动态</h3>
@@ -192,7 +209,6 @@
     <script>
         const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
         
-        // 加载首页数据
         async function loadHomeData() {
             try {
                 const resp = await fetch(API_BASE + '/');
@@ -211,18 +227,59 @@
                     document.getElementById('statTeams').textContent = data.stats.totalTeams || 0;
                 }
                 
+                // 新闻 - 从D1
+                renderNews(data.news || []);
+                
+                // 赞助商 - 从D1
+                renderSponsors(data.sponsors || []);
+                
                 // 赛果
                 loadMatches();
                 
-                // 精选照片
+                // 精选照片 - 从R2
                 renderPhotos(data.featuredPhotos || []);
                 
-                // 社区消息
+                // 社区消息 - 从R2
                 renderMessages(data.messages || []);
                 
             } catch (e) {
                 console.error('加载数据失败:', e);
             }
+        }
+        
+        function renderNews(news) {
+            if (!news.length) {
+                document.getElementById('newsGrid').innerHTML = '<div class="loading">暂无新闻</div>';
+                return;
+            }
+            
+            const html = news.slice(0, 3).map(n => `
+                <div class="news-card">
+                    <span class="news-tag">${n.tag || '动态'}</span>
+                    <h3 class="news-title">${n.title}</h3>
+                    <p class="news-summary">${n.summary || ''}</p>
+                    <div class="news-date">${n.date || ''}</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('newsGrid').innerHTML = html;
+        }
+        
+        function renderSponsors(sponsors) {
+            if (!sponsors.length) {
+                document.getElementById('sponsorsList').innerHTML = '<div class="loading">暂无赞助商</div>';
+                return;
+            }
+            
+            const html = sponsors.slice(0, 3).map(s => `
+                <div class="sponsor-card">
+                    <div class="sponsor-name">${s.name}</div>
+                    <div class="sponsor-level">${s.level || ''}</div>
+                    <div class="sponsor-tagline">${s.tagline || ''}</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('sponsorsList').innerHTML = html;
         }
         
         async function loadMatches() {
@@ -248,7 +305,7 @@
                             <div class="match-league">${m.league} · ${m.group}</div>
                             <div class="match-teams">
                                 <div class="match-team"><div class="match-team-icon">🔥</div><div class="match-team-name">${m.team1}</div></div>
-                                <div class="match-vs">VS</div>
+                                <div class="match-score">VS</div>
                                 <div class="match-team"><div class="match-team-icon">⭐</div><div class="match-team-name">${m.team2}</div></div>
                             </div>
                             <div class="match-time">${m.time}</div>
@@ -309,7 +366,6 @@
             alert('登录/注册功能开发中，敬请期待！');
         }
         
-        // 页面加载
         loadHomeData();
     </script>
 </body>
