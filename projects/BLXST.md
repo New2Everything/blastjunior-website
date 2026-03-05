@@ -148,7 +148,7 @@ CLOUDFLARE_API_TOKEN="xxx" CLOUDFLARE_ACCOUNT_ID="xxx" \
 |------|--------|
 | 比赛复盘页 | P1 | ✅ | ✅ |
 | 一键分享卡 | P1 | ✅ |
-| 关注订阅 | P1 |
+| 关注订阅 | P1 | ✅ |
 | 搜索与标签 | P1 | ✅ |
 | AI自动发赛果 | P0 |
 
@@ -162,3 +162,26 @@ CLOUDFLARE_API_TOKEN="xxx" CLOUDFLARE_ACCOUNT_ID="xxx" \
 - [x] 色彩：符合白皮书规范
 - [x] 无控制台错误
 - [x] API数据流接通（D1+R2）
+
+---
+
+## Workers API列表
+
+| Worker | 用途 | 数据来源 |
+|--------|------|----------|
+| blast-homepage-api | 聚合数据 | D1+R2 |
+| blast-share-api | 分享卡 | R2 |
+| blast-search-api | 搜索 | D1+R2 |
+| blast-subscribe-api | 订阅 | KV+R2 |
+| blast-ai-report-api | AI赛报 | R2 |
+| blast-auth-api | 登录注册 | KV |
+| blast-safe-api | 内容审核 | KV |
+| blast-static-api | R2访问 | R2 |
+
+---
+
+## 待询问老K
+
+1. KV命名空间：订阅功能使用现有blast-comments，是否需要单独创建？
+2. AI赛报：当前是简单模板生成，需要更智能的分析吗？
+3. D1表：teams/players/matches表初始化失败，是否需要继续尝试？
