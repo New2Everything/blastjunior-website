@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画廊 - 兰星少年 HADO 俱乐部</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #FF6B35; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), #FF8A5C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        .page-header { margin-bottom: 1.5rem; }
+        .page-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; }
+        .page-subtitle { color: var(--text-gray); }
+        
+        .filters { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .filter-select { padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-white); font-size: 0.9rem; min-width: 130px; }
+        
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        
+        .album-card { background: var(--bg-white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s; text-decoration: none; color: inherit; display: block; }
+        .album-card:hover { transform: translateY(-4px); }
+        .album-cover { height: 180px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 4rem; }
+        .album-cover.赛事 { background: linear-gradient(135deg, #EF4444, #F97316); }
+        .album-cover.训练 { background: linear-gradient(135deg, #3B82F6, #60A5FA); }
+        .album-cover.活动 { background: linear-gradient(135deg, #8B5CF6, #A78BFA); }
+        .album-cover.人物 { background: linear-gradient(135deg, #10B981, #34D399); }
+        .album-count { position: absolute; bottom: 0.75rem; right: 0.75rem; background: rgba(0,0,0,0.6); color: white; padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.8rem; font-weight: 600; }
+        
+        .album-info { padding: 1.25rem; }
+        .album-tag { display: inline-block; background: var(--secondary); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .album-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .album-meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-gray); }
+        
+        @media (max-width: 768px) { .nav-links { display: none; } }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo"><div class="logo-icon">⚡</div><span>兰星少年</span></a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/matches" class="nav-link">赛程</a>
+                <a href="/standings" class="nav-link">积分榜</a>
+                <a href="/teams" class="nav-link">战队</a>
+                <a href="/players" class="nav-link">选手</a>
+                <a href="/gallery" class="nav-link active">画廊</a>
+                <a href="/join" class="nav-link">加入</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">📸 画廊</h1>
+            <p class="page-subtitle">记录每一个精彩瞬间</p>
+        </div>
+        
+        <div class="filters">
+            <select class="filter-select"><option>全部类型</option><option>赛事</option><option>训练</option><option>活动</option><option>人物</option></select>
+            <select class="filter-select"><option>2026春季</option><option>2025秋季</option></select>
+            <select class="filter-select"><option>最新</option><option>最热</option></select>
+        </div>
+        
+        <div class="gallery-grid">
+            <a href="/gallery/1" class="album-card">
+                <div class="album-cover 赛事">⚽<span class="album-count">📷 32</span></div>
+                <div class="album-info">
+                    <span class="album-tag">赛事</span>
+                    <h3 class="album-title">2026春季联赛开幕战</h3>
+                    <div class="album-meta"><span>3月1日</span><span>256人浏览</span></div>
+                </div>
+            </a>
+            
+            <a href="/gallery/2" class="album-card">
+                <div class="album-cover 训练">🏋️<span class="album-count">📷 18</span></div>
+                <div class="album-info">
+                    <span class="album-tag">训练</span>
+                    <h3 class="album-title">周末训练营</h3>
+                    <div class="album-meta"><span>2月28日</span><span>128人浏览</span></div>
+                </div>
+            </a>
+            
+            <a href="/gallery/3" class="album-card">
+                <div class="album-cover 活动">🎉<span class="album-count">📷 45</span></div>
+                <div class="album-info">
+                    <span class="album-tag">活动</span>
+                    <h3 class="album-title">颁奖典礼</h3>
+                    <div class="album-meta"><span>2月25日</span><span>324人浏览</span></div>
+                </div>
+            </a>
+            
+            <a href="/gallery/4" class="album-card">
+                <div class="album-cover 人物">⭐<span class="album-count">📷 12</span></div>
+                <div class="album-info">
+                    <span class="album-tag">人物</span>
+                    <h3 class="album-title">明星选手写真</h3>
+                    <div class="album-meta"><span>2月20日</span><span>189人浏览</span></div>
+                </div>
+            </a>
+            
+            <a href="/gallery/5" class="album-card">
+                <div class="album-cover 赛事">🏆<span class="album-count">📷 28</span></div>
+                <div class="album-info">
+                    <span class="album-tag">赛事</span>
+                    <h3 class="album-title">半决赛集锦</h3>
+                    <div class="album-meta"><span>2月18日</span><span>412人浏览</span></div>
+                </div>
+            </a>
+            
+            <a href="/gallery/6" class="album-card">
+                <div class="album-cover 活动">🎊<span class="album-count">📷 56</span></div>
+                <div class="album-info">
+                    <span class="album-tag">活动</span>
+                    <h3 class="album-title">年会盛典</h3>
+                    <div class="album-meta"><span>2月15日</span><span>567人浏览</span></div>
+                </div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

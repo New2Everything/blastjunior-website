@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加入我们 - 兰星少年 HADO 俱乐部</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #FF6B35; --primary-light: #FF8A5C; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --success: #10B981; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        /* Hero */
+        .join-hero { background: linear-gradient(135deg, var(--secondary), #90E0EF); border-radius: var(--radius); padding: 3rem; text-align: center; color: white; margin-bottom: 2rem; }
+        .join-hero h1 { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem; }
+        .join-hero p { font-size: 1.2rem; opacity: 0.9; }
+        
+        /* Options Grid */
+        .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        
+        .option-card { background: var(--bg-white); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); text-align: center; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .option-card:hover { border-color: var(--primary); transform: translateY(-4px); }
+        .option-card.selected { border-color: var(--primary); background: linear-gradient(135deg, rgba(255,107,53,0.05), rgba(255,138,92,0.05)); }
+        .option-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .option-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .option-desc { color: var(--text-gray); font-size: 0.95rem; }
+        
+        /* Form */
+        .form-card { background: var(--bg-white); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); }
+        .form-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; }
+        
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 0.875rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: inherit; transition: border-color 0.2s; }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--primary); }
+        .form-textarea { min-height: 120px; resize: vertical; }
+        
+        .form-submit { width: 100%; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .form-submit:hover { background: var(--primary-light); transform: translateY(-2px); }
+        
+        .form-note { margin-top: 1rem; font-size: 0.85rem; color: var(--text-gray); text-align: center; }
+        
+        /* FAQ */
+        .faq-section { margin-top: 3rem; }
+        .faq-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; }
+        .faq-list { display: flex; flex-direction: column; gap: 1rem; }
+        .faq-item { background: var(--bg-white); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); }
+        .faq-q { font-weight: 700; margin-bottom: 0.5rem; color: var(--primary); }
+        .faq-a { color: var(--text-gray); font-size: 0.95rem; }
+        
+        @media (max-width: 768px) { .nav-links { display: none; } .join-hero { padding: 2rem; } .join-hero h1 { font-size: 1.75rem; } }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo"><div class="logo-icon">⚡</div><span>兰星少年</span></a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/matches" class="nav-link">赛程</a>
+                <a href="/standings" class="nav-link">积分榜</a>
+                <a href="/teams" class="nav-link">战队</a>
+                <a href="/players" class="nav-link">选手</a>
+                <a href="/gallery" class="nav-link">画廊</a>
+                <a href="/join" class="nav-link active">加入</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <section class="join-hero">
+            <h1>加入兰星少年</h1>
+            <p>开启你的HADO运动之旅！</p>
+        </section>
+        
+        <div class="options-grid">
+            <div class="option-card" onclick="selectOption('player')">
+                <div class="option-icon">⚽</div>
+                <div class="option-title">我要加入</div>
+                <div class="option-desc">成为俱乐部正式成员，参加训练和比赛</div>
+            </div>
+            <div class="option-card" onclick="selectOption('parent')">
+                <div class="option-icon">👨‍👩‍👧</div>
+                <div class="option-title">家长咨询</div>
+                <div class="option-desc">了解课程安排、费用标准、训练时间</div>
+            </div>
+            <div class="option-card" onclick="selectOption('cooperate')">
+                <div class="option-icon">🤝</div>
+                <div class="option-title">商务合作</div>
+                <div class="option-desc">赞助、场地、活动合作等商业咨询</div>
+            </div>
+        </div>
+        
+        <div class="form-card">
+            <h2 class="form-title">📝 提交信息</h2>
+            <form id="joinForm">
+                <div class="form-group">
+                    <label class="form-label">您的姓名 *</label>
+                    <input type="text" class="form-input" placeholder="请输入姓名" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">联系方式 *</label>
+                    <input type="tel" class="form-input" placeholder="手机号或微信" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">年龄/年级</label>
+                    <input type="text" class="form-input" placeholder="如：12岁 / 五年级">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">有兴趣的项目</label>
+                    <select class="form-select">
+                        <option>请选择</option>
+                        <option>HADO体验课</option>
+                        <option>正式训练班</option>
+                        <option>比赛报名</option>
+                        <option>其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">留言</label>
+                    <textarea class="form-textarea" placeholder="请告诉我们更多关于你的信息..."></textarea>
+                </div>
+                <button type="submit" class="form-submit">提交报名</button>
+                <p class="form-note">提交后24小时内会有工作人员联系您</p>
+            </form>
+        </div>
+        
+        <section class="faq-section">
+            <h2 class="faq-title">❓ 常见问题</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <div class="faq-q">Q: 几岁可以开始学HADO？</div>
+                    <div class="faq-a">A: 我们建议6岁以上的小朋友开始体验，8岁以上可以参加正式训练。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q: 需要购买装备吗？</div>
+                    <div class="faq-a">A: 初次体验无需装备，后续训练所需装备可以在俱乐部购买或租用。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q: 训练时间是怎么安排的？</div>
+                    <div class="faq-a">A: 周末训练营为主，具体时间会根据年龄和水平分组安排。</div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <script>
+        function selectOption(type) {
+            document.querySelectorAll('.option-card').forEach(card => card.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+        }
+        
+        document.getElementById('joinForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('提交成功！我们会尽快联系您~');
+        });
+    </script>
+</body>
+</html>

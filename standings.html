@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>积分榜 - 兰星少年 HADO 俱乐部</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #FF6B35; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --success: #10B981; --danger: #EF4444; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), #FF8A5C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        .page-header { margin-bottom: 1.5rem; }
+        .page-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; }
+        
+        .filters { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .filter-select { padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-white); font-size: 0.9rem; min-width: 140px; }
+        
+        /* League Tabs */
+        .league-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .league-tab { padding: 0.75rem 1.5rem; background: var(--bg-white); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; color: var(--text-gray); }
+        .league-tab.active { background: var(--primary); color: white; }
+        
+        /* Standings Card */
+        .standings-card { background: var(--bg-white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+        .standings-header { background: linear-gradient(135deg, var(--primary), #FF8A5C); padding: 1.5rem; color: white; }
+        .standings-header h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 900; margin-bottom: 0.25rem; }
+        .standings-header p { opacity: 0.9; font-size: 0.9rem; }
+        
+        .standings-table { width: 100%; border-collapse: collapse; }
+        .standings-table th { background: var(--bg-light); padding: 1rem; text-align: left; font-size: 0.8rem; color: var(--text-gray); font-weight: 600; text-transform: uppercase; }
+        .standings-table th:not(:first-child) { text-align: center; }
+        .standings-table td { padding: 1rem; border-top: 1px solid var(--border); font-size: 0.95rem; }
+        .standings-table td:not(:first-child):not(:nth-child(2)) { text-align: center; }
+        .standings-table tr:hover { background: var(--bg-light); }
+        
+        .rank { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; width: 60px; }
+        .rank-1 { color: #FFD700; }
+        .rank-2 { color: #C0C0C0; }
+        .rank-3 { color: #CD7F32; }
+        
+        .team-cell { display: flex; align-items: center; gap: 0.75rem; }
+        .team-logo { width: 36px; height: 36px; background: var(--bg-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .team-name { font-weight: 600; }
+        
+        .stat-num { font-family: 'Outfit', sans-serif; font-weight: 700; }
+        .stat-win { color: var(--success); }
+        .stat-draw { color: var(--text-gray); }
+        .stat-lose { color: var(--danger); }
+        .stat-pts { color: var(--primary); font-weight: 900; font-size: 1.1rem; }
+        
+        /* Rules */
+        .rules-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); }
+        .rules-card h3 { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
+        .rules-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .rules-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--text-gray); }
+        .rules-icon { color: var(--secondary); }
+        
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .standings-table { font-size: 0.85rem; }
+            .standings-table th, .standings-table td { padding: 0.75rem 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo"><div class="logo-icon">⚡</div><span>兰星少年</span></a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/matches" class="nav-link">赛程</a>
+                <a href="/standings" class="nav-link active">积分榜</a>
+                <a href="/teams" class="nav-link">战队</a>
+                <a href="/players" class="nav-link">选手</a>
+                <a href="/gallery" class="nav-link">画廊</a>
+                <a href="/join" class="nav-link">加入</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">📊 积分榜</h1>
+        </div>
+        
+        <div class="filters">
+            <select class="filter-select"><option>2026春季联赛</option><option>2025秋季联赛</option></select>
+            <select class="filter-select"><option>全部组别</option><option>U12</option><option>U15</option><option>U18</option></select>
+        </div>
+        
+        <div class="league-tabs">
+            <button class="league-tab active">U12 竞技组</button>
+            <button class="league-tab">U15 竞技组</button>
+            <button class="league-tab">U18 竞技组</button>
+            <button class="league-tab">训练组</button>
+        </div>
+        
+        <div class="standings-card">
+            <div class="standings-header">
+                <h2>🏆 U12 竞技组</h2>
+                <p>2026春季联赛 · 第8轮</p>
+            </div>
+            <table class="standings-table">
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>战队</th>
+                        <th>场次</th>
+                        <th>胜</th>
+                        <th>平</th>
+                        <th>负</th>
+                        <th>净胜球</th>
+                        <th>积分</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="rank rank-1">1</td>
+                        <td><div class="team-cell"><div class="team-logo">🔥</div><span class="team-name">烈焰战队</span></div></td>
+                        <td>8</td>
+                        <td class="stat-num stat-win">7</td>
+                        <td class="stat-num stat-draw">1</td>
+                        <td class="stat-num stat-lose">0</td>
+                        <td>+15</td>
+                        <td class="stat-pts">22</td>
+                    </tr>
+                    <tr>
+                        <td class="rank rank-2">2</td>
+                        <td><div class="team-cell"><div class="team-logo">🏆</div><span class="team-name">冠军战队</span></div></td>
+                        <td>8</td>
+                        <td class="stat-num stat-win">6</td>
+                        <td class="stat-num stat-draw">2</td>
+                        <td class="stat-num stat-lose">0</td>
+                        <td>+12</td>
+                        <td class="stat-pts">20</td>
+                    </tr>
+                    <tr>
+                        <td class="rank rank-3">3</td>
+                        <td><div class="team-cell"><div class="team-logo">🌟</div><span class="team-name">星光战队</span></div></td>
+                        <td>8</td>
+                        <td class="stat-num stat-win">5</td>
+                        <td class="stat-num stat-draw">2</td>
+                        <td class="stat-num stat-lose">1</td>
+                        <td>+8</td>
+                        <td class="stat-pts">17</td>
+                    </tr>
+                    <tr>
+                        <td class="rank">4</td>
+                        <td><div class="team-cell"><div class="team-logo">⚡</div><span class="team-name">雷霆战队</span></div></td>
+                        <td>8</td>
+                        <td class="stat-num stat-win">4</td>
+                        <td class="stat-num stat-draw">1</td>
+                        <td class="stat-num stat-lose">3</td>
+                        <td>+3</td>
+                        <td class="stat-pts">13</td>
+                    </tr>
+                    <tr>
+                        <td class="rank">5</td>
+                        <td><div class="team-cell"><div class="team-logo">🛡️</div><span class="team-name">铁壁战队</span></div></td>
+                        <td>8</td>
+                        <td class="stat-num stat-win">3</td>
+                        <td class="stat-num stat-draw">2</td>
+                        <td class="stat-num stat-lose">3</td>
+                        <td>0</td>
+                        <td class="stat-pts">11</td>
+                    </tr>
+                    <tr>
+                        <td class="rank">6</td>
+                        <td><div class="team-cell"><div class="team-logo">🌊</div><span class="team-name">海浪战队</span></div></td>
+                        <td>8</td>
+                        <td class="stat-num stat-win">2</td>
+                        <td class="stat-num stat-draw">1</td>
+                        <td class="stat-num stat-lose">5</td>
+                        <td>-8</td>
+                        <td class="stat-pts">7</td>
+                    </tr>
+                    <tr>
+                        <td class="rank">7</td>
+                        <td><div class="team-cell"><div class="team-logo">🦅</div><span class="team-name">雄鹰战队</span></div></td>
+                        <td>8</td>
+                        <td class="stat-num stat-win">1</td>
+                        <td class="stat-num stat-draw">1</td>
+                        <td class="stat-num stat-lose">6</td>
+                        <td>-12</td>
+                        <td class="stat-pts">4</td>
+                    </tr>
+                    <tr>
+                        <td class="rank">8</td>
+                        <td><div class="team-cell"><div class="team-logo">🌙</div><span class="team-name">新月战队</span></div></td>
+                        <td>8</td>
+                        <td class="stat-num stat-win">0</td>
+                        <td class="stat-num stat-draw">0</td>
+                        <td class="stat-num stat-lose">8</td>
+                        <td>-18</td>
+                        <td class="stat-pts">0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="rules-card">
+            <h3>📋 积分规则说明</h3>
+            <div class="rules-list">
+                <div class="rules-item"><span class="rules-icon">✅</span> 胜一场得3分</div>
+                <div class="rules-item"><span class="rules-icon">✅</span> 平一场得1分</div>
+                <div class="rules-item"><span class="rules-icon">✅</span> 负一场得0分</div>
+                <div class="rules-item"><span class="rules-icon">✅</span> 积分相同看净胜球</div>
+                <div class="rules-item"><span class="rules-icon">✅</span> 净胜球相同看进球数</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
