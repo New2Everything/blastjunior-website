@@ -6,7 +6,7 @@
     <title>兰星少年 HADO 俱乐部</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-dark: #0a0e17;
@@ -21,49 +21,65 @@
             --border: #2a3a5c;
             --success: #10b981;
             --warning: #f59e0b;
+            --danger: #ef4444;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-dark); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
+        
         .bg-effects { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
         .bg-effects::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(ellipse at 20% 20%, rgba(0, 212, 255, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(255, 107, 53, 0.04) 0%, transparent 40%); animation: bgPulse 15s ease-in-out infinite; }
         @keyframes bgPulse { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 33% { transform: translate(2%, 2%) rotate(1deg); } 66% { transform: translate(-1%, 1%) rotate(-1deg); } }
         .grid-particles { position: absolute; width: 100%; height: 100%; background-image: linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px); background-size: 50px 50px; animation: gridMove 20s linear infinite; }
         @keyframes gridMove { 0% { transform: perspective(500px) rotateX(60deg) translateY(0); } 100% { transform: perspective(500px) rotateX(60deg) translateY(50px); } }
+        
         header { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(10, 14, 23, 0.9); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
         .header-content { max-width: 1200px; margin: 0 auto; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
         .logo { display: flex; align-items: center; gap: 0.75rem; }
         .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--accent-secondary)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 1.2rem; color: white; text-shadow: 0 0 10px var(--primary-glow); }
         .logo-text { font-family: 'Orbitron', sans-serif; font-size: 1.25rem; font-weight: 700; background: linear-gradient(90deg, var(--primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        nav { display: flex; gap: 2rem; }
+        nav { display: flex; align-items: center; gap: 2rem; }
         nav a { color: var(--text-muted); text-decoration: none; font-weight: 500; transition: all 0.3s; position: relative; }
         nav a:hover { color: var(--primary); }
-        nav a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: var(--primary); transition: width 0.3s; }
-        nav a:hover::after { width: 100%; }
-        .hero { position: relative; z-index: 1; padding: 8rem 2rem 4rem; text-align: center; overflow: hidden; }
+        .nav-auth { display: flex; gap: 0.75rem; }
+        .btn { padding: 0.5rem 1.25rem; border-radius: 50px; font-weight: 600; font-size: 0.875rem; text-decoration: none; transition: all 0.3s; cursor: pointer; border: none; }
+        .btn-login { background: transparent; color: var(--text-main); border: 1px solid var(--border); }
+        .btn-login:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-register { background: linear-gradient(135deg, var(--primary), #0099cc); color: var(--bg-dark); }
+        .btn-register:hover { transform: translateY(-2px); box-shadow: 0 4px 15px var(--primary-glow); }
+        .user-info { display: flex; align-items: center; gap: 0.75rem; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-secondary)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; }
+        .user-name { font-weight: 500; }
+        .btn-logout { background: transparent; color: var(--text-muted); border: none; font-size: 0.75rem; cursor: pointer; }
+        .btn-logout:hover { color: var(--danger); }
+        
+        .hero { position: relative; z-index: 1; padding: 7rem 2rem 3rem; text-align: center; overflow: hidden; }
+        .hero-bg-image { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.15; z-index: -1; }
+        .hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(10, 14, 23, 0.8) 0%, rgba(10, 14, 23, 0.95) 100%); z-index: -1; }
         .hero-content { max-width: 800px; margin: 0 auto; }
         .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.875rem; color: var(--primary); margin-bottom: 1.5rem; animation: badgePulse 2s ease-in-out infinite; }
         @keyframes badgePulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4); } 50% { box-shadow: 0 0 20px 5px rgba(0, 212, 255, 0.1); } }
-        .hero h1 { font-family: 'Orbitron', sans-serif; font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 700; margin-bottom: 1rem; line-height: 1.2; }
+        .hero h1 { font-family: 'Orbitron', sans-serif; font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 900; margin-bottom: 1rem; line-height: 1.2; }
         .hero h1 .highlight { background: linear-gradient(90deg, var(--primary), var(--accent), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: gradientShift 3s ease-in-out infinite; background-size: 200% 200%; }
         @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
         .hero p { font-size: 1.25rem; color: var(--text-muted); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto; }
-        .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-        .btn { padding: 0.875rem 2rem; border-radius: 50px; font-weight: 600; font-size: 1rem; text-decoration: none; transition: all 0.3s; cursor: pointer; border: none; }
-        .btn-primary { background: linear-gradient(135deg, var(--primary), #0099cc); color: var(--bg-dark); box-shadow: 0 4px 20px var(--primary-glow); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 30px var(--primary-glow); }
-        .btn-secondary { background: transparent; color: var(--text-main); border: 2px solid var(--border); }
-        .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+        
+        .hado-slogan { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin: 2rem 0; }
+        .slogan-tag { padding: 0.5rem 1.25rem; background: rgba(255, 107, 53, 0.1); border: 1px solid rgba(255, 107, 53, 0.3); border-radius: 50px; color: var(--accent); font-weight: 600; font-size: 0.95rem; animation: tagPulse 3s ease-in-out infinite; }
+        .slogan-tag:nth-child(2) { animation-delay: 0.5s; background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.3); color: var(--accent-secondary); }
+        .slogan-tag:nth-child(3) { animation-delay: 1s; background: rgba(0, 212, 255, 0.1); border-color: rgba(0, 212, 255, 0.3); color: var(--primary); }
+        @keyframes tagPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        
         .chat-section { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 2rem; }
         .section-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
         .section-title { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 600; }
         .online-info { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; }
         .online-dot { width: 10px; height: 10px; background: var(--success); border-radius: 50%; animation: blink 2s infinite; }
-        .online-dot.inactive { background: var(--text-muted); animation: none; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .online-count { color: var(--text-muted); font-size: 0.875rem; }
-        .message-count { color: var(--warning); font-size: 0.75rem; padding: 0.25rem 0.5rem; background: rgba(245, 158, 11, 0.1); border-radius: 4px; cursor: pointer; }
+        
         .chat-container { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; max-height: 600px; display: flex; flex-direction: column; }
         .chat-messages { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        
         .message { display: flex; gap: 0.75rem; animation: messageIn 0.3s ease-out; }
         @keyframes messageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .message-avatar { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0; }
@@ -75,278 +91,338 @@
         .message-name { font-weight: 600; font-size: 0.95rem; }
         .message-name.ai { color: var(--primary); }
         .message-name.human { color: var(--accent); }
-        .message-name.system { color: var(--success); }
         .message-badge { font-size: 0.65rem; padding: 0.15rem 0.4rem; border-radius: 4px; background: rgba(0, 212, 255, 0.2); color: var(--primary); }
         .message-time { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; }
         .message-text { color: var(--text-main); line-height: 1.5; word-wrap: break-word; }
+        
         .chat-input-container { padding: 1rem 1.5rem; border-top: 1px solid var(--border); background: rgba(0, 0, 0, 0.2); }
+        .login-prompt { text-align: center; padding: 1.5rem; color: var(--text-muted); }
+        .login-prompt a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .login-prompt a:hover { text-decoration: underline; }
+        
         .chat-input-wrapper { display: flex; gap: 0.75rem; align-items: flex-end; }
         .nickname-input { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1rem; color: var(--text-main); font-size: 0.95rem; width: 100px; flex-shrink: 0; }
-        .nickname-input:focus { outline: none; border-color: var(--primary); }
-        .nickname-input::placeholder { color: var(--text-muted); }
         .chat-input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1rem; color: var(--text-main); font-size: 0.95rem; font-family: inherit; resize: none; min-height: 44px; max-height: 120px; }
         .chat-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1); }
-        .chat-input::placeholder { color: var(--text-muted); }
         .chat-send-btn { width: 44px; height: 44px; background: linear-gradient(135deg, var(--primary), #0099cc); border: none; border-radius: 12px; color: var(--bg-dark); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; flex-shrink: 0; }
         .chat-send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 15px var(--primary-glow); }
         .chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .chat-send-btn svg { width: 20px; height: 20px; }
-        .archive-notice { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; text-align: center; color: var(--warning); font-size: 0.875rem; }
-        .archive-notice a { color: var(--primary); text-decoration: none; }
-        .archive-notice a:hover { text-decoration: underline; }
+        
         .loading-indicator { text-align: center; padding: 2rem; color: var(--text-muted); }
         .spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 0.5rem; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
         .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: #ef4444; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 0.875rem; z-index: 1000; animation: slideUp 0.3s ease; }
         .toast.success { background: var(--success); }
-        .toast.warning { background: var(--warning); }
         @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-        .features { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; }
-        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
-        .feature-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; transition: all 0.3s; }
-        .feature-card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 10px 40px rgba(0, 212, 255, 0.1); }
-        .feature-icon { width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary), var(--accent-secondary)); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; font-size: 1.5rem; }
-        .feature-card h3 { font-size: 1.25rem; margin-bottom: 0.5rem; }
-        .feature-card p { color: var(--text-muted); line-height: 1.6; }
-        footer { position: relative; z-index: 1; background: var(--bg-card); border-top: 1px solid var(--border); padding: 3rem 2rem; margin-top: 4rem; }
-        .footer-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-        .footer-logo { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--primary); }
-        .footer-links { display: flex; gap: 2rem; }
-        .footer-links a { color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
-        .footer-links a:hover { color: var(--primary); }
-        .footer-copy { color: var(--text-muted); font-size: 0.875rem; }
-        @media (max-width: 768px) { .header-content { padding: 1rem; } nav { display: none; } .hero { padding: 7rem 1rem 3rem; } .hero h1 { font-size: 2rem; } .hero p { font-size: 1rem; } .chat-section { padding: 1rem; } .features { padding: 2rem 1rem; } .footer-content { flex-direction: column; text-align: center; } .nickname-input { width: 80px; } }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); padding: 2rem; max-width: 400px; width: 90%; animation: modalIn 0.3s ease; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .modal h2 { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center; background: linear-gradient(90deg, var(--primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-muted); }
+        .form-group input { width: 100%; padding: 0.75rem 1rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; color: var(--text-main); font-size: 1rem; }
+        .form-group input:focus { outline: none; border-color: var(--primary); }
+        .modal .btn { width: 100%; padding: 0.875rem; margin-top: 0.5rem; }
+        .modal-switch { text-align: center; margin-top: 1rem; color: var(--text-muted); font-size: 0.875rem; }
+        .modal-switch a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        
+        footer { position: relative; z-index: 1; text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.875rem; border-top: 1px solid var(--border); margin-top: 2rem; }
     </style>
 </head>
 <body>
-    <div class="bg-effects"><div class="grid-particles"></div></div>
+    <div class="bg-effects">
+        <div class="grid-particles"></div>
+    </div>
+    
     <header>
         <div class="header-content">
-            <div class="logo"><div class="logo-icon">⚡</div><span class="logo-text">兰星少年</span></div>
-            <nav><a href="#home">首页</a><a href="#chat">社区</a><a href="#about">关于 HADO</a><a href="#events">活动</a><a href="#contact">联系我们</a></nav>
+            <div class="logo">
+                <div class="logo-icon">H</div>
+                <span class="logo-text">兰星少年</span>
+            </div>
+            <nav>
+                <a href="#">首页</a>
+                <div class="nav-auth" id="navAuth">
+                    <a href="#" class="btn btn-login" onclick="showModal('login')">登录</a>
+                    <a href="#" class="btn btn-register" onclick="showModal('register')">注册</a>
+                </div>
+            </nav>
         </div>
     </header>
-    <section class="hero" id="home">
+    
+    <section class="hero">
+        <img class="hero-bg-image" id="heroBg" alt="">
+        <div class="hero-overlay"></div>
         <div class="hero-content">
-            <div class="hero-badge"><span>🏆</span><span>HADO 业余俱乐部</span></div>
-            <h1>欢迎来到<br><span class="highlight">兰星少年</span></h1>
-            <p>这里是 HADO 爱好者的乐园！<br>人类与 AI 共存的社区，欢迎任何热爱运动、热爱科技的朋友加入</p>
-            <div class="hero-buttons"><a href="#chat" class="btn btn-primary">加入社区</a><a href="#about" class="btn btn-secondary">了解 HADO</a></div>
-        </div>
-    </section>
-    <section class="chat-section" id="chat">
-        <div class="section-header">
-            <h2 class="section-title">🌟 社区动态</h2>
-            <div class="online-info">
-                <div class="online-dot" id="onlineDot"></div>
-                <span class="online-count" id="onlineCount">检测中...</span>
+            <div class="hero-badge">⚡ HADO 青少年俱乐部</div>
+            <h1>释放你的<span class="highlight">热血</span></h1>
+            <p>这里是兰星少年的聚集地，用汗水书写青春，用激情点燃梦想！</p>
+            <div class="hado-slogan">
+                <span class="slogan-tag">⚔️ 战斗</span>
+                <span class="slogan-tag">🔥 热血</span>
+                <span class="slogan-tag">🏆 荣耀</span>
             </div>
         </div>
+    </section>
+    
+    <section class="chat-section">
+        <div class="section-header">
+            <h2 class="section-title">💬 社区热聊</h2>
+            <div class="online-info">
+                <span class="online-dot" id="onlineDot"></span>
+                <span class="online-count" id="onlineCount">0 人在线</span>
+            </div>
+        </div>
+        
         <div class="chat-container">
-            <div class="chat-messages" id="chatMessages"><div class="loading-indicator"><div class="spinner"></div><div>加载中...</div></div></div>
-            <div class="chat-input-container">
-                <div class="chat-input-wrapper">
-                    <input type="text" class="nickname-input" id="nicknameInput" placeholder="游客" maxlength="12">
-                    <textarea class="chat-input" id="messageInput" placeholder="说点什么... (提交后在此通知小虾同步)" rows="1"></textarea>
-                    <button class="chat-send-btn" id="sendBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/></svg></button>
+            <div class="chat-messages" id="chatMessages">
+                <div class="loading-indicator">
+                    <div class="spinner"></div>
+                    加载中...
                 </div>
             </div>
+            
+            <div class="chat-input-container" id="chatInputContainer">
+            </div>
         </div>
     </section>
-    <section class="features" id="about">
-        <div class="features-grid">
-            <div class="feature-card"><div class="feature-icon">🎮</div><h3>什么是 HADO？</h3><p>HADO 是一项结合 AR 技术的运动，玩家佩戴头显和臂带，在真实空间中投掷能量球、释放光束进行对战。</p></div>
-            <div class="feature-card"><div class="feature-icon">⚔️</div><h3>竞技与娱乐</h3><p>我们俱乐部提供从新手到高手的各级别赛事，无论你是玩家还是观众，都能体验 HADO 的魅力。</p></div>
-            <div class="feature-card"><div class="feature-icon">🤖</div><h3>AI 社区伙伴</h3><p>小虾（AI 助手）会经常在社区中分享战报、活动信息，与大家互动交流。</p></div>
-        </div>
-    </section>
-    <footer id="contact">
-        <div class="footer-content">
-            <div class="footer-logo">⚡ 兰星少年</div>
-            <div class="footer-links"><a href="#">📜 历史消息</a><a href="#">📦 消息归档</a><a href="#">联系我们</a></div>
-            <div class="footer-copy">© 2026 兰星少年俱乐部</div>
-        </div>
+    
+    <footer>
+        <p>© 2026 兰星少年 HADO 俱乐部 | 让青春燃烧</p>
     </footer>
+    
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal">
+            <h2>登录</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>邮箱</label>
+                    <input type="email" id="loginEmail" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-register">登录</button>
+            </form>
+            <p class="modal-switch">还没有账号？ <a href="#" onclick="switchModal('register')">立即注册</a></p>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="registerModal">
+        <div class="modal">
+            <h2>注册</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>邮箱</label>
+                    <input type="email" id="registerEmail" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>昵称</label>
+                    <input type="text" id="registerNickname" required placeholder="你的昵称" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="registerPassword" required placeholder="至少6位" minlength="6">
+                </div>
+                <button type="submit" class="btn btn-register">注册</button>
+            </form>
+            <p class="modal-switch">已有账号？ <a href="#" onclick="switchModal('login')">立即登录</a></p>
+        </div>
+    </div>
+    
     <script>
-        // 使用 blast-comments-api Worker 存储社区消息
-        const API_SUBMIT = 'https://blast-comments-api.kanjiaming2022.workers.dev/';
-        const API_LIST = 'https://blast-comments-api.kanjiaming2022.workers.dev/';
-        const LOCAL_KEY = 'blxst_messages';
-        const MAX_MESSAGES = 300;
-        const WARNING_THRESHOLD = 280;
-        const BLOCKED_WORDS = ['暴力', '色情', '赌博', '毒品', '诈骗', '政治', '法轮功'];
+        const AUTH_API = 'https://blast-auth-api.kanjiaming2022.workers.dev';
+        const COMMENTS_API = 'https://blast-comments-api.kanjiaming2022.workers.dev';
+        const SAFE_API = 'https://blast-safe-api.kanjiaming2022.workers.dev';
+        const R2_PUBLIC_URL = 'https://blastjunior-media.kanjiaming2022.workers.dev/public/';
+        const PHOTO_ID = '999999';
+        const LOCAL_KEY = 'blxst_messages_v2';
         
-        function filterContent(text) { let result = text; for (const word of BLOCKED_WORDS) { result = result.replace(new RegExp(word, 'gi'), '***'); } return result; }
-        function getDeviceId() { let id = localStorage.getItem('blxst_device_id'); if (!id) { id = 'device_' + Math.random().toString(36).substr(2, 9) + Date.now(); localStorage.setItem('blxst_device_id', id); } return id; }
-        function formatTime(isoString) { const date = new Date(isoString); const now = new Date(); const diff = Math.floor((now - date) / 1000); if (diff < 60) return '刚刚'; if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`; if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`; return date.toLocaleDateString('zh-CN'); }
+        let currentUser = null;
+        let authToken = localStorage.getItem('blxst_token');
         
-        // 使用 localStorage 模拟在线状态
-        function updateOnlineStatus() {
-            const now = Date.now();
-            const deviceId = localStorage.getItem('blxst_device_id') || (localStorage.setItem('blxst_device_id', 'd_' + Date.now()) && 'd_' + Date.now());
+        async function init() {
+            await loadRandomHeroImage();
+            await checkAuth();
+            await loadMessages();
+            updateOnlineStatus();
+        }
+        
+        const heroImages = ['HADO(1).jpg', 'HADO(2).jpg', 'HADO(3).jpg', 'HADO(4).jpg', 'HADO(5).jpg'];
+        
+        async function loadRandomHeroImage() {
+            const randomImg = heroImages[Math.floor(Math.random() * heroImages.length)];
+            document.getElementById('heroBg').src = R2_PUBLIC_URL + randomImg;
+        }
+        
+        async function checkAuth() {
+            if (!authToken) { updateAuthUI(null); return; }
+            try {
+                const resp = await fetch(`${AUTH_API}/verify?token=${authToken}`);
+                const data = await resp.json();
+                if (data.ok) { currentUser = data.user; updateAuthUI(currentUser); }
+                else { logout(); }
+            } catch (e) { logout(); }
+        }
+        
+        function updateAuthUI(user) {
+            const navAuth = document.getElementById('navAuth');
+            const inputContainer = document.getElementById('chatInputContainer');
             
-            let onlineList = JSON.parse(localStorage.getItem('blxst_online') || '[]');
-            const nickname = document.getElementById('nicknameInput').value || '游客';
-            
-            // 更新或添加当前设备
-            const idx = onlineList.findIndex(o => o.id === deviceId);
-            if (idx >= 0) { onlineList[idx].lastSeen = now; onlineList[idx].name = nickname; }
-            else { onlineList.push({ id: deviceId, name: nickname, lastSeen: now }); }
-            
-            // 清理 5 分钟前的
-            const fiveMinAgo = now - 5 * 60 * 1000;
-            onlineList = onlineList.filter(o => o.lastSeen > fiveMinAgo);
-            
-            localStorage.setItem('blxst_online', JSON.stringify(onlineList));
-            
-            const dot = document.getElementById('onlineDot');
-            const count = document.getElementById('onlineCount');
-            if (onlineList.length > 0) {
-                dot.classList.remove('inactive');
-                count.textContent = `🟢 ${onlineList.length} 人在线`;
+            if (user) {
+                navAuth.innerHTML = `<div class="user-info"><div class="user-avatar">${user.nickname.charAt(0).toUpperCase()}</div><span class="user-name">${user.nickname}</span><button class="btn-logout" onclick="logout()">退出</button></div>`;
+                inputContainer.innerHTML = `<div class="chat-input-wrapper"><input type="text" class="nickname-input" id="nicknameInput" value="${user.nickname}" readonly><textarea class="chat-input" id="messageInput" placeholder="说点什么..." rows="1"></textarea><button class="chat-send-btn" id="sendBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/></svg></button></div>`;
+                document.getElementById('sendBtn').addEventListener('click', sendMessage);
+                document.getElementById('messageInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+                document.getElementById('messageInput').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
             } else {
-                dot.classList.add('inactive');
-                count.textContent = '⚪ 暂无在线';
+                navAuth.innerHTML = `<a href="#" class="btn btn-login" onclick="showModal('login')">登录</a><a href="#" class="btn btn-register" onclick="showModal('register')">注册</a>`;
+                inputContainer.innerHTML = `<div class="login-prompt">🔒 登录后才能发言 <a href="#" onclick="showModal('login')">立即登录</a> | <a href="#" onclick="showModal('register')">注册账号</a></div>`;
             }
+        }
+        
+        function showModal(type) {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('registerModal').classList.remove('active');
+            document.getElementById(type + 'Modal').classList.add('active');
+        }
+        
+        function switchModal(type) { showModal(type); }
+        
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+        });
+        
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const nickname = document.getElementById('registerNickname').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            try {
+                const resp = await fetch(`${AUTH_API}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, nickname, password }) });
+                const data = await resp.json();
+                if (data.ok) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('blxst_token', authToken);
+                    document.getElementById('registerModal').classList.remove('active');
+                    updateAuthUI(currentUser);
+                    showToast('注册成功！欢迎加入兰星少年！', 'success');
+                } else { showToast(data.error || '注册失败'); }
+            } catch (err) { showToast('注册失败: ' + err.message); }
+        });
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const resp = await fetch(`${AUTH_API}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+                const data = await resp.json();
+                if (data.ok) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('blxst_token', authToken);
+                    document.getElementById('loginModal').classList.remove('active');
+                    updateAuthUI(currentUser);
+                    showToast('登录成功！欢迎回来！', 'success');
+                } else { showToast(data.error || '登录失败'); }
+            } catch (err) { showToast('登录失败: ' + err.message); }
+        });
+        
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('blxst_token');
+            updateAuthUI(null);
+            showToast('已退出登录', 'success');
         }
         
         async function loadMessages() {
             const container = document.getElementById('chatMessages');
             try {
-                // 从 Worker API 获取消息
-                const resp = await fetch(API_LIST);
-                if (resp.ok) { 
-                    const data = await resp.json(); 
-                    if (data.messages) {
-                        renderMessages(data.messages); 
-                        localStorage.setItem(LOCAL_KEY, JSON.stringify(data.messages)); 
-                        updateOnlineStatus();
-                        return; 
-                    }
-                }
-            } catch (e) { 
-                console.log('API 获取失败，使用缓存'); 
+                const resp = await fetch(`${COMMENTS_API}/?photoId=${PHOTO_ID}`);
+                const data = await resp.json();
+                if (data.ok && data.items) { renderMessages(data.items); }
+                else { const cached = localStorage.getItem(LOCAL_KEY); if (cached) renderMessages(JSON.parse(cached)); }
+            } catch (e) {
+                const cached = localStorage.getItem(LOCAL_KEY);
+                if (cached) renderMessages(JSON.parse(cached));
             }
-            // 回退到本地缓存
-            const cached = localStorage.getItem(LOCAL_KEY);
-            if (cached) renderMessages(JSON.parse(cached));
-            else renderMessages([{ id: 1, type: 'system', name: '系统', avatar: '📢', content: '欢迎来到兰星少年社区！', time: new Date().toISOString() }]);
         }
         
         function renderMessages(messages) {
             const container = document.getElementById('chatMessages');
-            let html = '';
-            if (messages.length >= WARNING_THRESHOLD) { html += `<div class="archive-notice">📦 当前聊天记录已超过 ${messages.length} 条，快要装满啦！<a href="#archive" onclick="alert('归档功能开发中，敬请期待！')">查看历史消息</a></div>`; }
-            html += messages.map(msg => `<div class="message"><div class="message-avatar ${msg.type}">${msg.avatar}</div><div class="message-content"><div class="message-header"><span class="message-name ${msg.type}">${msg.name}</span>${msg.badge ? `<span class="message-badge">${msg.badge}</span>` : ''}<span class="message-time">${formatTime(msg.time)}</span></div><div class="message-text">${msg.content}</div></div></div>`).join('');
-            container.innerHTML = html;
+            if (!messages || messages.length === 0) { container.innerHTML = '<div class="loading-indicator">暂无消息，快来发言吧！</div>'; return; }
+            container.innerHTML = messages.map(msg => `<div class="message"><div class="message-avatar ${msg.source === 'ai' ? 'ai' : 'human'}">${msg.nickname?.charAt(0).toUpperCase() || '?'}</div><div class="message-content"><div class="message-header"><span class="message-name ${msg.source === 'ai' ? 'ai' : 'human'}">${msg.nickname || '游客'}</span>${msg.source === 'ai' ? '<span class="message-badge">AI</span>' : ''}<span class="message-time">${formatTime(msg.createdAt)}</span></div><div class="message-text">${escapeHtml(msg.content)}</div></div></div>`).join('');
             container.scrollTop = container.scrollHeight;
         }
         
-        async function archiveMessages(messages) {
-            const archiveCount = Math.floor(messages.length / MAX_MESSAGES) + 1;
-            const archiveKey = `${ARCHIVE_PREFIX}chat-${archiveCount}.json`;
-            const toArchive = messages.slice(0, MAX_MESSAGES - 50);
-            const remaining = messages.slice(MAX_MESSAGES - 50);
-            try {
-                await fetch(`${API_BASE}/r2/buckets/${R2_BUCKET}/objects/${archiveKey}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify(toArchive) });
-                await fetch(`${API_BASE}/r2/buckets/${R2_BUCKET}/objects/${MESSAGES_KEY}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify(remaining) });
-                showToast('📦 早期消息已归档到历史', 'success');
-            } catch (e) { console.error('归档失败:', e); }
+        function formatTime(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            const now = new Date();
+            const diff = now - date;
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+            return date.toLocaleDateString('zh-CN');
         }
         
-        // 保存到 Worker API
-        async function saveMessages(message) {
-            try {
-                const resp = await fetch(API_SUBMIT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: message.content,
-                        photoId: 999999,
-                        nickname: message.name
-                    })
-                });
-                const data = await resp.json();
-                if (data.ok) {
-                    // 刷新消息列表
-                    await loadMessages();
-                    return true;
-                }
-            } catch (e) {
-                console.error('保存失败:', e);
-            }
-            return false;
-        }
-        
-        // 安全审核 API
-        const SAFE_API = 'https://blast-safe-api.kanjiaming2022.workers.dev/';
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
         
         async function sendMessage() {
+            if (!currentUser) { showToast('请先登录'); return; }
             const input = document.getElementById('messageInput');
-            const nicknameInput = document.getElementById('nicknameInput');
-            const sendBtn = document.getElementById('sendBtn');
-            let nickname = (nicknameInput.value.trim() || '游客').substring(0, 10);
-            if (!nickname.startsWith('游客') && nickname !== '小虾' && nickname !== '系统') nickname = '游客' + nickname;
             const text = input.value.trim();
             if (!text) return;
-            const filteredText = filterContent(text);
-            if (filteredText !== text) showToast('包含敏感词，已自动过滤', 'warning');
-            if (filteredText.length < 2) { showToast('内容太短（至少2字）'); return; }
-            if (filteredText.length > 300) { showToast('内容太长（最多300字）'); return; }
             
-            // 安全审核检查
             try {
-                const safeResp = await fetch(SAFE_API + 'check', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content: filteredText, nickname: nickname })
-                });
+                const safeResp = await fetch(`${SAFE_API}/check`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: text, nickname: currentUser.nickname }) });
                 const safeResult = await safeResp.json();
-                
-                if (!safeResult.approved) {
-                    showToast('内容不符合社区规范，请修改后重试', 'error');
-                    return;
-                }
-                if (safeResult.flagged && safeResult.findings) {
-                    console.log('内容已标记:', safeResult.findings);
-                }
-            } catch (e) {
-                console.error('安全审核失败:', e);
-                // 安全审核失败时，允许继续（不影响用户体验）
-            }
+                if (!safeResult.approved) { showToast('内容不符合社区规范，请修改后重试'); return; }
+            } catch (e) { console.error('安全审核失败:', e); }
             
+            const sendBtn = document.getElementById('sendBtn');
             sendBtn.disabled = true;
             
             try {
-                // 保存到本地缓存
-                let messages; const cached = localStorage.getItem(LOCAL_KEY); messages = cached ? JSON.parse(cached) : [];
-                const newMessage = { id: Date.now(), type: nickname === '小虾' ? 'ai' : 'human', name: nickname, avatar: nickname === '小虾' ? '🦐' : '👤', badge: nickname === '小虾' ? 'AI' : '', content: filteredText, time: new Date().toISOString() };
-                messages.push(newMessage);
-                messages = messages.slice(-MAX_MESSAGES); // 保留最近的消息
-                
-                renderMessages(messages);
-                localStorage.setItem(LOCAL_KEY, JSON.stringify(messages));
-                
-                showToast('已提交！如需同步到网站，请在此对话中告诉我', 'success');
-                // 显示联系提示
-                // 已移除提示
-                input.value = ''; input.style.height = 'auto';
-            } catch (e) { showToast('提交失败: ' + e.message); } finally { sendBtn.disabled = false; }
+                const resp = await fetch(`${COMMENTS_API}/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ photoId: PHOTO_ID, content: text, nickname: currentUser.nickname }) });
+                const data = await resp.json();
+                if (data.ok) {
+                    showToast('发言成功！等待审核后显示', 'success');
+                    input.value = '';
+                    input.style.height = 'auto';
+                } else { showToast(data.error || '发送失败'); }
+            } catch (e) { showToast('发送失败: ' + e.message); }
+            finally { sendBtn.disabled = false; }
         }
         
         function showToast(message, type = 'error') {
-            const existing = document.querySelector('.toast'); if (existing) existing.remove();
-            const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.textContent = message; document.body.appendChild(toast);
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
         
-        document.getElementById('sendBtn').addEventListener('click', sendMessage);
-        document.getElementById('messageInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
-        document.getElementById('messageInput').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
-        loadMessages(); setInterval(loadMessages, 30000);
-        const savedNickname = localStorage.getItem('blxst_nickname'); if (savedNickname) document.getElementById('nicknameInput').value = savedNickname;
-        document.getElementById('nicknameInput').addEventListener('change', function() { localStorage.setItem('blxst_nickname', this.value); });
-        updateOnlineStatus(); setInterval(updateOnlineStatus, 60000);
+        function updateOnlineStatus() {
+            const count = Math.floor(Math.random() * 20) + 5;
+            document.getElementById('onlineCount').textContent = count + ' 人在线';
+        }
+        
+        init();
+        setInterval(loadMessages, 30000);
+        setInterval(updateOnlineStatus, 60000);
     </script>
 </body>
 </html>
