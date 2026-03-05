@@ -1,0 +1,11 @@
+name = "blast-subscribe-api"
+main = "blast-subscribe-api.js"
+compatibility_date = "2024-12-01"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "bd00b8ea71124980bf1b906d643c67ff"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "blastjunior-media"

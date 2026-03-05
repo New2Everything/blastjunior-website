@@ -1,0 +1,7 @@
+name = "blast-ai-report-api"
+main = "blast-ai-report-api.js"
+compatibility_date = "2024-12-01"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "blastjunior-media"
