@@ -176,6 +176,22 @@
                     </div>
                 </div>
                 
+                <!-- 当前赛季 -->
+                <div class="sidebar-card" id="currentSeasonCard" style="display:none;">
+                    <h3 class="sidebar-title">🏆 当前赛季</h3>
+                    <div class="current-season">
+                        <div class="season-name" id="seasonName">-</div>
+                        <div class="season-status" id="seasonStatus">-</div>
+                        <div class="season-teams-count" id="seasonTeamsCount">-</div>
+                    </div>
+                </div>
+                
+                <!-- TOP战队 -->
+                <div class="sidebar-card" id="topTeamsCard" style="display:none;">
+                    <h3 class="sidebar-title">🔥 TOP战队</h3>
+                    <div class="top-teams" id="topTeamsList"></div>
+                </div>
+                
                 <!-- 数据统计 -->
                 <div class="sidebar-card">
                     <h3 class="sidebar-title">📊 数据统计</h3>
@@ -225,9 +241,28 @@
                 
                 // 统计数据
                 if (data.stats) {
-                    document.getElementById('statMatches').textContent = data.stats.totalMatches || 0;
-                    document.getElementById('statPlayers').textContent = data.stats.totalPlayers || 0;
-                    document.getElementById('statTeams').textContent = data.stats.totalTeams || 0;
+                    document.getElementById('statMatches').textContent = data.stats.totalMatches || '-';
+                    document.getElementById('statPlayers').textContent = data.stats.totalPlayers || '-';
+                    document.getElementById('statTeams').textContent = data.stats.totalTeams || '-';
+                }
+                
+                // 当前赛季
+                if (data.currentSeason) {
+                    document.getElementById('currentSeasonCard').style.display = 'block';
+                    document.getElementById('seasonName').textContent = data.currentSeason.name || '';
+                    document.getElementById('seasonStatus').textContent = data.currentSeason.status === 'ongoing' ? '进行中' : '';
+                }
+                
+                // TOP战队
+                if (data.topTeams && data.topTeams.length > 0) {
+                    document.getElementById('topTeamsCard').style.display = 'block';
+                    document.getElementById('topTeamsList').innerHTML = data.topTeams.map(t => 
+                        `<div class="top-team-item">
+                            <span class="top-rank">${t.rank}</span>
+                            <span class="top-name">${t.name}</span>
+                            <span class="top-points">${t.points}分</span>
+                        </div>`
+                    ).join('');
                 }
                 
                 // 新闻 - 从D1
