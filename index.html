@@ -110,6 +110,8 @@
                 <a href="/gallery" class="nav-link">画廊</a>
                 <a href="/honor" class="nav-link">荣誉</a>
                 <a href="/join" class="nav-link">加入</a>
+                <a href="/share.html" class="nav-link">📤分享</a>
+                <a href="/poster.html" class="nav-link">🖼️海报</a>
             </div>
             <div class="user-area" id="userArea">
                 <button class="btn btn-outline" onclick="showAuth('login')">登录</button>
@@ -293,23 +295,23 @@
                 const html = matches.map(m => {
                     if (m.status === 'finished') {
                         return `<div class="match-card">
-                            <div class="match-league">${m.league} · ${m.group}</div>
+                            <div class="match-league">${m.league} · ${m.group_name || m.group}</div>
                             <div class="match-teams">
-                                <div class="match-team"><div class="match-team-icon">🔥</div><div class="match-team-name">${m.team1}</div></div>
+                                <div class="match-team"><div class="match-team-icon">🔥</div><div class="match-team-name">${m.team1_name || m.team1}</div></div>
                                 <div class="match-score">${m.score1} - ${m.score2}</div>
-                                <div class="match-team"><div class="match-team-icon">⭐</div><div class="match-team-name">${m.team2}</div></div>
+                                <div class="match-team"><div class="match-team-icon">⭐</div><div class="match-team-name">${m.team2_name || m.team2}</div></div>
                             </div>
-                            <div class="match-time">${m.time}</div>
+                            <div class="match-time">${m.match_time || m.time}</div>
                         </div>`;
                     } else {
                         return `<div class="match-card">
-                            <div class="match-league">${m.league} · ${m.group}</div>
+                            <div class="match-league">${m.league} · ${m.group_name || m.group}</div>
                             <div class="match-teams">
-                                <div class="match-team"><div class="match-team-icon">🔥</div><div class="match-team-name">${m.team1}</div></div>
+                                <div class="match-team"><div class="match-team-icon">🔥</div><div class="match-team-name">${m.team1_name || m.team1}</div></div>
                                 <div class="match-score">VS</div>
-                                <div class="match-team"><div class="match-team-icon">⭐</div><div class="match-team-name">${m.team2}</div></div>
+                                <div class="match-team"><div class="match-team-icon">⭐</div><div class="match-team-name">${m.team2_name || m.team2}</div></div>
                             </div>
-                            <div class="match-time">${m.time}</div>
+                            <div class="match-time">${m.match_time || m.time}</div>
                         </div>`;
                     }
                 }).join('');
