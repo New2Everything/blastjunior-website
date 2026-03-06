@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>兰星少年 HADO 俱乐部</title>
+    <!-- DATA_MODULE: i18n -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #FF6B35; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', 'Noto Sans JP', 'Noto Sans', sans-serif; background: var(--bg-light); color: var(--text-dark); }
+        
+        /* 语言切换 */
+        .lang-switch { position: fixed; top: 1rem; right: 1rem; z-index: 1000; display: flex; gap: 0.5rem; background: var(--bg-white); padding: 0.5rem; border-radius: 8px; box-shadow: var(--shadow); }
+        .lang-btn { padding: 0.4rem 0.8rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; background: transparent; color: var(--text-gray); }
+        .lang-btn.active { background: var(--primary); color: white; }
+        
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), #FF8A5C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        
+        .page-header { text-align: center; padding: 3rem 1rem; }
+        .page-title { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 900; margin-bottom: 0.5rem; }
+        .page-subtitle { color: var(--text-gray); font-size: 1.1rem; }
+        
+        /* 语言内容卡片 */
+        .lang-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+        .lang-card { background: var(--bg-white); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); text-align: center; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .lang-card:hover { transform: translateY(-4px); border-color: var(--primary); }
+        .lang-card.active { border-color: var(--primary); background: linear-gradient(135deg, #fff5f2, #fff); }
+        .lang-flag { font-size: 3rem; margin-bottom: 1rem; }
+        .lang-name { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .lang-native { color: var(--text-gray); }
+    </style>
+</head>
+<body>
+    <!-- 语言切换器 -->
+    <div class="lang-switch">
+        <button class="lang-btn active" onclick="setLang('zh')">中文</button>
+        <button class="lang-btn" onclick="setLang('en')">English</button>
+        <button class="lang-btn" onclick="setLang('ja')">日本語</button>
+    </div>
+
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo"><div class="logo-icon">📷</div><span data-i18n="club_name">兰星少年</span></a>
+            <div class="nav-links">
+                <a href="/" class="nav-link" data-i18n="nav_home">首页</a>
+                <a href="/matches" class="nav-link" data-i18n="nav_matches">赛程</a>
+                <a href="/standings" class="nav-link" data-i18n="nav_standings">积分榜</a>
+                <a href="/teams" class="nav-link" data-i18n="nav_teams">战队</a>
+                <a href="/players" class="nav-link" data-i18n="nav_players">选手</a>
+                <a href="/gallery" class="nav-link" data-i18n="nav_gallery">画廊</a>
+                <a href="/join" class="nav-link" data-i18n="nav_join">加入</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title" data-i18n="welcome">欢迎来到</h1>
+            <p class="page-subtitle" data-i18n="subtitle">HADO 青少年俱乐部</p>
+        </div>
+        
+        <div class="lang-grid">
+            <div class="lang-card active" onclick="setLang('zh')">
+                <div class="lang-flag">🇨🇳</div>
+                <div class="lang-name">中文</div>
+                <div class="lang-native">简体中文</div>
+            </div>
+            <div class="lang-card" onclick="setLang('en')">
+                <div class="lang-flag">🇺🇸</div>
+                <div class="lang-name">English</div>
+                <div class="lang-native">English</div>
+            </div>
+            <div class="lang-card" onclick="setLang('ja')">
+                <div class="lang-flag">🇯🇵</div>
+                <div class="lang-name">日本語</div>
+                <div class="lang-native">日本語</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    const translations = {
+        zh: {
+            club_name: '兰星少年',
+            nav_home: '首页',
+            nav_matches: '赛程',
+            nav_standings: '积分榜',
+            nav_teams: '战队',
+            nav_players: '选手',
+            nav_gallery: '画廊',
+            nav_join: '加入',
+            welcome: '欢迎来到',
+            subtitle: 'HADO 青少年俱乐部'
+        },
+        en: {
+            club_name: 'Lanxing Junior',
+            nav_home: 'Home',
+            nav_matches: 'Matches',
+            nav_standings: 'Standings',
+            nav_teams: 'Teams',
+            nav_players: 'Players',
+            nav_gallery: 'Gallery',
+            nav_join: 'Join',
+            welcome: 'Welcome to',
+            subtitle: 'HADO Junior Club'
+        },
+        ja: {
+            club_name: '蘭星ジュニア',
+            nav_home: 'ホーム',
+            nav_matches: 'マッチ',
+            nav_standings: '順位',
+            nav_teams: 'チーム',
+            nav_players: 'プレイヤー',
+            nav_gallery: 'ギャラリー',
+            nav_join: '参加',
+            welcome: 'ようこそ',
+            subtitle: 'HADO ジュニアクラブ'
+        }
+    };
+    
+    function setLang(lang) {
+        // 保存语言
+        localStorage.setItem('lang', lang);
+        
+        // 更新按钮
+        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.lang-card').forEach(card => card.classList.remove('active'));
+        
+        // 找到对应按钮并激活
+        const btns = document.querySelectorAll('.lang-btn');
+        const cards = document.querySelectorAll('.lang-card');
+        if (lang === 'zh') { btns[0].classList.add('active'); cards[0].classList.add('active'); }
+        else if (lang === 'en') { btns[1].classList.add('active'); cards[1].classList.add('active'); }
+        else if (lang === 'ja') { btns[2].classList.add('active'); cards[2].classList.add('active'); }
+        
+        // 更新文本
+        const t = translations[lang];
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (t[key]) el.textContent = t[key];
+        });
+    }
+    
+    // 初始化
+    const savedLang = localStorage.getItem('lang') || 'zh';
+    setLang(savedLang);
+    </script>
+</body>
+</html>
