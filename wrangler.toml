@@ -7,6 +7,15 @@ binding = "BUCKET"
 bucket_name = "blastjunior-media"
 
 [[d1_databases]]
-binding = "DB"
-database_name = "blastjunior-content-db"
-database_id = "9e484b49-935c-4ef5-8407-54f5bf38b441"
+binding = "CAMPAIGNS"
+database_name = "blast-campaigns-db"
+database_id = "bc11dbe6-4f21-490b-b713-70564c95cf8e"
+
+[[d1_databases]]
+binding = "PHOTOS"
+database_name = "blast-photo-db"
+database_id = "9f259478-4234-4a29-92da-66b4c73feac5"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "ed0efbdc46714aa4802e07abacb72a6e"
