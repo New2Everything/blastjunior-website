@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片海报 - 兰星少年 HADO 俱乐部</title>
+    <!-- DATA_MODULE: photo_poster -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #FF6B35; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), #FF8A5C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+        
+        .container { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
+        .page-header { margin-bottom: 2rem; text-align: center; }
+        .page-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; }
+        
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        @media (max-width: 768px) { .main-grid { grid-template-columns: 1fr; } }
+        
+        /* 照片选择 */
+        .photo-section { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); }
+        .section-title { font-weight: 600; margin-bottom: 1rem; }
+        
+        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+        .photo-thumb { aspect-ratio: 1; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+        .photo-thumb:hover { border-color: var(--primary); }
+        .photo-thumb.selected { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(255,107,53,0.3); }
+        .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* 样式选择 */
+        .style-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+        .style-card { padding: 1rem; border-radius: 8px; border: 2px solid var(--border); cursor: pointer; text-align: center; transition: all 0.2s; }
+        .style-card:hover { border-color: var(--primary); }
+        .style-card.active { border-color: var(--primary); background: linear-gradient(135deg, #fff5f2, #fff); }
+        .style-preview { height: 60px; border-radius: 8px; margin-bottom: 0.5rem; }
+        .style-name { font-size: 0.85rem; font-weight: 500; }
+        
+        /* 预览 */
+        .preview-section { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); position: sticky; top: 80px; }
+        
+        /* 海报样式 */
+        .poster { width: 100%; aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; position: relative; }
+        .poster-img { width: 100%; height: 100%; object-fit: cover; }
+        .poster-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 1.5rem; }
+        
+        /* 样式1: 渐变底 */
+        .poster-gradient { background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
+        
+        /* 样式2: 橙色品牌 */
+        .poster-brand { background: linear-gradient(135deg, var(--primary), #FF8A5C); }
+        
+        /* 样式3: 蓝色清新 */
+        .poster-blue { background: linear-gradient(135deg, var(--secondary), #48C9B0); }
+        
+        /* 样式4: 紫色星空 */
+        .poster-purple { background: linear-gradient(135deg, #667eea, #764ba2); }
+        
+        .poster-content { color: white; }
+        .poster-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .poster-subtitle { font-size: 0.9rem; opacity: 0.9; }
+        .poster-logo { position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.9); padding: 0.5rem 0.75rem; border-radius: 8px; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.9rem; }
+        
+        /* 按钮 */
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-block { width: 100%; justify-content: center; margin-top: 1rem; }
+        
+        .loading { text-align: center; padding: 2rem; color: var(--text-gray); }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo"><div class="logo-icon">🖼️</div><span>兰星少年</span></a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/matches" class="nav-link">赛程</a>
+                <a href="/standings" class="nav-link">积分榜</a>
+                <a href="/teams" class="nav-link">战队</a>
+                <a href="/players" class="nav-link">选手</a>
+                <a href="/gallery" class="nav-link">画廊</a>
+                <a href="/join" class="nav-link">加入</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">🖼️ 照片海报</h1>
+            <p style="color: var(--text-gray);">选择照片，生成精美海报</p>
+        </div>
+        
+        <div class="main-grid">
+            <!-- 左侧：选择 -->
+            <div class="photo-section">
+                <div class="section-title">📷 选择照片</div>
+                <div class="photo-grid" id="photoGrid">
+                    <div class="loading">加载中...</div>
+                </div>
+                
+                <div class="section-title" style="margin-top: 1.5rem;">🎨 选择样式</div>
+                <div class="style-grid">
+                    <div class="style-card active" data-style="gradient" onclick="selectStyle('gradient')">
+                        <div class="style-preview" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);"></div>
+                        <div class="style-name">渐变底</div>
+                    </div>
+                    <div class="style-card" data-style="brand" onclick="selectStyle('brand')">
+                        <div class="style-preview" style="background: linear-gradient(135deg, var(--primary), #FF8A5C);"></div>
+                        <div class="style-name">橙色品牌</div>
+                    </div>
+                    <div class="style-card" data-style="blue" onclick="selectStyle('blue')">
+                        <div class="style-preview" style="background: linear-gradient(135deg, var(--secondary), #48C9B0);"></div>
+                        <div class="style-name">蓝色清新</div>
+                    </div>
+                    <div class="style-card" data-style="purple" onclick="selectStyle('purple')">
+                        <div class="style-preview" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+                        <div class="style-name">紫色星空</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧：预览 -->
+            <div class="preview-section">
+                <div class="section-title">👀 预览</div>
+                <div class="poster poster-gradient" id="poster">
+                    <img class="poster-img" id="posterImg" src="" alt="">
+                    <div class="poster-overlay">
+                        <div class="poster-logo">📷 兰星少年</div>
+                        <div class="poster-content">
+                            <div class="poster-title" id="posterTitle">精彩瞬间</div>
+                            <div class="poster-subtitle" id="posterSubtitle">2026 兰星少年 HADO 俱乐部</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="downloadPoster()">⬇️ 保存海报</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    let photos = [];
+    let selectedPhoto = null;
+    let currentStyle = 'gradient';
+    
+    const styleConfig = {
+        gradient: { class: 'poster-gradient', title: '精彩瞬间', subtitle: '2026 兰星少年 HADO 俱乐部' },
+        brand: { class: 'poster-brand', title: '兰星少年', subtitle: 'HADO 俱乐部' },
+        blue: { class: 'poster-blue', title: '训练日常', subtitle: '享受运动的乐趣' },
+        purple: { class: 'poster-purple', title: '比赛瞬间', subtitle: '超越自我' }
+    };
+    
+    // 加载照片
+    async function loadPhotos() {
+        try {
+            const res = await fetch(`${API_BASE}/gallery`);
+            const data = await res.json();
+            if (data.ok && data.data) {
+                photos = data.data.slice(0, 9); // 只取9张
+                renderPhotos();
+                if (photos.length > 0) {
+                    selectPhoto(photos[0]);
+                }
+            }
+        } catch(e) {
+            document.getElementById('photoGrid').innerHTML = '<div class="loading">加载失败</div>';
+        }
+    }
+    
+    function renderPhotos() {
+        document.getElementById('photoGrid').innerHTML = photos.map((p, i) => `
+            <div class="photo-thumb ${i === 0 ? 'selected' : ''}" onclick="selectPhoto(photos[${i}])">
+                <img src="${p.cover}" alt="${p.title}" loading="lazy">
+            </div>
+        `).join('');
+    }
+    
+    function selectPhoto(photo) {
+        selectedPhoto = photo;
+        document.querySelectorAll('.photo-thumb').forEach(t => t.classList.remove('selected'));
+        event.target.closest('.photo-thumb').classList.add('selected');
+        document.getElementById('posterImg').src = photo.cover;
+        document.getElementById('posterTitle').textContent = photo.title || '精彩瞬间';
+    }
+    
+    function selectStyle(style) {
+        currentStyle = style;
+        document.querySelectorAll('.style-card').forEach(c => c.classList.remove('active'));
+        document.querySelector(`[data-style="${style}"]`).classList.add('active');
+        
+        const poster = document.getElementById('poster');
+        poster.className = 'poster ' + styleConfig[style].class;
+        document.getElementById('posterTitle').textContent = styleConfig[style].title;
+        document.getElementById('posterSubtitle').textContent = styleConfig[style].subtitle;
+    }
+    
+    function downloadPoster() {
+        alert('💡 保存功能需要将海报截图或使用 html2canvas 库生成图片');
+    }
+    
+    loadPhotos();
+    </script>
+</body>
+</html>

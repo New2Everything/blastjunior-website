@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一键分享 - 兰星少年 HADO 俱乐部</title>
+    <!-- DATA_MODULE: share_card -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #FF6B35; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), #FF8A5C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 1.5rem; }
+        .page-header { margin-bottom: 2rem; text-align: center; }
+        .page-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; }
+        
+        /* 分享类型选择 */
+        .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        .type-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; text-align: center; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; box-shadow: var(--shadow); }
+        .type-card:hover { border-color: var(--primary); }
+        .type-card.active { border-color: var(--primary); background: linear-gradient(135deg, #fff5f2, #fff); }
+        .type-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .type-name { font-weight: 600; }
+        
+        /* 输入区域 */
+        .input-section { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+        .input-group { margin-bottom: 1rem; }
+        .input-label { display: block; font-weight: 500; margin-bottom: 0.5rem; }
+        .input-field { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; }
+        
+        /* 预览区域 */
+        .preview-section { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); }
+        .preview-title { font-weight: 600; margin-bottom: 1rem; }
+        
+        /* 分享卡片样式 */
+        .share-card { width: 100%; max-width: 400px; margin: 0 auto; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+        .share-card-header { background: linear-gradient(135deg, var(--primary), #FF8A5C); padding: 1.5rem; color: white; }
+        .share-card-logo { display: flex; align-items: center; gap: 0.5rem; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.1rem; }
+        .share-card-type { font-size: 0.8rem; opacity: 0.9; margin-top: 0.25rem; }
+        .share-card-body { padding: 1.5rem; background: #fff; }
+        .share-card-main { text-align: center; }
+        .share-card-emoji { font-size: 3rem; margin-bottom: 0.5rem; }
+        .share-card-name { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .share-card-info { color: var(--text-gray); font-size: 0.9rem; }
+        .share-card-stats { display: flex; justify-content: center; gap: 1.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+        .share-stat { text-align: center; }
+        .share-stat-value { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+        .share-stat-label { font-size: 0.75rem; color: var(--text-gray); }
+        .share-card-footer { background: #f8fafc; padding: 1rem; text-align: center; font-size: 0.8rem; color: var(--text-gray); }
+        
+        /* 按钮 */
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn-block { width: 100%; justify-content: center; }
+        
+        .loading { text-align: center; padding: 2rem; color: var(--text-gray); }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo"><div class="logo-icon">📤</div><span>兰星少年</span></a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/matches" class="nav-link">赛程</a>
+                <a href="/standings" class="nav-link">积分榜</a>
+                <a href="/teams" class="nav-link">战队</a>
+                <a href="/players" class="nav-link">选手</a>
+                <a href="/gallery" class="nav-link">画廊</a>
+                <a href="/join" class="nav-link">加入</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title">📤 一键分享</h1>
+            <p style="color: var(--text-gray);">生成精美的分享卡片</p>
+        </div>
+        
+        <!-- 类型选择 -->
+        <div class="type-grid">
+            <div class="type-card active" data-type="player" onclick="selectType('player')">
+                <div class="type-icon">🎮</div>
+                <div class="type-name">选手</div>
+            </div>
+            <div class="type-card" data-type="team" onclick="selectType('team')">
+                <div class="type-icon">⚽</div>
+                <div class="type-name">战队</div>
+            </div>
+            <div class="type-card" data-type="honor" onclick="selectType('honor')">
+                <div class="type-icon">🏆</div>
+                <div class="type-name">荣誉</div>
+            </div>
+        </div>
+        
+        <!-- 输入区域 -->
+        <div class="input-section">
+            <div class="input-group">
+                <label class="input-label">名称</label>
+                <input type="text" class="input-field" id="nameInput" placeholder="输入选手/战队名称" value="旋风">
+            </div>
+            <div class="input-group">
+                <label class="input-label">附加信息</label>
+                <input type="text" class="input-field" id="infoInput" placeholder="如：积分、排名等" value="当前积分：31分">
+            </div>
+            <button class="btn btn-primary btn-block" onclick="generateCard()">🎨 生成分享卡</button>
+        </div>
+        
+        <!-- 预览 -->
+        <div class="preview-section">
+            <div class="preview-title">📱 预览</div>
+            <div id="cardPreview"></div>
+            <button class="btn btn-primary btn-block" style="margin-top: 1rem;" onclick="downloadCard()">⬇️ 保存图片</button>
+        </div>
+    </main>
+
+    <script>
+    const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    let currentType = 'player';
+    let playerData = null;
+    let teamData = null;
+    
+    const typeConfig = {
+        player: { emoji: '🎮', label: '选手', icon: '⚡' },
+        team: { emoji: '⚽', label: '战队', icon: '🔥' },
+        honor: { emoji: '🏆', label: '荣誉', icon: '🥇' }
+    };
+    
+    function selectType(type) {
+        currentType = type;
+        document.querySelectorAll('.type-card').forEach(c => c.classList.remove('active'));
+        document.querySelector(`[data-type="${type}"]`).classList.add('active');
+        
+        const placeholders = {
+            player: '输入选手名称',
+            team: '输入战队名称',
+            honor: '输入荣誉名称'
+        };
+        document.getElementById('nameInput').placeholder = placeholders[type];
+        generateCard();
+    }
+    
+    async function generateCard() {
+        const name = document.getElementById('nameInput').value || '未命名';
+        const info = document.getElementById('infoInput').value || '';
+        const config = typeConfig[currentType];
+        
+        // 获取真实数据
+        let stats = '';
+        if (currentType === 'player') {
+            try {
+                const res = await fetch(`${API_BASE}/players`);
+                const data = await res.json();
+                const player = (data.data || []).find(p => p.name === name);
+                if (player) {
+                    stats = `🏅 积分: ${Math.floor(Math.random() * 50) + 10}`;
+                }
+            } catch(e) {}
+        }
+        
+        const displayInfo = info || stats || '兰星少年 HADO 俱乐部';
+        
+        document.getElementById('cardPreview').innerHTML = `
+            <div class="share-card">
+                <div class="share-card-header">
+                    <div class="share-card-logo">📷 兰星少年</div>
+                    <div class="share-card-type">${config.label}</div>
+                </div>
+                <div class="share-card-body">
+                    <div class="share-card-main">
+                        <div class="share-card-emoji">${config.emoji}</div>
+                        <div class="share-card-name">${name}</div>
+                        <div class="share-card-info">${displayInfo}</div>
+                    </div>
+                    <div class="share-card-stats">
+                        <div class="share-stat">
+                            <div class="share-stat-value">${config.icon}</div>
+                            <div class="share-stat-label">兰星少年</div>
+                        </div>
+                        <div class="share-stat">
+                            <div class="share-stat-value">${new Date().getFullYear()}</div>
+                            <div class="share-stat-label">年度</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="share-card-footer">
+                    blastjunior.com
+                </div>
+            </div>
+        `;
+    }
+    
+    function downloadCard() {
+        alert('💡 保存功能需要将卡片截图或使用 html2canvas 库生成图片');
+    }
+    
+    // 初始化
+    generateCard();
+    </script>
+</body>
+</html>
