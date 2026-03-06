@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>画廊 - 兰星少年 HADO 俱乐部</title>
+    <!-- DATA_MODULE: gallery -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #FF6B35; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
+        :root { --primary: #FF6B35; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; --insta-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
         nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
@@ -19,35 +21,51 @@
         .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
         
         .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
-        .page-header { margin-bottom: 1.5 .page-title { font-family: 'rem; }
-       Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; }
-        .page-subtitle { color: var(--text-gray); }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+        .page-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; }
         
-        .filters { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .filter-select { padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-white); font-size: 0.9rem; min-width: 130px; }
+        /* Instagram式标签筛选 */
+        .tag-filter { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .tag-btn { padding: 0.4rem 0.8rem; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-white); font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .tag-btn:hover, .tag-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        /* Instagram式网格 */
+        .insta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+        @media (min-width: 640px) { .insta-grid { grid-template-columns: repeat(4, 1fr); gap: 0.75rem; } }
+        @media (min-width: 1024px) { .insta-grid { grid-template-columns: repeat(5, 1fr); } }
         
-        .album-card { background: var(--bg-white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s; text-decoration: none; color: inherit; display: block; }
-        .album-card:hover { transform: translateY(-4px); }
-        .album-cover { height: 180px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 4rem; overflow: hidden; background: linear-gradient(135deg, var(--primary), #FF8A5C); }
-        .album-cover img { width: 100%; height: 100%; object-fit: cover; }
-        .album-count { position: absolute; bottom: 0.75rem; right: 0.75rem; background: rgba(0,0,0,0.6); color: white; padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.8rem; font-weight: 600; }
+        .photo-square { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: 8px; cursor: pointer; }
+        .photo-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .photo-square:hover .photo-img { transform: scale(1.05); }
         
-        .album-info { padding: 1.25rem; }
-        .album-tag { display: inline-block; background: var(--secondary); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-bottom: 0.5rem; }
-        .album-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem; }
-        .album-meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-gray); }
+        /* 悬停显示点赞和标题 */
+        .photo-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.3s; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; padding: 0.5rem; }
+        .photo-square:hover .photo-overlay { opacity: 1; }
+        .photo-likes { display: flex; align-items: center; gap: 0.3rem; font-weight: 600; font-size: 0.9rem; }
+        .photo-title-overlay { font-size: 0.8rem; margin-top: 0.3rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
         
-        .loading { text-align: center; padding: 3rem; color: var(--text-gray); font-size: 1.1rem; }
+        /* 点赞按钮 */
+        .like-btn { position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(0,0,0,0.5); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: transform 0.2s; }
+        .like-btn:hover { transform: scale(1.1); }
+        .like-btn.liked { background: #e6683c; }
         
-        @media (max-width: 768px) { .nav-links { display: none; } }
+        /* 照片标签 */
+        .photo-tags { position: absolute; bottom: 0.5rem; left: 0.5rem; display: flex; gap: 0.25rem; flex-wrap: wrap; }
+        .photo-tag { background: rgba(0,0,0,0.6); color: white; font-size: 0.65rem; padding: 0.15rem 0.4rem; border-radius: 4px; }
+        
+        /* 加载和空状态 */
+        .loading { text-align: center; padding: 3rem; color: var(--text-gray); }
+        .empty { text-align: center; padding: 3rem; color: var(--text-gray); }
+        
+        /* 统计 */
+        .stats { display: flex; gap: 1rem; margin-top: 1rem; color: var(--text-gray); font-size: 0.9rem; }
+        .stat-item { display: flex; align-items: center; gap: 0.3rem; }
     </style>
 </head>
 <body>
     <nav>
         <div class="nav-container">
-            <a href="/" class="logo"><div class="logo-icon">⚡</div><span>兰星少年</span></a>
+            <a href="/" class="logo"><div class="logo-icon">📷</div><span>兰星少年</span></a>
             <div class="nav-links">
                 <a href="/" class="nav-link">首页</a>
                 <a href="/matches" class="nav-link">赛程</a>
@@ -59,64 +77,134 @@
             </div>
         </div>
     </nav>
-    
-    <div class="container">
+
+    <main class="container">
         <div class="page-header">
-            <h1 class="page-title">📸 画廊</h1>
-            <p class="page-subtitle">记录每一个精彩瞬间</p>
+            <h1 class="page-title">📷 精彩瞬间</h1>
+            <div class="tag-filter" id="tagFilter">
+                <button class="tag-btn active" data-tag="all">全部</button>
+                <button class="tag-btn" data-tag="HADO">HADO</button>
+                <button class="tag-btn" data-tag="训练">训练</button>
+                <button class="tag-btn" data-tag="比赛">比赛</button>
+                <button class="tag-btn" data-tag="团队">团队</button>
+                <button class="tag-btn" data-tag="选手">选手</button>
+                <button class="tag-btn" data-tag="活动">活动</button>
+                <button class="tag-btn" data-tag="其他">其他</button>
+            </div>
         </div>
         
-        <div class="filters">
-            <select class="filter-select" id="typeFilter"><option value="">全部类型</option><option>赛事</option><option>训练</option><option>活动</option><option>人物</option></select>
-            <select class="filter-select"><option>2026春季</option><option>2025秋季</option></select>
-            <select class="filter-select"><option>最新</option><option>最热</option></select>
+        <div class="stats">
+            <span class="stat-item">📸 共 <strong id="photoCount">0</strong> 张照片</span>
+            <span class="stat-item">❤️ <strong id="likeCount">0</strong> 次点赞</span>
         </div>
         
-        <div class="gallery-grid" id="galleryGrid">
+        <div class="insta-grid" id="galleryGrid">
             <div class="loading">加载中...</div>
         </div>
-    </div>
-    
+    </main>
+
     <script>
-        const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    let allPhotos = [];
+    let currentTag = 'all';
+    
+    // 读取本地点赞
+    function getLikes() {
+        return JSON.parse(localStorage.getItem('gallery_likes') || '{}');
+    }
+    
+    // 保存点赞
+    function saveLike(photoId, liked) {
+        const likes = getLikes();
+        if (liked) {
+            likes[photoId] = true;
+        } else {
+            delete likes[photoId];
+        }
+        localStorage.setItem('gallery_likes', JSON.stringify(likes));
+        updateStats();
+    }
+    
+    // 更新统计
+    function updateStats() {
+        const likes = getLikes();
+        document.getElementById('photoCount').textContent = allPhotos.length;
+        document.getElementById('likeCount').textContent = Object.keys(likes).length;
+    }
+    
+    // 筛选照片
+    function filterPhotos() {
+        const grid = document.getElementById('galleryGrid');
+        const likes = getLikes();
         
-        async function loadGallery() {
-            try {
-                const resp = await fetch(API_BASE + '/gallery');
-                const result = await resp.json();
-                if (!result.ok) throw new Error(result.error);
-                
-                renderAlbums(result.data || []);
-            } catch (e) {
-                console.error('加载画廊失败:', e);
-                document.getElementById('galleryGrid').innerHTML = '<div class="loading">加载失败，请刷新重试</div>';
-            }
+        const filtered = currentTag === 'all' 
+            ? allPhotos 
+            : allPhotos.filter(p => p.tags && p.tags.includes(currentTag));
+        
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div class="empty">暂无照片</div>';
+            return;
         }
         
-        function renderAlbums(albums) {
-            if (!albums.length) {
-                document.getElementById('galleryGrid').innerHTML = '<div class="loading">暂无相册</div>';
-                return;
-            }
-            
-            const html = albums.map(album => `
-                <a href="/gallery/${album.id}" class="album-card">
-                    <div class="album-cover">
-                        ${album.cover ? `<img src="${album.cover}" alt="${album.title}">` : '📷'}
-                        <span class="album-count">📷 ${album.count || 0}</span>
-                    </div>
-                    <div class="album-info">
-                        <span class="album-tag">${album.type || '赛事'}</span>
-                        <h3 class="album-title">${album.title}</h3>
-                        <div class="album-meta"><span>${album.date || ''}</span></div>
-                    </div>
-                </a>
-            `).join('');
-            
-            document.getElementById('galleryGrid').innerHTML = html;
+        grid.innerHTML = filtered.map(photo => `
+            <div class="photo-square" onclick="openPhoto(${photo.id})">
+                <img class="photo-img" src="${photo.cover}" alt="${photo.title}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f0f0f0%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23999%22>📷</text></svg>'">
+                <button class="like-btn ${likes[photo.id] ? 'liked' : ''}" onclick="event.stopPropagation(); toggleLike(${photo.id})">
+                    ${likes[photo.id] ? '❤️' : '🤍'}
+                </button>
+                <div class="photo-tags">
+                    ${(photo.tags || []).map(t => `<span class="photo-tag">${t}</span>`).join('')}
+                </div>
+                <div class="photo-overlay">
+                    <div class="photo-likes">❤️ ${likes[photo.id] ? '1' : '0'}</div>
+                    <div class="photo-title-overlay">${photo.title}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // 切换点赞
+    function toggleLike(photoId) {
+        const likes = getLikes();
+        const isLiked = !!likes[photoId];
+        saveLike(photoId, !isLiked);
+        filterPhotos();
+    }
+    
+    // 打开照片（暂简单处理）
+    function openPhoto(id) {
+        const photo = allPhotos.find(p => p.id === id);
+        if (photo) {
+            window.open(photo.cover, '_blank');
         }
-        
-        loadGallery();
+    }
+    
+    // 标签筛选
+    document.getElementById('tagFilter').addEventListener('click', (e) => {
+        if (e.target.classList.contains('tag-btn')) {
+            document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentTag = e.target.dataset.tag;
+            filterPhotos();
+        }
+    });
+    
+    // 加载数据
+    async function loadGallery() {
+        try {
+            const res = await fetch(`${API_BASE}/gallery`);
+            const data = await res.json();
+            if (data.ok && data.data) {
+                allPhotos = data.data;
+                updateStats();
+                filterPhotos();
+            }
+        } catch (e) {
+            document.getElementById('galleryGrid').innerHTML = '<div class="empty">加载失败</div>';
+        }
+    }
+    
+    loadGallery();
     </script>
 </body>
 </html>
