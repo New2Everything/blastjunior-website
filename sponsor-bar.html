@@ -1,0 +1,188 @@
+<!-- 赞助商横条组件 - 在 </nav> 后添加 -->
+<!-- CSS 样式 -->
+<style>
+.sponsor-bar {
+    background: linear-gradient(135deg, #1E293B 0%, #334155 100%);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.sponsor-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.sponsor-label::before {
+    content: "🤝";
+}
+.sponsor-list {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.sponsor-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.05);
+}
+.sponsor-item:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+}
+.sponsor-item.platinum {
+    border-left: 3px solid #E5E4E2;
+}
+.sponsor-item.platinum .sponsor-tier {
+    color: #E5E4E2;
+}
+.sponsor-item.gold {
+    border-left: 3px solid #FFD700;
+}
+.sponsor-item.gold .sponsor-tier {
+    color: #FFD700;
+}
+.sponsor-item.silver {
+    border-left: 3px solid #C0C0C0;
+}
+.sponsor-item.silver .sponsor-tier {
+    color: #C0C0C0;
+}
+.sponsor-logo {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: cover;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+}
+.sponsor-tier {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+.sponsor-toggle {
+    display: none;
+    background: none;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.7);
+    padding: 0.3rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+.sponsor-empty {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.85rem;
+}
+
+/* 移动端响应式 */
+@media (max-width: 768px) {
+    .sponsor-bar {
+        padding: 0.6rem 1rem;
+    }
+    .sponsor-label {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+    }
+    .sponsor-list {
+        gap: 0.75rem;
+    }
+    .sponsor-item {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+    }
+}
+</style>
+
+<!-- HTML 结构 -->
+<div class="sponsor-bar" id="sponsorBar">
+    <div class="sponsor-label">赞助商</div>
+    <div class="sponsor-list" id="sponsorList">
+        <span class="sponsor-empty">加载中...</span>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+(function() {
+    const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    
+    // tier 优先级
+    const TIER_ORDER = { 'platinum': 1, 'gold': 2, 'silver': 3 };
+    
+    async function loadSponsors() {
+        try {
+            const resp = await fetch(API_BASE + '/sponsors');
+            const result = await resp.json();
+            
+            if (!result.ok || !result.data || result.data.length === 0) {
+                // 如果API失败，尝试从首页数据获取
+                const homeResp = await fetch(API_BASE + '/');
+                const homeResult = await homeResp.json();
+                const sponsors = homeResult.data?.sponsors || [];
+                renderSponsors(sponsors);
+                return;
+            }
+            
+            renderSponsors(result.data);
+        } catch (e) {
+            console.error('加载赞助商失败:', e);
+            document.getElementById('sponsorList').innerHTML = '<span class="sponsor-empty">暂无赞助商</span>';
+        }
+    }
+    
+    function renderSponsors(sponsors) {
+        if (!sponsors || sponsors.length === 0) {
+            document.getElementById('sponsorList').innerHTML = '<span class="sponsor-empty">暂无赞助商</span>';
+            return;
+        }
+        
+        // 按 tier 排序：platinum → gold → silver
+        const sorted = [...sponsors].sort((a, b) => {
+            const tierA = TIER_ORDER[a.tier?.toLowerCase()] || 99;
+            const tierB = TIER_ORDER[b.tier?.toLowerCase()] || 99;
+            return tierA - tierB;
+        });
+        
+        const html = sorted.map(s => {
+            const tier = (s.tier || 'silver').toLowerCase();
+            const logo = s.logo || s.name?.charAt(0) || '🏢';
+            
+            return `<a href="${s.website || '#'}" class="sponsor-item ${tier}" ${s.website ? 'target="_blank" rel="noopener"' : ''}>
+                <img class="sponsor-logo" src="${s.logo || ''}" alt="${s.name}" onerror="this.style.display='none'">
+                <span>${s.name}</span>
+                <span class="sponsor-tier">${tier}</span>
+            </a>`;
+        }).join('');
+        
+        document.getElementById('sponsorList').innerHTML = html;
+    }
+    
+    // 页面加载完成后加载赞助商
+    loadSponsors();
+})();
+</script>

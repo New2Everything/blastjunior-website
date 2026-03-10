@@ -3,190 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小狮子 - 兰星少年 HADO 俱乐部</title>
+    <title>选手详情 - 兰星少年 HADO 俱乐部</title>
+    <!-- DATA_MODULE: player_detail -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #FF6B35;
-            --primary-light: #FF8A5C;
-            --secondary: #00B4D8;
-            --bg-light: #F8FAFC;
-            --bg-white: #FFFFFF;
-            --text-dark: #1E293B;
-            --text-gray: #64748B;
-            --success: #10B981;
-            --border: #E2E8F0;
-            --shadow: 0 4px 20px rgba(0,0,0,0.08);
-            --radius: 16px;
-        }
+        :root { --primary: #FF6B35; --primary-light: #FF8A5C; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --gold: #FFD700; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
-        
         nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
         .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
         .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
-        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
         .nav-links { display: flex; gap: 0.5rem; }
         .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
-        .nav-link:hover { background: var(--primary); color: white; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
         
         .container { max-width: 800px; margin: 0 auto; padding: 1.5rem; }
         
-        /* Player Header */
-        .player-header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: var(--radius); padding: 2rem; color: white; margin-bottom: 1.5rem; text-align: center; }
-        .player-avatar-large { width: 120px; height: 120px; background: white; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: 900; color: var(--primary); box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
-        .player-name { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 0.25rem; }
-        .player-team { font-size: 1.1rem; opacity: 0.9; margin-bottom: 0.5rem; }
-        .player-title-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 0.3rem 0.75rem; border-radius: 50px; font-size: 0.9rem; font-weight: 600; }
+        /* Profile */
+        .player-profile { background: linear-gradient(135deg, var(--secondary), #00D4FF); border-radius: var(--radius); padding: 3rem; color: white; text-align: center; margin-bottom: 1.5rem; }
+        .player-avatar { width: 120px; height: 120px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 1rem; }
+        .player-name { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 900; margin-bottom: 0.5rem; }
+        .player-nickname { opacity: 0.9; font-size: 1.1rem; margin-bottom: 1rem; }
+        .player-club { display: inline-block; background: rgba(255,255,255,0.2); padding: 0.5rem 1.5rem; border-radius: 50px; }
         
-        /* Stats Grid */
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-        .stat-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.25rem; text-align: center; box-shadow: var(--shadow); }
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; text-align: center; box-shadow: var(--shadow); }
         .stat-value { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; color: var(--primary); }
-        .stat-label { font-size: 0.85rem; color: var(--text-gray); margin-top: 0.25rem; }
+        .stat-label { color: var(--text-gray); font-size: 0.85rem; margin-top: 0.25rem; }
         
         /* Section */
-        .section { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
-        .section-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+        .section { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+        .section-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
         
-        /* Badges */
-        .badges-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-        .badge-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--bg-light); border-radius: 50px; }
-        .badge-icon { font-size: 1.5rem; }
-        .badge-name { font-weight: 600; }
+        /* Team Info */
+        .team-card { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-light); border-radius: 12px; text-decoration: none; color: inherit; }
+        .team-icon { width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; }
+        .team-name { font-weight: 600; font-size: 1.1rem; }
+        .team-role { font-size: 0.85rem; color: var(--text-gray); }
         
-        /* Match History */
-        .match-list { display: flex; flex-direction: column; gap: 0.75rem; }
-        .match-row { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--bg-light); border-radius: 12px; }
-        .match-teams { display: flex; align-items: center; gap: 0.75rem; flex: 1; }
-        .match-team { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
-        .match-team-logo { width: 28px; height: 28px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
-        .match-score { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.1rem; }
-        .match-score.win { color: var(--success); }
-        .match-result { font-size: 0.85rem; color: var(--text-gray); }
+        /* Internal Stats */
+        .internal-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .internal-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-light); border-radius: 12px; }
+        .internal-rank { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; color: var(--gold); }
+        .internal-info { flex: 1; margin-left: 1rem; }
+        .internal-season { font-size: 0.8rem; color: var(--text-gray); }
+        .internal-points { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--primary); }
         
-        @media (max-width: 768px) {
-            .nav-links { display: none; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-        }
+        .loading { text-align: center; padding: 3rem; color: var(--text-gray); }
+        .empty { text-align: center; padding: 2rem; color: var(--text-gray); }
     </style>
 </head>
 <body>
-    <nav>
-        <div class="nav-container">
-            <a href="/" class="logo"><div class="logo-icon">⚡</div><span>兰星少年</span></a>
-            <div class="nav-links">
-                <a href="/" class="nav-link">首页</a>
-                <a href="/matches" class="nav-link">赛程</a>
-                <a href="/teams" class="nav-link">战队</a>
-                <a href="/players" class="nav-link">选手</a>
-                <a href="/gallery" class="nav-link">画廊</a>
-                <a href="/honor" class="nav-link">荣誉</a>
-                <a href="/join" class="nav-link">加入</a>
-            </div>
-        </div>
-    </nav>
-    
-    <div class="container">
-        <!-- Player Header -->
-        <div class="player-header">
-            <div class="player-avatar-large">🦁</div>
-            <h1 class="player-name">小狮子</h1>
-            <div class="player-team">🔥 烈焰战队</div>
-            <div class="player-title-badge">⭐ 得分王</div>
-        </div>
-        
-        <!-- Season Stats -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value">28</div>
-                <div class="stat-label">进球</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">12</div>
-                <div class="stat-label">助攻</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">40</div>
-                <div class="stat-label">直接参与</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">8</div>
-                <div class="stat-label">出场</div>
-            </div>
-        </div>
-        
-        <!-- Badges -->
-        <section class="section">
-            <h2 class="section-title">🏅 徽章成就</h2>
-            <div class="badges-grid">
-                <div class="badge-item"><span class="badge-icon">🔥</span><span class="badge-name">火之之子</span></div>
-                <div class="badge-item"><span class="badge-icon">⚡</span><span class="badge-name">闪电进球</span></div>
-                <div class="badge-item"><span class="badge-icon">🎯</span><span class="badge-name">百步穿杨</span></div>
-                <div class="badge-item"><span class="badge-icon">🏆</span><span class="badge-name">冠军成员</span></div>
-            </div>
-        </section>
-        
-        <!-- Milestones -->
-        <section class="section">
-            <h2 class="section-title">🌟 里程碑</h2>
-            <div class="match-list">
-                <div class="match-row">
-                    <div class="match-teams">
-                        <div class="match-team"><div class="match-team-logo">🦁</div>小狮子</div>
-                    </div>
-                    <div class="match-score win">⚽ 第1球</div>
-                    <div class="match-result">2026-02-15</div>
-                </div>
-                <div class="match-row">
-                    <div class="match-teams">
-                        <div class="match-team"><div class="match-team-logo">🦁</div>小狮子</div>
-                    </div>
-                    <div class="match-score win">🎯 首个帽子戏法</div>
-                    <div class="match-result">2026-02-28</div>
-                </div>
-                <div class="match-row">
-                    <div class="match-teams">
-                        <div class="match-team"><div class="match-team-logo">🦁</div>小狮子</div>
-                    </div>
-                    <div class="match-score win">🏆 获得得分王</div>
-                    <div class="match-result">2026-03-01</div>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Recent Matches -->
-        <section class="section">
-            <h2 class="section-title">⚔️ 最近比赛</h2>
-            <div class="match-list">
-                <div class="match-row">
-                    <div class="match-teams">
-                        <div class="match-team"><div class="match-team-logo">🔥</div>烈焰</div>
-                        <div class="match-score win">3 : 1</div>
-                        <div class="match-team"><div class="match-team-logo">⚡</div>雷霆</div>
-                    </div>
-                    <div class="match-result">今天 14:30</div>
-                </div>
-                <div class="match-row">
-                    <div class="match-teams">
-                        <div class="match-team"><div class="match-team-logo">🌟</div>星光</div>
-                        <div class="match-score win">2 : 1</div>
-                        <div class="match-team"><div class="match-team-logo">🔥</div>烈焰</div>
-                    </div>
-                    <div class="match-result">昨天 16:00</div>
-                </div>
-                <div class="match-row">
-                    <div class="match-teams">
-                        <div class="match-team"><div class="match-team-logo">🔥</div>烈焰</div>
-                        <div class="match-score win">4 : 0</div>
-                        <div class="match-team"><div class="match-team-logo">🏆</div>冠军</div>
-                    </div>
-                    <div class="match-result">3月3日</div>
-                </div>
-            </div>
-        </section>
+    <nav></nav>
+
+    <!-- 赞助商横条 -->
+    <style>
+    .sponsor-bar { background: linear-gradient(135deg, #1E293B 0%, #334155 100%); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .sponsor-label { font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.25rem; }
+    .sponsor-label::before { content: "🤝"; }
+    .sponsor-list { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+    .sponsor-item { display: flex; align-items: center; gap: 0.5rem; color: white; text-decoration: none; font-size: 0.9rem; font-weight: 500; padding: 0.4rem 0.75rem; border-radius: 6px; transition: all 0.2s; background: rgba(255,255,255,0.05); }
+    .sponsor-item:hover { background: rgba(255,255,255,0.15); transform: translateY(-1px); }
+    .sponsor-item.platinum { border-left: 3px solid #E5E4E2; }
+    .sponsor-item.platinum .sponsor-tier { color: #E5E4E2; }
+    .sponsor-item.gold { border-left: 3px solid #FFD700; }
+    .sponsor-item.gold .sponsor-tier { color: #FFD700; }
+    .sponsor-item.silver { border-left: 3px solid #C0C0C0; }
+    .sponsor-item.silver .sponsor-tier { color: #C0C0C0; }
+    .sponsor-logo { width: 24px; height: 24px; border-radius: 4px; object-fit: cover; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+    .sponsor-tier { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; opacity: 0.8; }
+    .sponsor-empty { color: rgba(255,255,255,0.4); font-size: 0.85rem; }
+    @media (max-width: 768px) { .sponsor-bar { padding: 0.6rem 1rem; } .sponsor-label { width: 100%; justify-content: center; margin-bottom: 0.5rem; } .sponsor-list { gap: 0.75rem; } .sponsor-item { font-size: 0.8rem; padding: 0.3rem 0.6rem; } }
+    </style>
+    <div class="sponsor-bar" id="sponsorBar">
+        <div class="sponsor-label">赞助商</div>
+        <div class="sponsor-list" id="sponsorList"><span class="sponsor-empty">加载中...</span></div>
     </div>
+    <script>
+    (function() {
+        const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+        const TIER_ORDER = { 'platinum': 1, 'gold': 2, 'silver': 3 };
+        async function loadSponsors() {
+            try {
+                const resp = await fetch(API_BASE + '/sponsors');
+                const result = await resp.json();
+                if (!result.ok || !result.data || result.data.length === 0) {
+                    const homeResp = await fetch(API_BASE + '/');
+                    const homeResult = await homeResp.json();
+                    const sponsors = homeResult.data?.sponsors || [];
+                    renderSponsors(sponsors);
+                    return;
+                }
+                renderSponsors(result.data);
+            } catch (e) { console.error('加载赞助商失败:', e); document.getElementById('sponsorList').innerHTML = '<span class="sponsor-empty">暂无赞助商</span>'; }
+        }
+        function renderSponsors(sponsors) {
+            if (!sponsors || sponsors.length === 0) { document.getElementById('sponsorList').innerHTML = '<span class="sponsor-empty">暂无赞助商</span>'; return; }
+            const sorted = [...sponsors].sort((a, b) => { const tierA = TIER_ORDER[a.tier?.toLowerCase()] || 99; const tierB = TIER_ORDER[b.tier?.toLowerCase()] || 99; return tierA - tierB; });
+            const html = sorted.map(s => { const tier = (s.tier || 'silver').toLowerCase(); return `<a href="${s.website || '#'}" class="sponsor-item ${tier}" ${s.website ? 'target="_blank" rel="noopener"' : ''}><img class="sponsor-logo" src="${s.logo || ''}" alt="${s.name}" onerror="this.style.display='none'"><span>${s.name}</span><span class="sponsor-tier">${tier}</span></a>`; }).join('');
+            document.getElementById('sponsorList').innerHTML = html;
+        }
+        loadSponsors();
+    })();
+    </script>
+
+    <main
+
+    <main class="container">
+        <!-- DATA_MODULE: player_info -->
+        <div id="playerProfile" class="loading">加载选手信息...</div>
+        
+        <!-- DATA_MODULE: player_team_current -->
+        <section id="playerTeam" class="section" style="display:none;">
+            <h2 class="section-title">🏟️ 当前所属战队 <span style="font-size:0.8rem;font-weight:400;color:var(--text-gray);">(联赛)</span></h2>
+            <div id="teamInfo"></div>
+        </section>
+        
+        <!-- DATA_MODULE: player_team_history -->
+        <section id="playerTeamHistory" class="section" style="display:none;">
+            <h2 class="section-title">📜 历史效力战队</h2>
+            <div id="teamHistoryInfo"></div>
+        </section>
+        
+        <!-- DATA_MODULE: player_internal_stats -->
+        <section id="playerInternal" class="section" style="display:none;">
+            <h2 class="section-title">📊 内部联赛排名（3v3）</h2>
+            <p style="color: var(--text-gray); font-size: 0.85rem; margin-bottom: 1rem;">各赛季独立排名，不混总积分</p>
+            <div id="internalStats" class="internal-list"></div>
+        </section>
+    </main>
+
+    <script>
+        const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+        
+        // 获取URL参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const playerId = urlParams.get('id') || 'lx_001';
+        
+        // 加载选手信息
+        async function loadPlayerInfo() {
+            try {
+                // 获取选手列表（包含当前战队和历史战队）
+                const resp = await fetch(API_BASE + '/players');
+                const result = await resp.json();
+                const player = (result.data || []).find(p => p.id === playerId);
+                
+                if (!player) {
+                    document.getElementById('playerProfile').innerHTML = '<div class="empty">选手不存在</div>';
+                    return;
+                }
+                
+                // 渲染Profile
+                document.getElementById('playerProfile').className = 'player-profile';
+                document.getElementById('playerProfile').innerHTML = `
+                    <div class="player-avatar">${player.name?.charAt(0) || '?'}</div>
+                    <h1 class="player-name">${player.name}</h1>
+                    <p class="player-nickname">${player.real_name || ''}</p>
+                    <span class="player-club">🏓 3v3选手 · ${player.is_active ? '活跃选手' : '历史选手'}</span>
+                `;
+                document.title = `${player.name} - 兰星少年 HADO 俱乐部`;
+                
+                // 加载当前战队信息
+                loadPlayerCurrentTeam(player);
+                
+                // 加载历史战队信息
+                loadPlayerTeamHistory(player);
+                
+                // 加载内部联赛数据
+                loadPlayerInternalStats(playerId);
+            } catch (e) {
+                console.error(e);
+                document.getElementById('playerProfile').innerHTML = '<div class="empty">加载失败</div>';
+            }
+        }
+        
+        // 加载选手当前所属战队（联赛）
+        async function loadPlayerCurrentTeam(player) {
+            const section = document.getElementById('playerTeam');
+            const container = document.getElementById('teamInfo');
+            
+            if (!player.current_team) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            const team = player.current_team;
+            const leagueBadge = team.isLeague ? '🏅' : '🏆';
+            
+            container.innerHTML = `
+                <a href="/team-detail.html?id=${team.id}" class="team-card">
+                    <div class="team-icon">⚔️</div>
+                    <div>
+                        <div class="team-name">${team.name}</div>
+                        <div class="team-role">${leagueBadge} ${team.season || '当前赛季'}</div>
+                    </div>
+                </a>
+            `;
+        }
+        
+        // 加载选手历史效力战队
+        function loadPlayerTeamHistory(player) {
+            const section = document.getElementById('playerTeamHistory');
+            const container = document.getElementById('teamHistoryInfo');
+            
+            if (!player.team_history || player.team_history.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            // 按时间分组显示
+            const history = player.team_history;
+            let html = '<div style="display:flex;flex-direction:column;gap:0.75rem;">';
+            
+            history.forEach((h, idx) => {
+                const typeBadge = h.isLeague ? '🏅' : '🏆';
+                const currentBadge = h.isCurrent ? '· 现役' : '';
+                const seasonLabel = h.season_id?.replace('hpl_', '').replace('_', ' ') || h.season_id;
+                
+                html += `
+                    <div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:var(--bg-light);border-radius:12px;">
+                        <div style="font-size:1.5rem;">${h.isCurrent ? '⭐' : '➡️'}</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:600;">${h.team_name}</div>
+                            <div style="font-size:0.8rem;color:var(--text-gray);">${typeBadge} ${seasonLabel} ${h.isCup ? '(杯赛)' : ''}${currentBadge}</div>
+                        </div>
+                        <a href="/team-detail.html?id=${h.team_id}" style="color:var(--primary);text-decoration:none;font-size:0.9rem;">查看 →</a>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            section.style.display = 'block';
+            container.innerHTML = html;
+        }
+        
+        // 加载内部联赛数据
+        async function loadPlayerInternalStats(playerId) {
+            try {
+                // 从内部联赛结果中查找该选手
+                const resp = await fetch(API_BASE + '/internal-rounds');
+                const result = await resp.json();
+                
+                const rounds = result.data || [];
+                const playerStats = [];
+                
+                rounds.forEach(round => {
+                    (round.topPlayers || []).forEach(p => {
+                        if (p.name) {
+                            playerStats.push({
+                                season: round.season_id,
+                                rank: p.rank,
+                                points: p.points,
+                                total: p.total
+                            });
+                        }
+                    });
+                });
+                
+                // 只取该选手的数据
+                const myStats = playerStats.slice(0, 10);
+                
+                if (myStats.length > 0) {
+                    document.getElementById('playerInternal').style.display = 'block';
+                    
+                    document.getElementById('internalStats').innerHTML = myStats.map(s => `
+                        <div class="internal-item">
+                            <div class="internal-rank">#${s.rank}</div>
+                            <div class="internal-info">
+                                <div class="internal-season">${s.season || '赛季'}</div>
+                            </div>
+                            <div class="internal-points">${s.points}分</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        
+        loadPlayerInfo();
+    </script>
+    <script src="/components/nav-loader.js"></script>
 </body>
 </html>

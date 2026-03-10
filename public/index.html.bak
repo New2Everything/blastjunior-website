@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>兰星少年 HADO 俱乐部 - 官网</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #FF6B35; --primary-light: #FF8A5C; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); padding-top: 64px; }
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: fixed; top: 0; left: 0; right: 0; z-index: 9999; width: 100%; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+        .user-area { display: flex; align-items: center; gap: 0.75rem; }
+        .btn { padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-gray); }
+        
+        .hero { background: linear-gradient(135deg, var(--primary), #FF8A5C); padding: 4rem 1.5rem; text-align: center; color: white; }
+        .hero h1 { font-family: 'Outfit', sans-serif; font-size: 3rem; font-weight: 900; margin-bottom: 1rem; }
+        .hero p { font-size: 1.25rem; opacity: 0.9; margin-bottom: 2rem; }
+        .hero-tags { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+        .hero-tag { background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.9rem; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        
+        .main-layout { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; }
+        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
+        
+        .sidebar { display: flex; flex-direction: column; gap: 1rem; }
+        .sidebar-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); }
+        .sidebar-title { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        
+        .online-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .online-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+        .online-dot { width: 8px; height: 8px; background: #10B981; border-radius: 50%; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+        .stat-item { text-align: center; padding: 0.75rem; background: var(--bg-light); border-radius: 8px; }
+        .stat-num { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.5rem; color: var(--primary); }
+        .stat-label { font-size: 0.75rem; color: var(--text-gray); }
+        
+        .section { margin-bottom: 2rem; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .section-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 900; }
+        .section-more { color: var(--primary); text-decoration: none; font-size: 0.9rem; }
+        
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+        
+        .news-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); text-decoration: none; color: inherit; display: block; }
+        .news-card:hover { transform: translateY(-2px); }
+        .news-tag { display: inline-block; background: var(--secondary); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .news-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem; line-height: 1.4; }
+        .news-summary { font-size: 0.85rem; color: var(--text-gray); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-date { font-size: 0.75rem; color: var(--text-gray); margin-top: 0.75rem; }
+        
+        .sponsor-card { background: var(--bg-white); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); margin-bottom: 0.75rem; border-left: 4px solid var(--primary); }
+        .sponsor-name { font-weight: 700; font-size: 0.95rem; }
+        .sponsor-level { font-size: 0.75rem; color: var(--primary); font-weight: 600; }
+        .sponsor-tagline { font-size: 0.8rem; color: var(--text-gray); margin-top: 0.25rem; }
+        
+        .match-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 0.75rem; }
+        .match-league { font-size: 0.8rem; color: var(--text-gray); }
+        .match-teams { display: flex; justify-content: space-between; align-items: center; }
+        .match-team { text-align: center; flex: 1; }
+        .match-team-icon { font-size: 1.5rem; }
+        .match-team-name { font-weight: 600; font-size: 0.9rem; }
+        .match-score { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.5rem; }
+        .match-time { font-size: 0.85rem; color: var(--text-gray); text-align: center; }
+        
+        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; border-radius: var(--radius); overflow: hidden; }
+        .photo-item { aspect-ratio: 1; background: var(--bg-light); display: flex; align-items: center; justify-content: center; font-size: 2rem; overflow: hidden; }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .chat-messages { display: flex; flex-direction: column; gap: 0.75rem; max-height: 300px; overflow-y: auto; }
+        .chat-msg { display: flex; gap: 0.5rem; }
+        .chat-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-light); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+        .chat-content { flex: 1; }
+        .chat-name { font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 0.25rem; }
+        .chat-badge { background: var(--primary); color: white; font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 4px; }
+        .chat-text { background: var(--bg-light); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.9rem; margin-top: 0.25rem; }
+        .chat-time { font-size: 0.7rem; color: var(--text-gray); }
+        
+        .chat-input-area { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .chat-input { flex: 1; padding: 0.6rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+        .chat-send { background: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 8px; cursor: pointer; }
+        
+        /* 骨架屏样式 */
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        
+        .skeleton-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); }
+        .skeleton-tag { height: 20px; width: 60px; border-radius: 4px; margin-bottom: 0.5rem; }
+        .skeleton-title { height: 24px; width: 80%; border-radius: 4px; margin-bottom: 0.5rem; }
+        .skeleton-text { height: 16px; width: 100%; border-radius: 4px; margin-bottom: 0.5rem; }
+        .skeleton-text.short { width: 60%; }
+        .skeleton-text.tiny { width: 40%; }
+        
+        .skeleton-news { display: flex; flex-direction: column; gap: 1rem; }
+        .skeleton-news .skeleton-tag { width: 50px; }
+        .skeleton-news .skeleton-title { width: 90%; }
+        .skeleton-news .skeleton-text { width: 100%; }
+        
+        .skeleton-match { padding: 1rem; }
+        .skeleton-match .skeleton-text { margin-bottom: 0.75rem; }
+        
+        .skeleton-photo { aspect-ratio: 1; background: var(--bg-light); }
+        
+        .skeleton-stat { text-align: center; padding: 0.75rem; }
+        .skeleton-stat .skeleton-text { height: 32px; width: 50px; margin: 0 auto 0.5rem; border-radius: 4px; }
+        
+        .skeleton-msg { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+        .skeleton-msg .skeleton-avatar { width: 32px; height: 32px; border-radius: 50%; }
+        .skeleton-msg .skeleton-content { flex: 1; }
+        .skeleton-msg .skeleton-name { height: 16px; width: 80px; border-radius: 4px; margin-bottom: 0.25rem; }
+        .skeleton-msg .skeleton-text { height: 32px; border-radius: 8px; }
+        
+        .skeleton-team { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: white; border-radius: 10px; }
+        .skeleton-team .skeleton-icon { width: 40px; height: 40px; border-radius: 10px; }
+        .skeleton-team .skeleton-info { flex: 1; }
+        .skeleton-team .skeleton-name { height: 18px; width: 100px; border-radius: 4px; margin-bottom: 0.25rem; }
+        .skeleton-team .skeleton-text { height: 14px; width: 60px; border-radius: 4px; }
+        
+        .skeleton-player { display: flex; flex-direction: column; align-items: center; padding: 1rem; background: white; border-radius: 10px; }
+        .skeleton-player .skeleton-avatar { width: 50px; height: 50px; border-radius: 50%; margin-bottom: 0.5rem; }
+        .skeleton-player .skeleton-name { height: 16px; width: 60px; border-radius: 4px; margin-bottom: 0.25rem; }
+        .skeleton-player .skeleton-text { height: 12px; width: 40px; border-radius: 4px; }
+        
+        /* 空状态优化 */
+        .empty-state { text-align: center; padding: 2rem; color: var(--text-gray); }
+        .empty-state-icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.6; }
+        .empty-state-text { font-size: 0.95rem; }
+        .empty-state-hint { font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.7; }
+        
+        /* 错误状态 */
+        .error-state { text-align: center; padding: 2rem; color: #dc2626; }
+        .error-state-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .error-state-text { font-size: 0.95rem; }
+        .error-retry { margin-top: 1rem; padding: 0.5rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .error-retry:hover { background: var(--primary-light); }
+        
+        /* 图片占位符 */
+        .img-placeholder { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 1.5rem; }
+        .img-placeholder.error { background: linear-gradient(135deg, #fecaca, #fca5a5); }
+        
+        /* 移动端汉堡菜单 */
+        .mobile-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; }
+        .mobile-menu-btn span { display: block; width: 24px; height: 2px; background: var(--text-dark); margin: 5px 0; transition: all 0.3s; }
+        .mobile-menu-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .mobile-menu-btn.active span:nth-child(2) { opacity: 0; }
+        .mobile-menu-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+        
+        .mobile-nav { display: none; position: fixed; top: 64px; left: 0; right: 0; background: var(--bg-white); border-bottom: 1px solid var(--border); padding: 1rem; z-index: 9998; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .mobile-nav.active { display: block; }
+        .mobile-nav-links { display: flex; flex-direction: column; gap: 0.5rem; }
+        .mobile-nav-link { padding: 0.75rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .mobile-nav-link:hover, .mobile-nav-link.active { background: var(--primary); color: white; }
+        
+        .loading { text-align: center; padding: 2rem; color: var(--text-gray); }
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 0.5rem; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        @media (max-width: 768px) { 
+            .nav-links { display: none; } 
+            .mobile-menu-btn { display: block; }
+            .hero h1 { font-size: 2rem; }
+            .hero-tags { gap: 0.4rem; }
+            .hero-tag { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+            .lanxing-btns { width: 100%; justify-content: center; }
+            .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">⚡</div>
+                <span>兰星HADO</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/matches" class="nav-link">赛程</a>
+                <a href="/teams" class="nav-link">战队</a>
+                <a href="/players" class="nav-link">选手</a>
+                <a href="/gallery" class="nav-link">画廊</a>
+                <a href="/news" class="nav-link">新闻</a>
+            </div>
+            <div class="user-area">
+                <button class="btn btn-outline" onclick="showAuth('login')">登录</button>
+                <button class="btn btn-primary" onclick="showAuth('register')">注册</button>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+    <div class="mobile-nav" id="mobileNav">
+        <div class="mobile-nav-links">
+            <a href="/" class="mobile-nav-link">首页</a>
+            <a href="/matches" class="mobile-nav-link">赛程</a>
+            <a href="/teams" class="mobile-nav-link">战队</a>
+            <a href="/players" class="mobile-nav-link">选手</a>
+            <a href="/gallery" class="mobile-nav-link">画廊</a>
+            <a href="/news" class="mobile-nav-link">新闻</a>
+            <hr style="border: none; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+            <a href="/login" class="mobile-nav-link">登录</a>
+            <a href="/register" class="mobile-nav-link">注册</a>
+        </div>
+    </div>
+    
+    <!-- 赞助商横条 -->
+    <style>
+    .sponsor-bar { background: linear-gradient(135deg, #1E293B 0%, #334155 100%); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .sponsor-label { font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.25rem; }
+    .sponsor-label::before { content: "🤝"; }
+    .sponsor-list { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+    .sponsor-item { display: flex; align-items: center; gap: 0.5rem; color: white; text-decoration: none; font-size: 0.9rem; font-weight: 500; padding: 0.4rem 0.75rem; border-radius: 6px; transition: all 0.2s; background: rgba(255,255,255,0.05); }
+    .sponsor-item:hover { background: rgba(255,255,255,0.15); transform: translateY(-1px); }
+    .sponsor-item.platinum { border-left: 3px solid #E5E4E2; }
+    .sponsor-item.platinum .sponsor-tier { color: #E5E4E2; }
+    .sponsor-item.gold { border-left: 3px solid #FFD700; }
+    .sponsor-item.gold .sponsor-tier { color: #FFD700; }
+    .sponsor-item.silver { border-left: 3px solid #C0C0C0; }
+    .sponsor-item.silver .sponsor-tier { color: #C0C0C0; }
+    .sponsor-logo { width: 24px; height: 24px; border-radius: 4px; object-fit: cover; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+    .sponsor-tier { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; opacity: 0.8; }
+    .sponsor-empty { color: rgba(255,255,255,0.4); font-size: 0.85rem; }
+    @media (max-width: 768px) { .sponsor-bar { padding: 0.6rem 1rem; } .sponsor-label { width: 100%; justify-content: center; margin-bottom: 0.5rem; } .sponsor-list { gap: 0.75rem; } .sponsor-item { font-size: 0.8rem; padding: 0.3rem 0.6rem; } }
+    </style>
+    <div class="sponsor-bar" id="sponsorBar">
+        <div class="sponsor-label">赞助商</div>
+        <div class="sponsor-list" id="sponsorList"><span class="sponsor-empty">加载中...</span></div>
+    </div>
+    <script>
+    (function() {
+        const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+        const TIER_ORDER = { 'platinum': 1, 'gold': 2, 'silver': 3 };
+        async function loadSponsors() {
+            try {
+                const resp = await fetch(API_BASE + '/sponsors');
+                const result = await resp.json();
+                if (!result.ok || !result.data || result.data.length === 0) {
+                    const homeResp = await fetch(API_BASE + '/');
+                    const homeResult = await homeResp.json();
+                    const sponsors = homeResult.data?.sponsors || [];
+                    renderSponsors(sponsors);
+                    return;
+                }
+                renderSponsors(result.data);
+            } catch (e) { console.error('加载赞助商失败:', e); document.getElementById('sponsorList').innerHTML = '<span class="sponsor-empty">暂无赞助商</span>'; }
+        }
+        function renderSponsors(sponsors) {
+            if (!sponsors || sponsors.length === 0) { document.getElementById('sponsorList').innerHTML = '<span class="sponsor-empty">暂无赞助商</span>'; return; }
+            const sorted = [...sponsors].sort((a, b) => { const tierA = TIER_ORDER[a.tier?.toLowerCase()] || 99; const tierB = TIER_ORDER[b.tier?.toLowerCase()] || 99; return tierA - tierB; });
+            const html = sorted.map(s => { const tier = (s.tier || 'silver').toLowerCase(); return `<a href="${s.website || '#'}" class="sponsor-item ${tier}" ${s.website ? 'target="_blank" rel="noopener"' : ''}><img class="sponsor-logo" src="${s.logo || ''}" alt="${s.name}" onerror="this.style.display='none'"><span>${s.name}</span><span class="sponsor-tier">${tier}</span></a>`; }).join('');
+            document.getElementById('sponsorList').innerHTML = html;
+        }
+        loadSponsors();
+    })();
+    </script>
+    
+    <section class="hero">
+        <h1>⚡ 兰星少年 HADO 俱乐部</h1>
+        <p>燃烧你的能量，追逐冠军梦想！</p>
+        <div class="hero-tags">
+            <span class="hero-tag">🏓 HADO 3v3</span>
+            <span class="hero-tag">⚔️ 每局3分钟</span>
+            <span class="hero-tag">🏆 第二届HPL进行中</span>
+            <span class="hero-tag">👨‍🏫 专业训练</span>
+        </div>
+    </section>
+    
+    <!-- 兰星专区 -->
+    <style>
+    .lanxing-zone { background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%); border-bottom: 2px solid #FF6B35; }
+    .lanxing-zone .container { padding: 2rem 1.5rem; }
+    .lanxing-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .lanxing-title { font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 900; color: #FF6B35; display: flex; align-items: center; gap: 0.5rem; }
+    .lanxing-title::before { content: "⭐"; }
+    .lanxing-btns { display: flex; gap: 0.75rem; }
+    .lanxing-btn { padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 0.9rem; transition: all 0.2s; }
+    .lanxing-btn.teams { background: #FF6B35; color: white; }
+    .lanxing-btn.teams:hover { background: #E55A2B; }
+    .lanxing-btn.players { background: #00B4D8; color: white; }
+    .lanxing-btn.players:hover { background: #0096B7; }
+    .lanxing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    @media (max-width: 768px) { .lanxing-grid { grid-template-columns: 1fr; } }
+    .lanxing-section h3 { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: #1E293B; display: flex; align-items: center; gap: 0.5rem; }
+    .lanxing-teams-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .lanxing-team-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-decoration: none; color: inherit; transition: all 0.2s; }
+    .lanxing-team-item:hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .lanxing-team-icon { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #FF6B35, #FF8A5C); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+    .lanxing-team-info { flex: 1; }
+    .lanxing-team-name { font-weight: 700; font-size: 0.95rem; }
+    .lanxing-team-tag { font-size: 0.75rem; color: #64748B; }
+    .lanxing-team-arrow { color: #FF6B35; }
+    .lanxing-players-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; }
+    .lanxing-player-item { display: flex; flex-direction: column; align-items: center; padding: 1rem 0.75rem; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-decoration: none; color: inherit; transition: all 0.2s; }
+    .lanxing-player-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .lanxing-player-avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #FF6B35, #FF8A5C); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .lanxing-player-name { font-weight: 700; font-size: 0.9rem; text-align: center; }
+    .lanxing-player-team { font-size: 0.75rem; color: #64748B; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lanxing-player-rank { font-size: 0.7rem; background: linear-gradient(135deg, #FFD700, #FFA500); color: white; padding: 0.15rem 0.4rem; border-radius: 4px; margin-top: 0.25rem; }
+    </style>
+    <section class="lanxing-zone" id="lanxingZone">
+        <div class="container">
+            <div class="lanxing-header">
+                <h2 class="lanxing-title">兰星专区</h2>
+                <div class="lanxing-btns">
+                    <a href="/teams" class="lanxing-btn teams">查看全部战队</a>
+                    <a href="/players" class="lanxing-btn players">查看全部选手</a>
+                </div>
+            </div>
+            <div class="lanxing-grid">
+                <div class="lanxing-section">
+                    <h3>🔥 兰星战队 TOP3</h3>
+                    <div class="lanxing-teams-list" id="lanxingTeamsList">
+                        <div class="skeleton-team"><div class="skeleton skeleton-icon"></div><div class="skeleton-info"><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div></div>
+                        <div class="skeleton-team"><div class="skeleton skeleton-icon"></div><div class="skeleton-info"><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div></div>
+                        <div class="skeleton-team"><div class="skeleton skeleton-icon"></div><div class="skeleton-info"><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div></div>
+                    </div>
+                </div>
+                <div class="lanxing-section">
+                    <h3>⭐ 兰星选手 TOP5</h3>
+                    <div class="lanxing-players-list" id="lanxingPlayersList">
+                        <div class="skeleton-player"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div>
+                        <div class="skeleton-player"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div>
+                        <div class="skeleton-player"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div>
+                        <div class="skeleton-player"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div>
+                        <div class="skeleton-player"><div class="skeleton skeleton-avatar"></div><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <div class="container">
+        <div class="main-layout">
+            <main>
+                <!-- 骨架屏 - 新闻 -->
+                <section class="section" id="newsSection">
+                    <div class="section-header">
+                        <h2 class="section-title">📰 最新动态</h2>
+                    </div>
+                    <div class="cards-grid" id="newsGrid">
+                        <div class="skeleton-card skeleton-news"><div class="skeleton skeleton-tag"></div><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>
+                        <div class="skeleton-card skeleton-news"><div class="skeleton skeleton-tag"></div><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>
+                        <div class="skeleton-card skeleton-news"><div class="skeleton skeleton-tag"></div><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>
+                    </div>
+                </section>
+                
+                <!-- 骨架屏 - 赛果 -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">🏆 最新赛果</h2>
+                        <a href="/matches" class="section-more">更多 ></a>
+                    </div>
+                    <div class="cards-grid" id="matchesGrid">
+                        <div class="skeleton-card skeleton-match"><div class="skeleton skeleton-text" style="width: 60%"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>
+                        <div class="skeleton-card skeleton-match"><div class="skeleton skeleton-text" style="width: 60%"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>
+                        <div class="skeleton-card skeleton-match"><div class="skeleton skeleton-text" style="width: 60%"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>
+                    </div>
+                </section>
+                
+                <!-- 骨架屏 - 精选照片 -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">📸 精彩瞬间</h2>
+                        <a href="/gallery" class="section-more">更多 ></a>
+                    </div>
+                    <div class="photo-grid" id="photoGrid">
+                        <div class="skeleton skeleton-photo"></div>
+                        <div class="skeleton skeleton-photo"></div>
+                        <div class="skeleton skeleton-photo"></div>
+                        <div class="skeleton skeleton-photo"></div>
+                        <div class="skeleton skeleton-photo"></div>
+                        <div class="skeleton skeleton-photo"></div>
+                    </div>
+                </section>
+            </main>
+            
+            <aside class="sidebar">
+                <!-- 在线用户 -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">🟢 在线用户 (<span id="onlineCount">-</span>)</h3>
+                    <div class="online-list" id="onlineList">
+                        <div class="skeleton-msg"><div class="skeleton skeleton-avatar"></div><div class="skeleton-content"><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div></div>
+                        <div class="skeleton-msg"><div class="skeleton skeleton-avatar"></div><div class="skeleton-content"><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div></div>
+                        <div class="skeleton-msg"><div class="skeleton skeleton-avatar"></div><div class="skeleton-content"><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div></div>
+                    </div>
+                </div>
+                
+                <!-- 当前赛季 -->
+                <div class="sidebar-card" id="currentSeasonCard" style="display:none;">
+                    <h3 class="sidebar-title">🏆 当前赛季</h3>
+                    <div class="current-season">
+                        <div class="season-name" id="seasonName">-</div>
+                        <div class="season-status" id="seasonStatus">-</div>
+                        <div class="season-teams-count" id="seasonTeamsCount">-</div>
+                    </div>
+                </div>
+                
+                <!-- TOP战队 -->
+                <div class="sidebar-card" id="topTeamsCard" style="display:none;">
+                    <h3 class="sidebar-title">🔥 TOP战队</h3>
+                    <div class="top-teams" id="topTeamsList"></div>
+                </div>
+                
+                <!-- 数据统计 -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">📊 数据统计</h3>
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="skeleton-stat"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text tiny"></div></div>
+                        <div class="skeleton-stat"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text tiny"></div></div>
+                        <div class="skeleton-stat"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text tiny"></div></div>
+                    </div>
+                </div>
+                
+                <!-- 赞助商 -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">🤝 合作伙伴</h3>
+                    <div id="sponsorsList">
+                        <div class="skeleton-card" style="margin-bottom: 0.75rem"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text tiny"></div><div class="skeleton skeleton-text short"></div></div>
+                        <div class="skeleton-card" style="margin-bottom: 0.75rem"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text tiny"></div><div class="skeleton skeleton-text short"></div></div>
+                    </div>
+                </div>
+                
+                <!-- 社区聊天 -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">💬 社区动态</h3>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="skeleton-msg"><div class="skeleton skeleton-avatar"></div><div class="skeleton-content"><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div></div>
+                        <div class="skeleton-msg"><div class="skeleton skeleton-avatar"></div><div class="skeleton-content"><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div></div>
+                        <div class="skeleton-msg"><div class="skeleton skeleton-avatar"></div><div class="skeleton-content"><div class="skeleton skeleton-name"></div><div class="skeleton skeleton-text"></div></div></div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="说点什么...">
+                        <button class="chat-send" onclick="sendMessage()">发送</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+        
+        // 移动端菜单切换
+        function toggleMobileMenu() {
+            const btn = document.querySelector('.mobile-menu-btn');
+            const nav = document.getElementById('mobileNav');
+            btn.classList.toggle('active');
+            nav.classList.toggle('active');
+        }
+        
+        // 关闭移动端菜单
+        function closeMobileMenu() {
+            document.querySelector('.mobile-menu-btn').classList.remove('active');
+            document.getElementById('mobileNav').classList.remove('active');
+        }
+        
+        // 空状态模板
+        function getEmptyState(icon, text, hint = '') {
+            return `<div class="empty-state">
+                <div class="empty-state-icon">${icon}</div>
+                <div class="empty-state-text">${text}</div>
+                ${hint ? `<div class="empty-state-hint">${hint}</div>` : ''}
+            </div>`;
+        }
+        
+        // 错误状态模板
+        function getErrorState(text, retryFn = '') {
+            return `<div class="error-state">
+                <div class="error-state-icon">⚠️</div>
+                <div class="error-state-text">${text}</div>
+                ${retryFn ? `<button class="error-retry" onclick="${retryFn}">重试</button>` : ''}
+            </div>`;
+        }
+        
+        // 加载状态模板
+        function getLoadingState(text = '加载中...') {
+            return `<div class="loading"><span class="loading-spinner"></span>${text}</div>`;
+        }
+        
+        async function loadHomeData() {
+            try {
+                const resp = await fetch(API_BASE + '/');
+                const result = await resp.json();
+                if (!result.ok) throw new Error(result.error);
+                
+                const data = result.data;
+                
+                // 在线用户
+                document.getElementById('onlineCount').textContent = data.onlineCount || 0;
+                
+                // 统计数据
+                if (data.stats) {
+                    document.getElementById('statMatches').textContent = data.stats.totalMatches || '-';
+                    document.getElementById('statPlayers').textContent = data.stats.totalPlayers || '-';
+                    document.getElementById('statTeams').textContent = data.stats.totalTeams || '-';
+                }
+                
+                // 当前赛季
+                if (data.currentSeason) {
+                    document.getElementById('currentSeasonCard').style.display = 'block';
+                    document.getElementById('seasonName').textContent = data.currentSeason.name || '';
+                    document.getElementById('seasonStatus').textContent = data.currentSeason.status === 'ongoing' ? '进行中' : '';
+                }
+                
+                // TOP战队
+                if (data.topTeams && data.topTeams.length > 0) {
+                    document.getElementById('topTeamsCard').style.display = 'block';
+                    document.getElementById('topTeamsList').innerHTML = data.topTeams.map(t => 
+                        `<div class="top-team-item">
+                            <span class="top-rank">${t.rank}</span>
+                            <span class="top-name">${t.name}</span>
+                            <span class="top-points">${t.points}分</span>
+                        </div>`
+                    ).join('');
+                }
+                
+                // 加载兰星专区数据
+                loadLanxingData();
+                
+                // 新闻 - 从D1
+                renderNews(data.news || []);
+                
+                // 赞助商 - 从D1
+                renderSponsors(data.sponsors || []);
+                
+                // 赛果
+                loadMatches();
+                
+                // 精选照片 - 从R2
+                renderPhotos(data.featuredPhotos || []);
+                
+                // 社区消息 - 从R2
+                renderMessages(data.messages || []);
+                
+            } catch (e) {
+                console.error('加载数据失败:', e);
+                // 显示错误状态
+                document.getElementById('newsGrid').innerHTML = getErrorState('加载失败，请检查网络', 'loadHomeData()');
+                document.getElementById('matchesGrid').innerHTML = getErrorState('加载失败，请检查网络', 'loadMatches()');
+                document.getElementById('photoGrid').innerHTML = getErrorState('加载失败，请检查网络', 'loadHomeData()');
+            }
+        }
+        
+        function renderNews(news) {
+            if (!news || news.length === 0) {
+                document.getElementById('newsGrid').innerHTML = getEmptyState('📰', '暂无新闻', '即将发布最新动态');
+                return;
+            }
+            
+            const html = news.slice(0, 3).map(n => {
+                // 安全处理字段，避免undefined
+                const tag = n.category || n.tag || '动态';
+                const title = n.title || '无标题';
+                const summary = n.summary || (n.content ? n.content.substring(0, 100) + '...' : '');
+                const date = n.published_at || n.date || '';
+                return `
+                    <div class="news-card">
+                        <span class="news-tag">${tag}</span>
+                        <h3 class="news-title">${title}</h3>
+                        <p class="news-summary">${summary}</p>
+                        <div class="news-date">${date}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('newsGrid').innerHTML = html;
+        }
+        
+        function renderSponsors(sponsors) {
+            if (!sponsors || sponsors.length === 0) {
+                document.getElementById('sponsorsList').innerHTML = getEmptyState('🤝', '暂无赞助商', '成为合作伙伴');
+                return;
+            }
+            
+            const html = sponsors.slice(0, 3).map(s => {
+                const name = s.name || '未知赞助商';
+                const level = s.tier || s.level || '';
+                const tagline = s.tagline || '';
+                return `
+                    <div class="sponsor-card">
+                        <div class="sponsor-name">${name}</div>
+                        <div class="sponsor-level">${level}</div>
+                        <div class="sponsor-tagline">${tagline}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('sponsorsList').innerHTML = html;
+        }
+        
+        async function loadMatches() {
+            try {
+                const resp = await fetch(API_BASE + '/matches');
+                const result = await resp.json();
+                if (!result.ok) {
+                    document.getElementById('matchesGrid').innerHTML = getEmptyState('🏆', '暂无比赛', '即将开始新赛季');
+                    return;
+                }
+                
+                const matches = result.data || [];
+                if (matches.length === 0) {
+                    document.getElementById('matchesGrid').innerHTML = getEmptyState('🏆', '暂无比赛', '即将开始新赛季');
+                    return;
+                }
+                const html = matches.map(m => {
+                    const league = m.name || m.league || '联赛';
+                    const group = m.group_name || m.group || '';
+                    const team1 = m.team1_name || m.team1 || '球队1';
+                    const team2 = m.team2_name || m.team2 || '球队2';
+                    const score1 = m.score1 !== undefined ? m.score1 : '-';
+                    const score2 = m.score2 !== undefined ? m.score2 : '-';
+                    const matchTime = m.match_time || m.time || '';
+                    
+                    if (m.status === 'finished') {
+                        return `<div class="match-card">
+                            <div class="match-league">${league} · ${group}</div>
+                            <div class="match-teams">
+                                <div class="match-team"><div class="match-team-icon">🔥</div><div class="match-team-name">${team1}</div></div>
+                                <div class="match-score">${score1} - ${score2}</div>
+                                <div class="match-team"><div class="match-team-icon">⭐</div><div class="match-team-name">${team2}</div></div>
+                            </div>
+                            <div class="match-time">${matchTime}</div>
+                        </div>`;
+                    } else {
+                        return `<div class="match-card">
+                            <div class="match-league">${league} · ${group}</div>
+                            <div class="match-teams">
+                                <div class="match-team"><div class="match-team-icon">🔥</div><div class="match-team-name">${team1}</div></div>
+                                <div class="match-score">VS</div>
+                                <div class="match-team"><div class="match-team-icon">⭐</div><div class="match-team-name">${team2}</div></div>
+                            </div>
+                            <div class="match-time">${matchTime}</div>
+                        </div>`;
+                    }
+                }).join('');
+                
+                document.getElementById('matchesGrid').innerHTML = html || '<div class="loading">暂无比赛</div>';
+            } catch (e) {
+                console.error('加载赛果失败:', e);
+            }
+        }
+        
+        function renderPhotos(photos) {
+            if (!photos || photos.length === 0) {
+                document.getElementById('photoGrid').innerHTML = getEmptyState('📸', '暂无照片', '上传你的精彩瞬间');
+                return;
+            }
+            
+            const html = photos.slice(0, 6).map(p => {
+                const imgSrc = p.cover || p.url || '';
+                return `<div class="photo-item">
+                    <img src="${imgSrc}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'img-placeholder error\\'>🖼️</div>'">
+                </div>`;
+            }).join('');
+            
+            document.getElementById('photoGrid').innerHTML = html;
+        }
+        
+        function renderMessages(messages) {
+            if (!messages || messages.length === 0) {
+                document.getElementById('chatMessages').innerHTML = getEmptyState('💬', '暂无消息', '登录后参与讨论');
+                return;
+            }
+            
+            const html = messages.slice(0, 8).map(m => {
+                const badge = m.badge ? `<span class="chat-badge">${m.badge}</span>` : '';
+                const avatar = m.avatar || '👤';
+                const name = m.name || '匿名';
+                const content = m.content || '';
+                const time = m.time || '';
+                return `<div class="chat-msg">
+                    <div class="chat-avatar">${avatar}</div>
+                    <div class="chat-content">
+                        <div class="chat-name">${name} ${badge}</div>
+                        <div class="chat-text">${content}</div>
+                        <div class="chat-time">${time}</div>
+                    </div>
+                </div>`;
+            }).join('');
+            
+            document.getElementById('chatMessages').innerHTML = html;
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const content = input.value.trim();
+            if (!content) return;
+            
+            alert('请先登录后发言~');
+            input.value = '';
+        }
+        
+        function showAuth(type) {
+            if (type === 'login') {
+                window.location.href = '/login';
+            } else if (type === 'register') {
+                window.location.href = '/register';
+            }
+        }
+        
+        // 兰星专区数据加载
+        async function loadLanxingData() {
+            try {
+                // 加载战队数据
+                const teamsResp = await fetch(API_BASE + '/teams');
+                const teamsResult = await teamsResp.json();
+                if (teamsResult.ok && teamsResult.data) {
+                    const lanxingTeams = teamsResult.data
+                        .filter(t => t.club_id === 'lanxing')
+                        .slice(0, 3);
+                    renderLanxingTeams(lanxingTeams);
+                }
+                
+                // 加载选手数据
+                const playersResp = await fetch(API_BASE + '/players');
+                const playersResult = await playersResp.json();
+                if (playersResult.ok && playersResult.data) {
+                    const lanxingPlayers = playersResult.data
+                        .filter(p => p.club_name === '兰星少年俱乐部')
+                        .sort((a, b) => (b.internal_rank?.points || 0) - (a.internal_rank?.points || 0))
+                        .slice(0, 5);
+                    renderLanxingPlayers(lanxingPlayers);
+                }
+            } catch (e) {
+                console.error('加载兰星专区数据失败:', e);
+            }
+        }
+        
+        function renderLanxingTeams(teams) {
+            if (!teams || teams.length === 0) {
+                document.getElementById('lanxingTeamsList').innerHTML = getEmptyState('🔥', '暂无战队', '创建你的战队');
+                return;
+            }
+            
+            const html = teams.map(t => `
+                <a href="/team-detail.html?id=${t.id}" class="lanxing-team-item">
+                    <div class="lanxing-team-icon">🔥</div>
+                    <div class="lanxing-team-info">
+                        <div class="lanxing-team-name">${t.name}</div>
+                        <div class="lanxing-team-tag">${t.team_type || '俱乐部战队'}</div>
+                    </div>
+                    <div class="lanxing-team-arrow">→</div>
+                </a>
+            `).join('');
+            
+            document.getElementById('lanxingTeamsList').innerHTML = html;
+        }
+        
+        function renderLanxingPlayers(players) {
+            if (!players || players.length === 0) {
+                document.getElementById('lanxingPlayersList').innerHTML = getEmptyState('⭐', '暂无选手', '加入兰星');
+                return;
+            }
+            
+            const html = players.map((p, idx) => {
+                const rank = p.internal_rank?.points || 0;
+                const rankLabel = rank > 0 ? `第${rank}名` : '-';
+                return `
+                <a href="/player-detail.html?id=${p.id}" class="lanxing-player-item">
+                    <div class="lanxing-player-avatar">${p.gender === '女' ? '👧' : '👦'}</div>
+                    <div class="lanxing-player-name">${p.name}</div>
+                    <div class="lanxing-player-team">${p.current_team?.name || '待定'}</div>
+                    <div class="lanxing-player-rank">🏆 ${rankLabel}</div>
+                </a>
+            `}).join('');
+            
+            document.getElementById('lanxingPlayersList').innerHTML = html;
+        }
+        
+        loadHomeData();
+    </script>
+    <script src="/components/nav-loader.js"></script>
+</body>
+</html>

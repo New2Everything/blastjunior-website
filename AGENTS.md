@@ -15,6 +15,15 @@ Before doing anything else:
 3. Read `memory/YYYY-MM-DD.md` (today + yesterday) for recent context
 4. **If in MAIN SESSION** (direct chat with your human): Also read `MEMORY.md`
 
+### 🌀 BLXST 项目 Sync（如适用）
+
+如果是 BLXST 项目，每次 session 开始时：
+1. 读取 `projects/BLXST-knowledge-graph.md` → 了解整体架构
+2. 读取 `projects/BLXST-status.md` → 了解当前进度
+3. 读取 `projects/BLXST-config-protection.md` → 确认关键配置
+4. 运行验证命令 → 确认系统正常
+5. 汇报状态
+
 ### �宪法 - 透明性原则
 
 **第一条：** 任何时候只要 `AGENTS.md` / `SOUL.md` / `USER.md` 里的内容被修改了，必须在会话开始时告知用户这个事实。

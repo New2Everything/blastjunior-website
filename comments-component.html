@@ -1,0 +1,556 @@
+<!-- 
+  BLXST 评论组件
+  用法: 在页面中引入此组件，并调用 initComments(targetType, targetId)
+  
+  示例:
+  <div id="comments-section" data-target-type="news" data-target-id="123"></div>
+  <script src="/comments-component.js"></script>
+-->
+<div class="blxst-comments" id="blxstComments">
+  <!-- 评论头部 -->
+  <div class="comments-header">
+    <h3 class="comments-title">💬 评论 <span class="comments-count" id="commentsCount">0</span></h3>
+  </div>
+
+  <!-- 评论列表 -->
+  <div class="comments-list" id="commentsList">
+    <div class="comments-loading">
+      <div class="loading-spinner"></div>
+      <span>加载中...</span>
+    </div>
+  </div>
+
+  <!-- 评论输入框 -->
+  <div class="comments-form" id="commentsForm">
+    <div class="comments-login-prompt" id="loginPrompt" style="display: none;">
+      <p>登录后可以参与评论</p>
+      <a href="/login.html" class="btn-login">立即登录</a>
+    </div>
+    
+    <div class="comments-input-area" id="inputArea" style="display: none;">
+      <div class="user-info" id="userInfo">
+        <img class="user-avatar" id="userAvatar" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23ddd'/><text x='50' y='50' text-anchor='middle' dy='.3em' font-size='40'>👤</text></svg>" alt="avatar">
+        <span class="user-name" id="userName">用户名</span>
+      </div>
+      <textarea 
+        class="comment-input" 
+        id="commentInput" 
+        placeholder="写下你的评论..."
+        maxlength="500"
+      ></textarea>
+      <div class="comment-input-footer">
+        <span class="char-count"><span id="charCount">0</span>/500</span>
+        <button class="btn-submit" id="btnSubmit" disabled>发布评论</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.blxst-comments {
+  background: var(--bg-white, #fff);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+.comments-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.comments-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.comments-count {
+  background: #f1f5f9;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* 加载状态 */
+.comments-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: #94a3b8;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #ff6b35;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 评论列表 */
+.comments-list {
+  margin-bottom: 1.5rem;
+}
+
+.comment-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+}
+
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.comment-username {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.comment-time {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.comment-content {
+  color: #334155;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.comments-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #94a3b8;
+}
+
+/* 评论表单 */
+.comments-form {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.5rem;
+}
+
+.comments-login-prompt {
+  text-align: center;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.comments-login-prompt p {
+  color: #64748b;
+  margin-bottom: 1rem;
+}
+
+.btn-login {
+  display: inline-block;
+  background: #ff6b35;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-login:hover {
+  background: #e55a2b;
+}
+
+.comments-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.comment-input {
+  width: 100%;
+  min-height: 100px;
+  padding: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.comment-input:focus {
+  outline: none;
+  border-color: #ff6b35;
+}
+
+.comment-input::placeholder {
+  color: #94a3b8;
+}
+
+.comment-input-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.char-count {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.btn-submit {
+  background: #ff6b35;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: #e55a2b;
+}
+
+.btn-submit:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+/* 错误提示 */
+.comment-error {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+/* 提交中状态 */
+.btn-submit.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.btn-submit.loading::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 0.5rem;
+  border: 2px solid white;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+</style>
+
+<script>
+// 评论组件配置
+const COMMENT_API = 'https://blast-comment-api.kanjiaming2022.workers.dev';
+const AUTH_API = 'https://blast-auth-api.kanjiaming2022.workers.dev';
+
+let currentUser = null;
+let currentTargetType = null;
+let currentTargetId = null;
+
+// 初始化评论组件
+async function initComments(targetType, targetId) {
+  currentTargetType = targetType;
+  currentTargetId = targetId;
+  
+  // 绑定字符计数
+  const input = document.getElementById('commentInput');
+  if (input) {
+    input.addEventListener('input', updateCharCount);
+  }
+  
+  // 绑定提交按钮
+  const submitBtn = document.getElementById('btnSubmit');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', submitComment);
+  }
+  
+  // 加载用户信息
+  await checkUserStatus();
+  
+  // 加载评论列表
+  await loadComments();
+}
+
+// 检查用户登录状态
+async function checkUserStatus() {
+  const token = localStorage.getItem('blxst_token');
+  const loginPrompt = document.getElementById('loginPrompt');
+  const inputArea = document.getElementById('inputArea');
+  
+  if (!token) {
+    loginPrompt.style.display = 'block';
+    inputArea.style.display = 'none';
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${AUTH_API}/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await response.json();
+    
+    if (data.ok && data.user) {
+      currentUser = data.user;
+      loginPrompt.style.display = 'none';
+      inputArea.style.display = 'flex';
+      
+      // 更新用户信息
+      const userAvatar = document.getElementById('userAvatar');
+      const userName = document.getElementById('userName');
+      
+      if (data.user.avatar_url) {
+        userAvatar.src = data.user.avatar_url;
+      }
+      userName.textContent = data.user.username || '用户';
+    } else {
+      // token 失效
+      localStorage.removeItem('blxst_token');
+      loginPrompt.style.display = 'block';
+      inputArea.style.display = 'none';
+    }
+  } catch (e) {
+    console.error('Check user status failed:', e);
+    loginPrompt.style.display = 'block';
+    inputArea.style.display = 'none';
+  }
+}
+
+// 加载评论列表
+async function loadComments() {
+  const listEl = document.getElementById('commentsList');
+  const countEl = document.getElementById('commentsCount');
+  
+  listEl.innerHTML = `
+    <div class="comments-loading">
+      <div class="loading-spinner"></div>
+      <span>加载中...</span>
+    </div>
+  `;
+  
+  try {
+    const response = await fetch(
+      `${COMMENT_API}/comments?target_type=${currentTargetType}&target_id=${currentTargetId}&status=approved`
+    );
+    const data = await response.json();
+    
+    if (data.ok) {
+      countEl.textContent = data.total || 0;
+      renderComments(data.comments || []);
+    } else {
+      listEl.innerHTML = `<div class="comments-empty">加载失败: ${data.error}</div>`;
+    }
+  } catch (e) {
+    console.error('Load comments failed:', e);
+    listEl.innerHTML = `<div class="comments-empty">加载失败，请稍后重试</div>`;
+  }
+}
+
+// 渲染评论列表
+function renderComments(comments) {
+  const listEl = document.getElementById('commentsList');
+  
+  if (!comments || comments.length === 0) {
+    listEl.innerHTML = `<div class="comments-empty">暂无评论，快来抢沙发吧~</div>`;
+    return;
+  }
+  
+  const html = comments.map(comment => {
+    const time = formatTime(comment.created_at);
+    const avatar = comment.user.avatar_url || 
+      `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23e2e8f0'/><text x='50' y='55' text-anchor='middle' font-size='40'>👤</text></svg>`;
+    
+    return `
+      <div class="comment-item">
+        <div class="comment-avatar">
+          <img src="${avatar}" alt="${comment.user.username}" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'><circle cx=\\'50\\' cy=\\'50\\' r=\\'50\\' fill=\\'%23e2e8f0\\'/><text x=\\'50\\' y=\\'55\\' text-anchor=\\'middle\\' font-size=\\'40\\'>👤</text></svg>'">
+        </div>
+        <div class="comment-body">
+          <div class="comment-header">
+            <span class="comment-username">${escapeHtml(comment.user.username)}</span>
+            <span class="comment-time">${time}</span>
+          </div>
+          <div class="comment-content">${escapeHtml(comment.content)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  listEl.innerHTML = html;
+}
+
+// 更新字符计数
+function updateCharCount() {
+  const input = document.getElementById('commentInput');
+  const countEl = document.getElementById('charCount');
+  const submitBtn = document.getElementById('btnSubmit');
+  
+  const len = input.value.length;
+  countEl.textContent = len;
+  
+  submitBtn.disabled = len === 0 || len > 500;
+}
+
+// 提交评论
+async function submitComment() {
+  const input = document.getElementById('commentInput');
+  const submitBtn = document.getElementById('btnSubmit');
+  const content = input.value.trim();
+  
+  if (!content || content.length > 500) {
+    return;
+  }
+  
+  const token = localStorage.getItem('blxst_token');
+  if (!token) {
+    alert('请先登录');
+    return;
+  }
+  
+  // 显示提交中
+  submitBtn.classList.add('loading');
+  submitBtn.textContent = '发布中...';
+  
+  try {
+    const response = await fetch(`${COMMENT_API}/comments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        target_type: currentTargetType,
+        target_id: currentTargetId,
+        content: content
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.ok) {
+      // 清空输入框
+      input.value = '';
+      updateCharCount();
+      
+      // 重新加载评论
+      await loadComments();
+    } else {
+      alert(data.error || '发布失败');
+    }
+  } catch (e) {
+    console.error('Submit comment failed:', e);
+    alert('发布失败，请稍后重试');
+  } finally {
+    submitBtn.classList.remove('loading');
+    submitBtn.textContent = '发布评论';
+  }
+}
+
+// 格式化时间
+function formatTime(dateStr) {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diff = now - date;
+  
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  
+  if (minutes < 1) return '刚刚';
+  if (minutes < 60) return `${minutes}分钟前`;
+  if (hours < 24) return `${hours}小时前`;
+  if (days < 7) return `${days}天前`;
+  
+  return date.toLocaleDateString('zh-CN');
+}
+
+// HTML转义
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// 自动初始化（如果页面已配置）
+document.addEventListener('DOMContentLoaded', function() {
+  const section = document.getElementById('comments-section');
+  if (section) {
+    const targetType = section.dataset.targetType || 'news';
+    const targetId = section.dataset.targetId || window.location.pathname.match(/\/(\d+)\.html/)?.[1] || '1';
+    initComments(targetType, targetId);
+  }
+});
+
+// 导出供手动调用
+window.initComments = initComments;
+</script>

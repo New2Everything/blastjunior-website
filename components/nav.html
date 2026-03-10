@@ -1,0 +1,47 @@
+<!-- 统一导航栏组件 -->
+<link rel="stylesheet" href="/components/nav.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+
+<nav class="site-nav">
+  <div class="nav-container">
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-icon">⚡</div>
+      <span>兰星少年</span>
+    </a>
+    
+    <button class="nav-mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('mobile-open')">☰</button>
+    
+    <div class="nav-links">
+      <a href="/" class="nav-link" data-page="home">首页</a>
+      <a href="/matches" class="nav-link" data-page="matches">赛程</a>
+      <a href="/standings" class="nav-link" data-page="standings">积分榜</a>
+      <a href="/teams" class="nav-link" data-page="teams">战队</a>
+      <a href="/players" class="nav-link" data-page="players">选手</a>
+      <a href="/heroes" class="nav-link" data-page="heroes">英雄</a>
+      <a href="/gallery" class="nav-link" data-page="gallery">画廊</a>
+      <a href="/honor" class="nav-link" data-page="honor">荣誉</a>
+      <a href="/chat" class="nav-link" data-page="chat">聊天室</a>
+      <a href="/join" class="nav-link" data-page="join">加入</a>
+      <a href="/login" class="nav-link" data-page="login">登录</a>
+    </div>
+    
+    <div class="nav-user-area">
+      <a href="/join" class="nav-btn nav-btn-primary">加入我们</a>
+    </div>
+  </div>
+</nav>
+
+<script>
+// 自动高亮当前页面导航
+(function() {
+  const path = window.location.pathname;
+  const page = path === '/' ? 'home' : path.replace(/^\//, '').split('/')[0];
+  
+  document.querySelectorAll('.nav-link').forEach(link => {
+    if (link.dataset.page === page) {
+      link.classList.add('active');
+    }
+  });
+})();
+</script>

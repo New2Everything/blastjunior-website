@@ -24,3 +24,22 @@ npm-debug.log*
 .clawhub/
 *.state.json
 TOOLS.md
+
+# ==== Wrangler/CF ====
+.wrangler/
+wrangler-*.toml
+
+# ==== Tests & Reports ====
+test-*.js
+test-reports/
+test-reports-screenshots-*.png
+
+# ==== Logs ====
+logs/
+
+# ==== Backups ====
+backup*
+
+# ==== Workers (keep in workers/ only) ====
+blast-*.js
+

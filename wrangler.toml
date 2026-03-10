@@ -12,9 +12,19 @@ database_name = "blast-campaigns-db"
 database_id = "bc11dbe6-4f21-490b-b713-70564c95cf8e"
 
 [[d1_databases]]
+binding = "USERS_DB"
+database_name = "blast-user-db"
+database_id = "520d5c63-ba38-46db-b4b9-ac3a15e1c298"
+
+[[d1_databases]]
 binding = "PHOTOS"
 database_name = "blast-photo-db"
 database_id = "9f259478-4234-4a29-92da-66b4c73feac5"
+
+[[d1_databases]]
+binding = "NEWS"
+database_name = "news-database"
+database_id = "c2d2f16b-a85e-4cd6-8d95-eb16981c19c4"
 
 [[kv_namespaces]]
 binding = "CACHE"
