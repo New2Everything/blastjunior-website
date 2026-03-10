@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
 
-# Environment variables
+# Environment
 .env
 .env.local
 .env.*.local
@@ -12,7 +12,7 @@ Thumbs.db
 
 # Logs
 *.log
-npm-debug.log*
+logs/
 
 # IDE
 .vscode/
@@ -20,32 +20,25 @@ npm-debug.log*
 *.swp
 *.swo
 
-# OpenClaw
-.clawhub/
-*.state.json
+# OpenClaw (ALL private files)
+.openclaw/
+AGENTS.md
+SOUL.md
+USER.md
+MEMORY.md
+BOOTSTRAP.md
+HEARTBEAT.md
+IDENTITY.md
 TOOLS.md
 
-# Cloudflare/Wrangler
+# Cloudflare
 .wrangler/
 !wrangler.toml
 wrangler-*.toml
 
-# Tests & Reports
-test-*.js
-test-reports/
-test-reports-screenshots-*.png
-
-# Local Logs
-logs/
-
 # Backups
 backup*
-
-# Workers (keep in workers/ directory)
-blast-*.js
-
-# OpenClaw Workspace
-.openclaw/
-
-# Backup files
 *.bak
+
+# Workers (only blast-homepage-api.js in root)
+blast-*.js
