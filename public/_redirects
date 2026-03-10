@@ -1,0 +1,12 @@
+# URL 重定向规则
+/news /news.html 200
+/teams /teams.html 200
+/players /players.html 200
+/matches /matches.html 200
+/gallery /gallery.html 200
+/sponsors /sponsors.html 200
+/parent /parent.html 200
+/standings /standings.html 200
+/honor /honor.html 200
+/join /join.html 200
+/index /index.html 200

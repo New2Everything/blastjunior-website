@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家长中心 - BLXST 兰星少年</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #FF6B35; --primary-light: #FF8A5C; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); min-height: 100vh; }
+        
+        /* 导航 */
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), #FF8A5C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+        
+        /* 主内容 */
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
+        
+        /* Hero */
+        .hero { background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%); border-radius: var(--radius); padding: 2.5rem 2rem; text-align: center; color: white; margin-bottom: 2rem; }
+        .hero h1 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; }
+        .hero p { opacity: 0.9; font-size: 1rem; }
+        
+        /* 选择孩子 */
+        .search-section { background: var(--bg-white); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+        .search-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .search-form { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .search-input { flex: 1; min-width: 200px; padding: 0.875rem 1rem; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: inherit; }
+        .search-input:focus { outline: none; border-color: var(--primary); }
+        .search-btn { padding: 0.875rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .search-btn:hover { background: var(--primary-light); }
+        
+        /* 选手选择列表 */
+        .player-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+        .player-item { background: var(--bg-light); border: 2px solid var(--border); border-radius: 12px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .player-item:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .player-item.selected { border-color: var(--primary); background: rgba(255,107,53,0.1); }
+        .player-avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-light)); margin: 0 auto 0.75rem; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem; }
+        .player-name { font-weight: 600; margin-bottom: 0.25rem; }
+        .player-team { font-size: 0.8rem; color: var(--text-gray); }
+        
+        /* 数据展示 */
+        .data-section { display: none; }
+        .data-section.show { display: block; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); text-align: center; }
+        .stat-value { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; color: var(--primary); }
+        .stat-label { color: var(--text-gray); font-size: 0.9rem; margin-top: 0.25rem; }
+        
+        .data-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1rem; }
+        .card-title { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        
+        /* 比赛记录 */
+        .match-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .match-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--bg-light); border-radius: 12px; }
+        .match-info { display: flex; align-items: center; gap: 1rem; }
+        .match-result { width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; }
+        .match-result.win { background: #DCFCE7; color: #16A34A; }
+        .match-result.loss { background: #FEE2E2; color: #DC2626; }
+        .match-result.draw { background: #FEF3C7; color: #D97706; }
+        .match-detail { flex: 1; }
+        .match-date { font-size: 0.8rem; color: var(--text-gray); }
+        .match-points { font-weight: 600; }
+        
+        /* 成长数据 */
+        .growth-bars { display: flex; flex-direction: column; gap: 1rem; }
+        .growth-item { display: flex; align-items: center; gap: 1rem; }
+        .growth-label { width: 100px; font-weight: 500; }
+        .growth-bar { flex: 1; height: 12px; background: var(--bg-light); border-radius: 6px; overflow: hidden; }
+        .growth-fill { height: 100%; border-radius: 6px; transition: width 0.5s; }
+        .growth-fill.up { background: linear-gradient(90deg, #22C55E, #4ADE80); }
+        .growth-fill.stable { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
+        .growth-fill.down { background: linear-gradient(90deg, #EF4444, #F87171); }
+        .growth-value { width: 50px; text-align: right; font-weight: 600; }
+        
+        /* 加载 */
+        .loading { display: none; text-align: center; padding: 3rem; }
+        .loading.show { display: block; }
+        .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* 空状态 */
+        .empty-state { text-align: center; padding: 3rem; color: var(--text-gray); }
+        
+        /* 错误 */
+        .error { background: #FEE2E2; color: #DC2626; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: none; }
+        .error.show { display: block; }
+        
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">⚡</div>
+                BLXST
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/matches" class="nav-link">赛事</a>
+                <a href="/teams" class="nav-link">战队</a>
+                <a href="/players" class="nav-link">选手</a>
+                <a href="/parent" class="nav-link active">家长中心</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Hero -->
+        <div class="hero">
+            <h1>👨‍👩‍👧 家长中心</h1>
+            <p>查看孩子的比赛表现和成长记录</p>
+        </div>
+
+        <!-- 搜索区域 -->
+        <div class="search-section">
+            <div class="search-title">🔍 选择孩子</div>
+            <div class="search-form">
+                <input type="text" class="search-input" id="searchInput" placeholder="输入选手姓名搜索...">
+                <button class="search-btn" onclick="searchPlayers()">搜索</button>
+            </div>
+            <div class="player-list" id="playerList">
+                <!-- 选手列表将通过 JS 加载 -->
+            </div>
+        </div>
+
+        <!-- 错误提示 -->
+        <div class="error" id="errorMsg"></div>
+
+        <!-- 加载状态 -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- 数据展示 -->
+        <div class="data-section" id="dataSection">
+            <!-- 选手信息 -->
+            <div class="data-card">
+                <div class="card-title" id="playerInfoTitle">👤 选手信息</div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="player-avatar" id="playerAvatar" style="width: 80px; height: 80px; font-size: 1.5rem;">-</div>
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: 700; font-family: 'Outfit', sans-serif;" id="playerName">-</div>
+                        <div style="color: var(--text-gray);" id="playerTeam">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 统计数据 -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalMatches">0</div>
+                    <div class="stat-label">参赛场次</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="winRate">0%</div>
+                    <div class="stat-label">胜率</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPoints">0</div>
+                    <div class="stat-label">总积分</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avgRank">-</div>
+                    <div class="stat-label">平均排名</div>
+                </div>
+            </div>
+
+            <!-- 比赛记录 -->
+            <div class="data-card">
+                <div class="card-title">📅 近期比赛</div>
+                <div class="match-list" id="matchList">
+                    <!-- 比赛记录将通过 JS 加载 -->
+                </div>
+            </div>
+
+            <!-- 成长数据 -->
+            <div class="data-card">
+                <div class="card-title">📈 成长数据</div>
+                <div class="growth-bars" id="growthBars">
+                    <div class="growth-item">
+                        <div class="growth-label">得分能力</div>
+                        <div class="growth-bar"><div class="growth-fill up" style="width: 70%"></div></div>
+                        <div class="growth-value up">↑ 上升</div>
+                    </div>
+                    <div class="growth-item">
+                        <div class="growth-label">防守表现</div>
+                        <div class="growth-bar"><div class="growth-fill stable" style="width: 85%"></div></div>
+                        <div class="growth-value stable">→ 稳定</div>
+                    </div>
+                    <div class="growth-item">
+                        <div class="growth-label">团队配合</div>
+                        <div class="growth-bar"><div class="growth-fill up" style="width: 60%"></div></div>
+                        <div class="growth-value up">↑ 上升</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+        let allPlayers = [];
+        let selectedPlayerId = null;
+        
+        // 加载所有选手
+        async function loadPlayers() {
+            const listEl = document.getElementById('playerList');
+            listEl.innerHTML = '<div class="loading show"><div class="spinner"></div></div>';
+            
+            try {
+                const resp = await fetch(API_BASE + '/players');
+                const result = await resp.json();
+                allPlayers = result.data || [];
+                renderPlayerList(allPlayers);
+            } catch (e) {
+                console.error('加载选手失败:', e);
+                listEl.innerHTML = '<div class="empty-state">加载失败，请刷新重试</div>';
+            }
+        }
+        
+        // 渲染选手列表
+        function renderPlayerList(players) {
+            const listEl = document.getElementById('playerList');
+            
+            if (players.length === 0) {
+                listEl.innerHTML = '<div class="empty-state">未找到选手</div>';
+                return;
+            }
+            
+            listEl.innerHTML = players.map(p => `
+                <div class="player-item" onclick="selectPlayer('${p.id}', '${p.name}')" data-id="${p.id}">
+                    <div class="player-avatar">${p.name ? p.name.charAt(0) : '?'}</div>
+                    <div class="player-name">${p.name || '-'}</div>
+                    <div class="player-team">${p.current_team?.name || '自由选手'}</div>
+                </div>
+            `).join('');
+        }
+        
+        // 搜索选手
+        function searchPlayers() {
+            const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (!keyword) {
+                renderPlayerList(allPlayers);
+                return;
+            }
+            
+            const filtered = allPlayers.filter(p => 
+                (p.name && p.name.toLowerCase().includes(keyword)) ||
+                (p.real_name && p.real_name.toLowerCase().includes(keyword)) ||
+                (p.display_name && p.display_name.toLowerCase().includes(keyword))
+            );
+            renderPlayerList(filtered);
+        }
+        
+        // 绑定搜索回车
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchPlayers();
+        });
+        
+        // 选择选手
+        async function selectPlayer(playerId, playerName) {
+            selectedPlayerId = playerId;
+            
+            // 更新选中状态
+            document.querySelectorAll('.player-item').forEach(item => {
+                item.classList.remove('selected');
+                if (item.dataset.id === playerId) item.classList.add('selected');
+            });
+            
+            // 显示加载
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('dataSection').classList.remove('show');
+            document.getElementById('errorMsg').classList.remove('show');
+            
+            try {
+                // 获取选手详情
+                const resp = await fetch(API_BASE + '/players/' + playerId);
+                const result = await resp.json();
+                
+                if (!result.ok) {
+                    throw new Error(result.error || '加载失败');
+                }
+                
+                const player = result.data;
+                renderPlayerData(player);
+            } catch (e) {
+                console.error('加载选手数据失败:', e);
+                const errorEl = document.getElementById('errorMsg');
+                errorEl.textContent = e.message || '加载失败，请稍后重试';
+                errorEl.classList.add('show');
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+            }
+        }
+        
+        // 渲染选手数据
+        function renderPlayerData(player) {
+            // 基本信息
+            document.getElementById('playerAvatar').textContent = player.name ? player.name.charAt(0) : '?';
+            document.getElementById('playerName').textContent = player.real_name || player.name;
+            document.getElementById('playerTeam').textContent = player.currentTeam?.name || '自由选手';
+            
+            // 统计数据
+            const stats = player.internalStats || [];
+            const totalMatches = stats.reduce((sum, s) => sum + (s.rounds?.length || 0), 0);
+            const totalPoints = stats.reduce((sum, s) => sum + (s.totalPoints || 0), 0);
+            const avgRank = stats.length > 0 
+                ? (stats.reduce((sum, s) => sum + (s.avgRank || 0), 0) / stats.length).toFixed(1)
+                : '-';
+            
+            // 计算胜率（简化：前3名算胜）
+            let wins = 0;
+            stats.forEach(s => {
+                (s.rounds || []).forEach(r => {
+                    if (r.rank <= 3) wins++;
+                });
+            });
+            const winRate = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
+            
+            document.getElementById('totalMatches').textContent = totalMatches;
+            document.getElementById('winRate').textContent = winRate + '%';
+            document.getElementById('totalPoints').textContent = totalPoints;
+            document.getElementById('avgRank').textContent = avgRank;
+            
+            // 比赛记录
+            const allRounds = [];
+            stats.forEach(s => {
+                (s.rounds || []).forEach(r => {
+                    allRounds.push({
+                        season_id: s.season_id,
+                        round_date: r.round_date,
+                        points: r.points,
+                        total_points: r.total_points,
+                        rank: r.rank
+                    });
+                });
+            });
+            
+            // 按日期排序，取最近10场
+            allRounds.sort((a, b) => new Date(b.round_date) - new Date(a.round_date));
+            const recentMatches = allRounds.slice(0, 10);
+            
+            const matchListEl = document.getElementById('matchList');
+            if (recentMatches.length === 0) {
+                matchListEl.innerHTML = '<div class="empty-state">暂无比赛记录</div>';
+            } else {
+                matchListEl.innerHTML = recentMatches.map(m => {
+                    const rank = m.rank;
+                    let resultClass = 'draw';
+                    let resultText = m.points + '分';
+                    if (rank === 1) { resultClass = 'win'; resultText = '🥇 第1'; }
+                    else if (rank === 2) { resultClass = 'win'; resultText = '🥈 第2'; }
+                    else if (rank === 3) { resultClass = 'win'; resultText = '🥉 第3'; }
+                    else if (rank <= 8) { resultText = '第' + rank; }
+                    
+                    return `
+                        <div class="match-item">
+                            <div class="match-result ${resultClass}">${resultText}</div>
+                            <div class="match-detail">
+                                <div class="match-date">${m.round_date}</div>
+                                <div class="match-points">本场 ${m.points} 分 · 累计 ${m.total_points} 分</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // 显示数据区域
+            document.getElementById('dataSection').classList.add('show');
+        }
+        
+        // 初始化
+        loadPlayers();
+    </script>
+</body>
+</html>
