@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": ["/login.html", "/register.html", "/profile.html", "/heroes.html", "/hero.html", "/public/*"],
+  "fallback": {
+    "uri": "/index.html"
+  }
+}
