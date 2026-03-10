@@ -43,3 +43,9 @@ backup*
 
 # Workers (keep in workers/ directory)
 blast-*.js
+
+# OpenClaw Workspace
+.openclaw/
+
+# Backup files
+*.bak
