@@ -10,17 +10,13 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-logs/
-
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OpenClaw (ALL private files)
+# OpenClaw (all private files)
 .openclaw/
 AGENTS.md
 SOUL.md
@@ -30,6 +26,13 @@ BOOTSTRAP.md
 HEARTBEAT.md
 IDENTITY.md
 TOOLS.md
+logs/
+memory/
+projects/
+skills/
+knowledge/
+docs/
+scripts/
 
 # Cloudflare
 .wrangler/
@@ -40,8 +43,6 @@ wrangler-*.toml
 backup*
 *.bak
 
-# Workers (only blast-homepage-api.js in root)
+# Workers (only blast-homepage-api.js allowed)
 blast-*.js
-
-# Scripts (OpenClaw automation)
-scripts/
+!blast-homepage-api.js
