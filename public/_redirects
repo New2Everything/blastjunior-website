@@ -1,0 +1,6 @@
+# Fix .html pages - redirect to non-html version
+# Cloudflare Pages automatically serves .html files for requests without extension
+# This file ensures backward compatibility
+
+# Explicitly allow .html files to be accessed directly
+*.html /index.html 200
