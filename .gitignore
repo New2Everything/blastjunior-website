@@ -42,3 +42,6 @@ backup*
 
 # Workers (only blast-homepage-api.js in root)
 blast-*.js
+
+# Scripts (OpenClaw automation)
+scripts/
