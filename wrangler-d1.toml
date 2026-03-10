@@ -1,8 +1,0 @@
-name = "blast-d1-admin"
-main = "blast-d1-admin.js"
-compatibility_date = "2024-12-01"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "blastjunior-content-db"
-database_id = "9e484b49-935c-4ef5-8407-54f5bf38b441"
