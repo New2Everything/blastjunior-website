@@ -123,6 +123,12 @@
     <main class="container">
         <h1 class="page-title">赛季进度中心</h1>
         
+        <!-- 赛事体系 -->
+        <section id="eventsSection">
+            <h2 class="section-title">🏆 赛事体系</h2>
+            <div id="eventsList"><div class="loading">加载赛事数据...</div></div>
+        </section>
+        
         <!-- DATA_MODULE: seasons -->
         <section id="seasons">
             <div class="loading">加载赛季数据...</div>
@@ -161,6 +167,77 @@
 
     <script>
         const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+        
+        // 加载赛事
+        async function loadEvents() {
+            try {
+                const resp = await fetch(API_BASE + '/events');
+                const result = await resp.json();
+                
+                if (!result.ok) {
+                    document.getElementById('eventsList').innerHTML = '<div class="empty">加载失败</div>';
+                    return;
+                }
+                
+                const events = result.data || [];
+                
+                if (events.length === 0) {
+                    document.getElementById('eventsList').innerHTML = '<div class="empty">暂无赛事数据</div>';
+                    return;
+                }
+                
+                const levelColors = {
+                    'World': { bg: 'linear-gradient(135deg, #FFD700, #FFA500)', icon: '🌍' },
+                    'National': { bg: 'linear-gradient(135deg, #FF6B35, #FF8A5C)', icon: '🇨🇳' },
+                    'International': { bg: 'linear-gradient(135deg, #00B4D8, #00D4FF)', icon: '🌏' },
+                    'Regional': { bg: 'linear-gradient(135deg, #10B981, #34D399)', icon: '🏙️' },
+                    'Other': { bg: 'linear-gradient(135deg, #6B7280, #9CA3AF)', icon: '📍' }
+                };
+                
+                let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;">';
+                
+                events.forEach(event => {
+                    const levelStyle = levelColors[event.levelLabel] || levelColors['Other'];
+                    const leagueSeasons = event.seasons?.filter(s => s.isLeague) || [];
+                    const cupSeasons = event.seasons?.filter(s => s.isCup) || [];
+                    
+                    html += `
+                        <div style="background:white;border-radius:16px;padding:1.5rem;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+                            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+                                <span style="font-size:2rem;">${levelStyle.icon}</span>
+                                <div>
+                                    <div style="font-weight:700;font-size:1.1rem;">${event.name_zh}</div>
+                                    <div style="font-size:0.8rem;color:var(--text-gray);">${event.levelLabel || event.level} · ${event.frequency}</div>
+                                </div>
+                            </div>
+                            <div style="font-size:0.85rem;color:var(--text-gray);margin-bottom:1rem;">${event.description || ''}</div>
+                            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                                ${leagueSeasons.length > 0 ? `<span style="background:linear-gradient(135deg,var(--primary),#FF8A5C);color:white;padding:0.25rem 0.75rem;border-radius:50px;font-size:0.75rem;font-weight:600;">🏅 联赛 (${leagueSeasons.length})</span>` : ''}
+                                ${cupSeasons.length > 0 ? `<span style="background:linear-gradient(135deg,var(--secondary),#00D4FF);color:white;padding:0.25rem 0.75rem;border-radius:50px;font-size:0.75rem;font-weight:600;">🏆 杯赛 (${cupSeasons.length})</span>` : ''}
+                            </div>
+                            ${event.seasons && event.seasons.length > 0 ? `
+                                <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+                                    <div style="font-size:0.75rem;color:var(--text-gray);margin-bottom:0.5rem;">最近赛季</div>
+                                    <div style="font-size:0.85rem;">
+                                        ${event.seasons.slice(0, 2).map(s => `
+                                            <span style="display:inline-block;margin-right:0.5rem;margin-bottom:0.25rem;padding:0.25rem 0.5rem;background:var(--bg-light);border-radius:4px;">
+                                                ${s.name} ${s.isCup ? '🏆' : '🏅'}
+                                            </span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                document.getElementById('eventsList').innerHTML = html;
+            } catch (e) {
+                console.error(e);
+                document.getElementById('eventsList').innerHTML = '<div class="empty">加载失败</div>';
+            }
+        }
         
         // 加载赛季
         async function loadSeasons() {
@@ -283,6 +360,7 @@
         }
         
         // 初始化
+        loadEvents();
         loadSeasons();
     </script>
     <script src="/components/nav-loader.js"></script>

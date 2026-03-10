@@ -57,6 +57,12 @@
         .loading { text-align: center; padding: 3rem; color: var(--text-gray); }
         .empty { text-align: center; padding: 2rem; color: var(--text-gray); }
         
+        /* Tooltip样式 */
+        .tooltip { position: relative; cursor: help; display: inline-flex; align-items: center; gap: 0.25rem; }
+        .tooltip::after { content: "ℹ️"; font-size: 0.75rem; opacity: 0.6; }
+        .tooltip:hover::before { content: attr(data-tip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--text-dark); color: white; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; white-space: nowrap; z-index: 1000; box-shadow: var(--shadow); margin-bottom: 0.5rem; font-weight: 400; }
+        .tooltip:hover::after { opacity: 1; }
+        
         @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
@@ -123,10 +129,28 @@
         <!-- DATA_MODULE: team_stats -->
         <div id="teamStats" class="stats-grid"></div>
         
-        <!-- DATA_MODULE: team_roster -->
+        <!-- 首次亮相 -->
+        <section id="firstAppearanceSection" class="section" style="display:none;">
+            <h2 class="section-title">🎯 首次亮相</h2>
+            <div id="firstAppearance" class="honor-list"></div>
+        </section>
+        
+        <!-- DATA_MODULE: team_roster_current -->
         <section class="section">
-            <h2 class="section-title">👥 阵容名单</h2>
-            <div id="teamRoster" class="members-grid"><div class="loading">加载阵容...</div></div>
+            <h2 class="section-title">👥 当前阵容 <span style="font-size:0.8rem;font-weight:400;color:var(--text-gray);">(HPL第二届)</span></h2>
+            <div id="teamRosterCurrent" class="members-grid"><div class="loading">加载当前阵容...</div></div>
+        </section>
+        
+        <!-- DATA_MODULE: team_roster_history -->
+        <section class="section">
+            <h2 class="section-title">📜 历史阵容</h2>
+            <div id="teamRosterHistory" class="members-grid"><div class="loading">加载历史阵容...</div></div>
+        </section>
+        
+        <!-- DATA_MODULE: team_points -->
+        <section class="section">
+            <h2 class="section-title">📊 参赛记录</h2>
+            <div id="teamPoints" class="honor-list"><div class="loading">加载参赛记录...</div></div>
         </section>
         
         <!-- DATA_MODULE: team_honors -->
@@ -161,45 +185,195 @@
                 document.getElementById('teamHero').innerHTML = `
                     <div class="team-logo">${team.name?.charAt(0) || '⚔️'}</div>
                     <h1 class="team-name">${team.name}</h1>
-                    <span class="team-tag">3v3标准比赛 · 4-6人轮换</span>
+                    <span class="team-tag">${team.tag || '战队'}</span>
                 `;
                 document.title = `${team.name} - 兰星少年 HADO 俱乐部`;
                 
                 // 加载其他数据
-                loadTeamRoster(teamId);
-                loadTeamHonors(teamId);
-                loadTeamStats(teamId);
+                loadTeamDetail(teamId);
             } catch (e) {
                 console.error(e);
                 document.getElementById('teamHero').innerHTML = '<div class="empty">加载失败</div>';
             }
         }
         
-        // 加载阵容
-        async function loadTeamRoster(teamId) {
+        // 加载战队详情（包含所有信息）
+        async function loadTeamDetail(teamId) {
             try {
-                const resp = await fetch(API_BASE + '/rosters/' + teamId);
+                const resp = await fetch(API_BASE + '/team/' + teamId);
                 const result = await resp.json();
                 
-                const roster = result.data || [];
-                const container = document.getElementById('teamRoster');
-                
-                if (roster.length === 0) {
-                    container.innerHTML = '<div class="empty">暂无阵容数据</div>';
+                if (!result.ok || !result.data) {
+                    document.getElementById('teamHero').innerHTML = '<div class="empty">战队不存在</div>';
                     return;
                 }
                 
-                container.innerHTML = roster.map(p => `
-                    <a href="/players.html?id=${p.player_id}" class="member-card">
-                        <div class="member-avatar">${p.player_name?.charAt(0) || '?'}</div>
-                        <div class="member-name">${p.player_name || '选手'}</div>
-                        <div class="member-role">${p.season_id || '成员'}</div>
-                    </a>
-                `).join('');
+                const team = result.data;
+                
+                // 渲染当前阵容
+                renderCurrentRoster(team.currentRoster, team.currentSeasonId);
+                
+                // 渲染历史阵容
+                renderRosterHistory(team.rosterHistory);
+                
+                // 渲染参赛记录
+                renderTeamPoints(team.points);
+                
+                // 渲染荣誉
+                renderTeamHonors(team.honors);
+                
+                // 渲染首次亮相
+                renderFirstAppearance(team.firstAppearance);
+                
+                // 渲染统计
+                loadTeamStats(teamId);
+                
             } catch (e) {
                 console.error(e);
-                document.getElementById('teamRoster').innerHTML = '<div class="empty">加载失败</div>';
             }
+        }
+        
+        // 渲染当前阵容
+        function renderCurrentRoster(roster, seasonId) {
+            const container = document.getElementById('teamRosterCurrent');
+            
+            if (!roster || roster.length === 0) {
+                container.innerHTML = '<div class="empty">暂无当前赛季阵容数据</div>';
+                return;
+            }
+            
+            container.innerHTML = roster.map(p => `
+                <a href="/player-detail.html?id=${p.player_id}" class="member-card">
+                    <div class="member-avatar">${p.nickname?.charAt(0) || '?'}</div>
+                    <div class="member-name">${p.nickname || '选手'}</div>
+                    <div class="member-role">${p.real_name || ''}</div>
+                </a>
+            `).join('');
+        }
+        
+        // 渲染历史阵容
+        function renderRosterHistory(rosterHistory) {
+            const container = document.getElementById('teamRosterHistory');
+            
+            if (!rosterHistory || rosterHistory.length === 0) {
+                container.innerHTML = '<div class="empty">暂无历史阵容数据</div>';
+                return;
+            }
+            
+            // 按赛季分组
+            const bySeason = {};
+            rosterHistory.forEach(r => {
+                const seasonName = r.season_id?.replace('hpl_', '') || r.season_id;
+                if (!bySeason[seasonName]) {
+                    bySeason[seasonName] = {
+                        seasonName: r.season_name || seasonName,
+                        isLeague: r.season_type !== 'cup',
+                        isCup: r.season_type === 'cup',
+                        players: []
+                    };
+                }
+                bySeason[seasonName].players.push(r);
+            });
+            
+            let html = '';
+            Object.entries(bySeason).forEach(([seasonKey, data]) => {
+                const typeBadge = data.isLeague ? '🏅' : '🏆';
+                html += `
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-weight:600;margin-bottom:0.5rem;color:var(--text-gray);font-size:0.85rem;">
+                            ${typeBadge} ${data.seasonName} ${data.isCup ? '(杯赛)' : '(联赛)'}
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+                            ${data.players.map(p => `
+                                <a href="/player-detail.html?id=${p.player_id}" style="background:var(--bg-light);padding:0.5rem 1rem;border-radius:8px;text-decoration:none;color:inherit;font-size:0.9rem;">
+                                    ${p.nickname}
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<div class="empty">暂无历史阵容</div>';
+        }
+        
+        // 渲染参赛记录
+        function renderTeamPoints(points) {
+            const container = document.getElementById('teamPoints');
+            
+            if (!points || points.length === 0) {
+                container.innerHTML = '<div class="empty">暂无参赛记录</div>';
+                return;
+            }
+            
+            const leaguePoints = points.filter(p => p.isLeague);
+            const cupPoints = points.filter(p => p.isCup);
+            
+            let html = '';
+            
+            if (leaguePoints.length > 0) {
+                html += `<div style="margin-bottom:1rem;"><div style="font-weight:600;margin-bottom:0.5rem;">🏅 联赛记录</div>`;
+                leaguePoints.forEach(p => {
+                    html += `
+                        <div class="honor-item">
+                            <div class="honor-icon">📊</div>
+                            <div class="honor-info">
+                                <div class="honor-name">${p.season_name || p.season_id} - ${p.name}</div>
+                                <div class="honor-time">${p.season_id}</div>
+                            </div>
+                            <div style="font-weight:700;color:var(--primary);">${p.points}分</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            if (cupPoints.length > 0) {
+                html += `<div><div style="font-weight:600;margin-bottom:0.5rem;">🏆 杯赛记录</div>`;
+                cupPoints.forEach(p => {
+                    html += `
+                        <div class="honor-item">
+                            <div class="honor-icon">🏆</div>
+                            <div class="honor-info">
+                                <div class="honor-name">${p.season_name || p.season_id} - ${p.name}</div>
+                                <div class="honor-time">${p.season_id}</div>
+                            </div>
+                            <div style="font-weight:700;color:var(--secondary);">${p.points}分</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            container.innerHTML = html || '<div class="empty">暂无参赛记录</div>';
+        }
+        
+        // 渲染首次亮相
+        function renderFirstAppearance(firstAppearance) {
+            const container = document.getElementById('firstAppearance');
+            const section = document.getElementById('firstAppearanceSection');
+            
+            if (!firstAppearance) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            const typeBadge = firstAppearance.isLeague ? '🏅' : '🏆';
+            const levelBadge = firstAppearance.level === 'World' ? '🌍' : firstAppearance.level === 'National' ? '🇨🇳' : '📍';
+            
+            container.innerHTML = `
+                <div class="honor-item">
+                    <div class="honor-icon">🎯</div>
+                    <div class="honor-info">
+                        <div class="honor-name">${firstAppearance.season_name || firstAppearance.season_id}</div>
+                        <div class="honor-time">${levelBadge} ${firstAppearance.event_name || firstAppearance.event_id} ${typeBadge}</div>
+                    </div>
+                    <div style="font-weight:700;">
+                        ${firstAppearance.final_rank ? `第${firstAppearance.final_rank}名` : firstAppearance.stage_reached || ''}
+                    </div>
+                </div>
+            `;
         }
         
         // 加载荣誉
@@ -208,29 +382,36 @@
                 const resp = await fetch(API_BASE + '/team-honors/' + teamId);
                 const result = await resp.json();
                 
-                const honors = result.data || [];
-                const container = document.getElementById('teamHonors');
-                
-                if (honors.length === 0) {
-                    container.innerHTML = '<div class="empty">暂无荣誉</div>';
-                    return;
-                }
-                
-                const rankIcons = { 1: '🥇', 2: '🥈', 3: '🥉' };
-                
-                container.innerHTML = honors.map(h => `
+                // 荣誉已经在loadTeamDetail中加载了，这里保留作为备用
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        
+        // 渲染荣誉
+        function renderTeamHonors(honors) {
+            const container = document.getElementById('teamHonors');
+            
+            if (!honors || honors.length === 0) {
+                container.innerHTML = '<div class="empty">暂无荣誉记录</div>';
+                return;
+            }
+            
+            const rankIcons = { 1: '🥇', 2: '🥈', 3: '🥉' };
+            
+            container.innerHTML = honors.map(h => {
+                const typeBadge = h.isLeague ? '🏅' : '🏆';
+                const levelBadge = h.level === 'World' ? '🌍' : h.level === 'National' ? '🇨🇳' : h.level === 'International' ? '🌏' : h.level === 'Regional' ? '📍' : '';
+                return `
                     <div class="honor-item">
                         <div class="honor-icon">${rankIcons[h.final_rank] || '🏆'}</div>
                         <div class="honor-info">
-                            <div class="honor-name">${h.event_id || '赛事'} - 第${h.final_rank}名</div>
-                            <div class="honor-time">${h.stage_reached || ''}</div>
+                            <div class="honor-name">${h.name_zh || h.event_id} - ${h.season_name || h.season_id}</div>
+                            <div class="honor-time">${levelBadge} ${h.levelLabel || h.level} ${typeBadge} ${h.isCup ? '(杯赛)' : ''}</div>
                         </div>
                     </div>
-                `).join('');
-            } catch (e) {
-                console.error(e);
-                document.getElementById('teamHonors').innerHTML = '<div class="empty">加载失败</div>';
-            }
+                `;
+            }).join('');
         }
         
         // 加载积分统计
@@ -241,6 +422,7 @@
                 
                 const standings = result.data || [];
                 const teamStanding = standings.find(s => s.team_id === teamId);
+                const meta = result.meta || {};
                 
                 const container = document.getElementById('teamStats');
                 
@@ -248,19 +430,19 @@
                     container.innerHTML = `
                         <div class="stat-card">
                             <div class="stat-value">#${teamStanding.rank}</div>
-                            <div class="stat-label">联赛排名</div>
+                            <div class="stat-label"><span class="tooltip" data-tip="${meta.seasonName || 'HPL'}积分榜排名">联赛排名 ℹ️</span></div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">${teamStanding.points}</div>
-                            <div class="stat-label">总积分</div>
+                            <div class="stat-label"><span class="tooltip" data-tip="${meta.seasonName || '当前赛季'}所有比赛的总得分">总积分 ℹ️</span></div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">${teamStanding.rounds}</div>
-                            <div class="stat-label">参赛轮次</div>
+                            <div class="stat-label"><span class="tooltip" data-tip="该战队在本赛季参加的场次数">参赛场次 ℹ️</span></div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">${Math.round(teamStanding.points / Math.max(teamStanding.rounds, 1) * 10) / 10}</div>
-                            <div class="stat-label">场均得分</div>
+                            <div class="stat-label"><span class="tooltip" data-tip="总积分 ÷ 参赛场次，每场比赛的平均得分">场均得分 ℹ️</span></div>
                         </div>
                     `;
                 } else {

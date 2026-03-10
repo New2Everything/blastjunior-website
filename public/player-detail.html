@@ -117,10 +117,16 @@
         <!-- DATA_MODULE: player_info -->
         <div id="playerProfile" class="loading">加载选手信息...</div>
         
-        <!-- DATA_MODULE: player_team -->
+        <!-- DATA_MODULE: player_team_current -->
         <section id="playerTeam" class="section" style="display:none;">
-            <h2 class="section-title">🏟️ 所属战队</h2>
+            <h2 class="section-title">🏟️ 当前所属战队 <span style="font-size:0.8rem;font-weight:400;color:var(--text-gray);">(联赛)</span></h2>
             <div id="teamInfo"></div>
+        </section>
+        
+        <!-- DATA_MODULE: player_team_history -->
+        <section id="playerTeamHistory" class="section" style="display:none;">
+            <h2 class="section-title">📜 历史效力战队</h2>
+            <div id="teamHistoryInfo"></div>
         </section>
         
         <!-- DATA_MODULE: player_internal_stats -->
@@ -141,7 +147,7 @@
         // 加载选手信息
         async function loadPlayerInfo() {
             try {
-                // 获取选手列表
+                // 获取选手列表（包含当前战队和历史战队）
                 const resp = await fetch(API_BASE + '/players');
                 const result = await resp.json();
                 const player = (result.data || []).find(p => p.id === playerId);
@@ -156,13 +162,16 @@
                 document.getElementById('playerProfile').innerHTML = `
                     <div class="player-avatar">${player.name?.charAt(0) || '?'}</div>
                     <h1 class="player-name">${player.name}</h1>
-                    <p class="player-nickname">${player.team_name || ''}</p>
+                    <p class="player-nickname">${player.real_name || ''}</p>
                     <span class="player-club">🏓 3v3选手 · ${player.is_active ? '活跃选手' : '历史选手'}</span>
                 `;
                 document.title = `${player.name} - 兰星少年 HADO 俱乐部`;
                 
-                // 加载战队信息
-                loadPlayerTeam(player);
+                // 加载当前战队信息
+                loadPlayerCurrentTeam(player);
+                
+                // 加载历史战队信息
+                loadPlayerTeamHistory(player);
                 
                 // 加载内部联赛数据
                 loadPlayerInternalStats(playerId);
@@ -172,33 +181,65 @@
             }
         }
         
-        // 加载选手所属战队
-        async function loadPlayerTeam(player) {
-            try {
-                const resp = await fetch(API_BASE + '/teams');
-                const result = await resp.json();
-                const teams = result.data || [];
-                
-                // 找到选手所属战队
-                const team = teams.find(t => 
-                    player.team_name && t.name && t.name.includes(player.team_name)
-                );
-                
-                if (team) {
-                    document.getElementById('playerTeam').style.display = 'block';
-                    document.getElementById('teamInfo').innerHTML = `
-                        <a href="/team-detail.html?id=${team.id}" class="team-card">
-                            <div class="team-icon">⚔️</div>
-                            <div>
-                                <div class="team-name">${team.name}</div>
-                                <div class="team-role">${team.tag || '战队'}</div>
-                            </div>
-                        </a>
-                    `;
-                }
-            } catch (e) {
-                console.error(e);
+        // 加载选手当前所属战队（联赛）
+        async function loadPlayerCurrentTeam(player) {
+            const section = document.getElementById('playerTeam');
+            const container = document.getElementById('teamInfo');
+            
+            if (!player.current_team) {
+                section.style.display = 'none';
+                return;
             }
+            
+            section.style.display = 'block';
+            const team = player.current_team;
+            const leagueBadge = team.isLeague ? '🏅' : '🏆';
+            
+            container.innerHTML = `
+                <a href="/team-detail.html?id=${team.id}" class="team-card">
+                    <div class="team-icon">⚔️</div>
+                    <div>
+                        <div class="team-name">${team.name}</div>
+                        <div class="team-role">${leagueBadge} ${team.season || '当前赛季'}</div>
+                    </div>
+                </a>
+            `;
+        }
+        
+        // 加载选手历史效力战队
+        function loadPlayerTeamHistory(player) {
+            const section = document.getElementById('playerTeamHistory');
+            const container = document.getElementById('teamHistoryInfo');
+            
+            if (!player.team_history || player.team_history.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            // 按时间分组显示
+            const history = player.team_history;
+            let html = '<div style="display:flex;flex-direction:column;gap:0.75rem;">';
+            
+            history.forEach((h, idx) => {
+                const typeBadge = h.isLeague ? '🏅' : '🏆';
+                const currentBadge = h.isCurrent ? '· 现役' : '';
+                const seasonLabel = h.season_id?.replace('hpl_', '').replace('_', ' ') || h.season_id;
+                
+                html += `
+                    <div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:var(--bg-light);border-radius:12px;">
+                        <div style="font-size:1.5rem;">${h.isCurrent ? '⭐' : '➡️'}</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:600;">${h.team_name}</div>
+                            <div style="font-size:0.8rem;color:var(--text-gray);">${typeBadge} ${seasonLabel} ${h.isCup ? '(杯赛)' : ''}${currentBadge}</div>
+                        </div>
+                        <a href="/team-detail.html?id=${h.team_id}" style="color:var(--primary);text-decoration:none;font-size:0.9rem;">查看 →</a>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            section.style.display = 'block';
+            container.innerHTML = html;
         }
         
         // 加载内部联赛数据

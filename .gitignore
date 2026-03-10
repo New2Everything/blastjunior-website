@@ -25,21 +25,21 @@ npm-debug.log*
 *.state.json
 TOOLS.md
 
-# ==== Wrangler/CF ====
+# Cloudflare/Wrangler
 .wrangler/
+!wrangler.toml
 wrangler-*.toml
 
-# ==== Tests & Reports ====
+# Tests & Reports
 test-*.js
 test-reports/
 test-reports-screenshots-*.png
 
-# ==== Logs ====
+# Local Logs
 logs/
 
-# ==== Backups ====
+# Backups
 backup*
 
-# ==== Workers (keep in workers/ only) ====
+# Workers (keep in workers/ directory)
 blast-*.js
-

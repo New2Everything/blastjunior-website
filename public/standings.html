@@ -127,16 +127,16 @@
         <!-- DATA_MODULE: standings -->
         <div class="standings-card">
             <div class="standings-header">
-                <h2>🏆 第二届HPL超级联赛积分榜</h2>
-                <p>3v3标准比赛 · 每局3分钟 · 当前赛季总积分</p>
+                <h2 id="standingsTitle">🏆 积分榜</h2>
+                <p id="standingsDesc">加载中...</p>
             </div>
             <table class="standings-table">
                 <thead>
                     <tr>
                         <th>排名</th>
                         <th>战队</th>
-                        <th><span class="tooltip" data-tip="当前赛季（第二届HPL）所有比赛的总得分">总积分 ℹ️</span></th>
-                        <th><span class="tooltip" data-tip="该战队在本赛季参加的轮次数">参赛轮次 ℹ️</span></th>
+                        <th><span class="tooltip" data-tip="当前赛季所有比赛的总得分">总积分 ℹ️</span></th>
+                        <th><span class="tooltip" data-tip="该战队在本赛季参加的场次数">参赛场次 ℹ️</span></th>
                     </tr>
                 </thead>
                 <tbody id="standingsBody">
@@ -148,13 +148,8 @@
         <!-- 积分规则说明 -->
         <div class="rules-section">
             <h3>📋 积分规则说明</h3>
-            <ul class="rules-list">
-                <li><span class="tooltip" data-tip="第二届HPL超级联赛当前赛季所有比赛的总得分">总积分</span>：当前赛季（第二届HPL）总积分，每个联赛/赛季独立计算</li>
-                <li><span class="tooltip" data-tip="每参加一轮比赛获得的平均得分">场均积分</span>：总积分 ÷ 参赛轮次</li>
-                <li>比赛形式：3v3标准比赛，每局3分钟</li>
-                <li>积分项目：HPL超级联赛（仅当前赛季积分，不混总积分）</li>
-                <li>数据来源：blast-campaigns-db.team_component_points</li>
-                <li>更新周期：每周更新一次</li>
+            <ul class="rules-list" id="rulesList">
+                <li>加载中...</li>
             </ul>
         </div>
     </main>
@@ -174,6 +169,25 @@
                 }
                 
                 const data = result.data || [];
+                const meta = result.meta || {};
+                
+                // 更新页面标题和描述
+                const seasonName = meta.seasonName || 'HPL联赛';
+                const seasonId = meta.seasonId || '';
+                document.getElementById('standingsTitle').textContent = `🏆 ${seasonName}积分榜`;
+                document.getElementById('standingsDesc').textContent = meta.description || '联赛总积分';
+                
+                // 更新积分规则说明
+                const rulesList = document.getElementById('rulesList');
+                const rulesHtml = `
+                    <li><span class="tooltip" data-tip="当前赛季所有比赛的总得分">总积分</span>：${seasonName}总积分，每个赛季独立计算</li>
+                    <li><span class="tooltip" data-tip="每参加一场比赛获得的平均得分">场均积分</span>：总积分 ÷ 参赛场次</li>
+                    <li>比赛形式：3v3标准比赛，每局3分钟</li>
+                    <li>赛事类型：${meta.description || '联赛'} ${meta.seasonType === 'cup' ? '🏆 杯赛单独计分' : '🏅 联赛'}</li>
+                    <li>数据来源：blast-campaigns-db（动态查询）</li>
+                    <li>更新周期：每周更新一次</li>
+                `;
+                rulesList.innerHTML = rulesHtml;
                 
                 if (data.length === 0) {
                     document.getElementById('standingsBody').innerHTML = '<tr><td colspan="4" class="empty">暂无积分数据</td></tr>';
@@ -191,7 +205,7 @@
                             </div>
                         </td>
                         <td class="points-cell">${item.points}</td>
-                        <td class="rounds-cell">${item.rounds}轮</td>
+                        <td class="rounds-cell">${item.rounds}场</td>
                     </tr>`;
                 }).join('');
             } catch (e) {
