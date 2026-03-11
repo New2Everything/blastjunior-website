@@ -1,5 +1,7 @@
-# Fix .html pages - redirect to non-html version
-# Cloudflare Pages automatically serves .html files for requests without extension
+# Fix .html pages - redirect to non-htmlflare Pages automatically serves version
+# Cloud .html files for requests without extension
 # This file ensures backward compatibility
 
-# Remove the problematic wildcard redirect that breaks .html pages
+# Explicitly serve login and register pages
+/login /login.html 200
+/register /register.html 200
