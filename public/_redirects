@@ -2,5 +2,4 @@
 # Cloudflare Pages automatically serves .html files for requests without extension
 # This file ensures backward compatibility
 
-# Explicitly allow .html files to be accessed directly
-*.html /index.html 200
+# Remove the problematic wildcard redirect that breaks .html pages
