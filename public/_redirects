@@ -1,3 +1,0 @@
-# Cloudflare Pages serves .html files for requests without extension
-/login /login.html
-/register /register.html

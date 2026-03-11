@@ -9,8 +9,8 @@ export default {
     const path = url.pathname;
     const origin = request.headers.get("Origin") || "";
 
-    // 验证 origin
-    const allowedOrigins = ["https://blastjunior.com", "https://www.blastjunior.com"];
+    // 验证 origin - 只允许单域名 (BLXST-rules)
+    const allowedOrigins = ["https://blastjunior.com"];
     const isAllowedOrigin = allowedOrigins.includes(origin);
 
     if (request.method === "OPTIONS") {
@@ -43,9 +43,15 @@ export default {
         return withCors(await getPlayers(env, origin), origin);
       }
       
-      // 比赛（空，按白皮书V1.1方案A）
+      // 比赛列表（按白皮书V1.1方案A - 返回赛季和参赛队伍）
       if (path === "/matches") {
         return withCors(await getMatches(env, origin), origin);
+      }
+      
+      // 比赛详情（单个赛季）
+      if (path.startsWith("/matches/")) {
+        const seasonId = path.replace("/matches/", "");
+        return withCors(await getMatchDetail(env, seasonId, origin), origin);
       }
       
       // 积分榜
@@ -99,6 +105,24 @@ export default {
         return withCors(await getTeamDetail(env, teamId, origin), origin);
       }
       
+      // 战队详情 (备用路径)
+      if (path.startsWith("/teams/")) {
+        const teamId = path.replace("/teams/", "");
+        return withCors(await getTeamDetail(env, teamId, origin), origin);
+      }
+      
+      // 选手详情
+      if (path.startsWith("/player/")) {
+        const playerId = path.replace("/player/", "");
+        return withCors(await getPlayerDetail(env, playerId, origin), origin);
+      }
+      
+      // 选手详情 (备用路径)
+      if (path.startsWith("/players/")) {
+        const playerId = path.replace("/players/", "");
+        return withCors(await getPlayerDetail(env, playerId, origin), origin);
+      }
+      
       // 阵容
       if (path.startsWith("/rosters/")) {
         const teamId = path.replace("/rosters/", "");
@@ -125,9 +149,8 @@ export default {
 // ===== 辅助函数 =====
 
 function corsHeaders(origin) {
-  // 如果 origin 不在白名单，返回 * (但更好的做法是返回空或不设置)
-  // 这里允许的 origin 直接返回，否则返回空
-  const allowedOrigins = ["https://blastjunior.com", "https://www.blastjunior.com"];
+  // CORS 只允许单域名 (BLXST-rules)
+  const allowedOrigins = ["https://blastjunior.com"];
   const allowOrigin = allowedOrigins.includes(origin) ? origin : "";
   
   return {
@@ -138,14 +161,16 @@ function corsHeaders(origin) {
 }
 
 function withCors(response, origin) {
-  const allowedOrigins = ["https://blastjunior.com", "https://www.blastjunior.com"];
+  // CORS 只允许单域名 (BLXST-rules)
+  const allowedOrigins = ["https://blastjunior.com"];
   const allowOrigin = allowedOrigins.includes(origin) ? origin : "";
   response.headers.set("Access-Control-Allow-Origin", allowOrigin);
   return response;
 }
 
 function jsonResponse(data, status = 200, origin = "") {
-  const allowedOrigins = ["https://blastjunior.com", "https://www.blastjunior.com"];
+  // CORS 只允许单域名 (BLXST-rules)
+  const allowedOrigins = ["https://blastjunior.com"];
   const allowOrigin = allowedOrigins.includes(origin) ? origin : "";
   return new Response(JSON.stringify(data), {
     status,
@@ -554,6 +579,67 @@ async function getMatches(env, origin = "") {
   }
 }
 
+// 获取单个赛季详情（比赛/赛季详情）
+async function getMatchDetail(env, seasonId, origin = "") {
+  try {
+    // 获取指定赛季信息
+    const season = await env.CAMPAIGNS.prepare(`
+      SELECT season_id, name, year, start_date, end_date, status, season_type
+      FROM seasons 
+      WHERE season_id = ?
+    `).bind(seasonId).first();
+    
+    if (!season) {
+      return jsonResponse({ ok: false, error: "Season not found" }, 404, origin);
+    }
+    
+    // 获取该赛季的组别
+    const divisions = await env.CAMPAIGNS.prepare(`
+      SELECT * FROM divisions WHERE season_id = ? ORDER BY sort_order
+    `).bind(seasonId).all();
+    
+    // 获取该赛季的参赛队伍
+    const registrations = await env.CAMPAIGNS.prepare(`
+      SELECT r.registration_id, r.season_id, r.team_id, r.division, r.status,
+             t.canonical_name as team_name, d.name as division_name
+      FROM registrations r
+      JOIN teams t ON r.team_id = t.team_id
+      LEFT JOIN divisions d ON r.season_id = d.season_id AND r.division = d.division_key
+      WHERE r.season_id = ?
+      ORDER BY r.status DESC, t.canonical_name
+    `).bind(seasonId).all();
+    
+    // 获取该赛季的积分
+    let points = [];
+    try {
+      const pt = await env.CAMPAIGNS.prepare(`
+        SELECT r.team_id, t.canonical_name as team_name, 
+               SUM(tcp.points) as total_points, 
+               COUNT(DISTINCT tcp.component_id) as rounds_played
+        FROM team_component_points tcp
+        JOIN registrations r ON tcp.registration_id = r.registration_id
+        JOIN teams t ON r.team_id = t.team_id
+        WHERE r.season_id = ?
+        GROUP BY r.team_id
+        ORDER BY total_points DESC
+      `).bind(seasonId).all();
+      points = pt.results || [];
+    } catch(e) {}
+    
+    return jsonResponse({ 
+      ok: true, 
+      data: {
+        ...season,
+        divisions: divisions.results || [],
+        teams: registrations.results || [],
+        standings: points
+      }
+    }, 200, origin);
+  } catch (e) { 
+    return jsonResponse({ ok: false, error: e.message }, 500, origin); 
+  }
+}
+
 async function getStandingsV2(env, origin = "") {
   try {
     // 获取当前赛季信息
@@ -758,3 +844,121 @@ async function getTeamHonors(env, teamId, origin = "") {
 }
 
 async function getRosters(env, teamId, origin = "") { try { const r = await env.CAMPAIGNS.prepare("SELECT r.roster_id as id, r.season_id, r.team_id, r.player_id, p.nickname as player_name, p.display_name FROM rosters r LEFT JOIN players p ON r.player_id = p.player_id WHERE r.team_id = ? ORDER BY r.season_id DESC LIMIT 50").bind(teamId).all(); return jsonResponse({ ok: true, data: r.results || [] }, 200, origin); } catch (e) { return jsonResponse({ ok: false, error: e.message }, 500, origin); } }
+
+// 获取选手详情
+async function getPlayerDetail(env, playerId, origin = "") {
+  try {
+    // 选手基本信息
+    const player = await env.CAMPAIGNS.prepare("SELECT * FROM players WHERE player_id = ?").bind(playerId).first();
+    if (!player) return jsonResponse({ ok: false, error: "Player not found" }, 404, origin);
+    
+    // 获取当前赛季ID
+    const currentSeason = await env.CAMPAIGNS.prepare(`
+      SELECT season_id FROM seasons WHERE status = 'ongoing' ORDER BY start_date DESC LIMIT 1
+    `).first();
+    const currentSeasonId = currentSeason?.season_id || 'hpl_s2_2025';
+    
+    // 当前所属战队
+    let currentTeam = null;
+    try {
+      const ct = await env.CAMPAIGNS.prepare(`
+        SELECT r.team_id, t.canonical_name as team_name, r.season_id, r.role, s.season_type
+        FROM rosters r
+        JOIN teams t ON r.team_id = t.team_id
+        JOIN seasons s ON r.season_id = s.season_id
+        WHERE r.player_id = ? AND s.status = 'ongoing'
+        LIMIT 1
+      `).bind(playerId).first();
+      if (ct) {
+        currentTeam = {
+          id: ct.team_id,
+          name: ct.team_name,
+          season: ct.season_id,
+          role: ct.role,
+          isLeague: ct.season_type !== 'cup',
+          isCup: ct.season_type === 'cup'
+        };
+      }
+    } catch(e) {}
+    
+    // 历史效力战队
+    let teamHistory = [];
+    try {
+      const th = await env.CAMPAIGNS.prepare(`
+        SELECT r.team_id, t.canonical_name as team_name, r.season_id, r.role, s.season_type, s.status as season_status, s.name as season_name
+        FROM rosters r
+        JOIN teams t ON r.team_id = t.team_id
+        JOIN seasons s ON r.season_id = s.season_id
+        WHERE r.player_id = ?
+        ORDER BY s.start_date DESC
+      `).bind(playerId).all();
+      teamHistory = (th.results || []).map(x => ({
+        team_id: x.team_id,
+        team_name: x.team_name,
+        season_id: x.season_id,
+        season_name: x.season_name,
+        role: x.role,
+        isLeague: x.season_type !== 'cup',
+        isCup: x.season_type === 'cup',
+        isCurrent: x.season_status === 'ongoing'
+      }));
+    } catch(e) {}
+    
+    // 内部联赛成绩
+    let internalStats = null;
+    try {
+      const ir = await env.CAMPAIGNS.prepare(`
+        SELECT 
+          SUM(total_points) as total_points, 
+          SUM(points) as points,
+          COUNT(*) as rounds_played,
+          MAX(rank) as best_rank
+        FROM internal_league_results 
+        WHERE player_name = ?
+      `).bind(player.nickname).first();
+      if (ir && ir.total_points !== null) {
+        internalStats = {
+          total_points: ir.total_points,
+          points: ir.points,
+          rounds_played: ir.rounds_played,
+          best_rank: ir.best_rank
+        };
+      }
+    } catch(e) {}
+    
+    // 内部联赛历史记录
+    let internalHistory = [];
+    try {
+      const ih = await env.CAMPAIGNS.prepare(`
+        SELECT season_id, round_date, points, total_points, rank
+        FROM internal_league_results 
+        WHERE player_name = ?
+        ORDER BY round_date DESC
+        LIMIT 20
+      `).bind(player.nickname).all();
+      internalHistory = ih.results || [];
+    } catch(e) {}
+    
+    return jsonResponse({ 
+      ok: true, 
+      data: {
+        id: player.player_id,
+        name: player.nickname,
+        display_name: player.display_name,
+        real_name: player.real_name,
+        birth_year: player.birth_year,
+        gender: player.gender,
+        is_active: player.is_active,
+        club_name: player.club_name,
+        note: player.note,
+        currentSeasonId,
+        currentTeam: currentTeam,
+        team_history: teamHistory,
+        internal_stats: internalStats,
+        internal_history: internalHistory
+      }
+    }, 200, origin);
+  } catch (e) {
+    return jsonResponse({ ok: false, error: e.message }, 500, origin);
+  }
+}
