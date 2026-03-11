@@ -10,7 +10,7 @@ export default {
     const origin = request.headers.get("Origin") || "";
 
     // 验证 origin - 只允许单域名 (BLXST-rules)
-    const allowedOrigins = ["https://blastjunior.com"];
+    const allowedOrigins = ["https://blastjunior.com", "https://blastjunior-website.pages.dev"];
     const isAllowedOrigin = allowedOrigins.includes(origin);
 
     if (request.method === "OPTIONS") {
@@ -150,7 +150,7 @@ export default {
 
 function corsHeaders(origin) {
   // CORS 只允许单域名 (BLXST-rules)
-  const allowedOrigins = ["https://blastjunior.com"];
+  const allowedOrigins = ["https://blastjunior.com", "https://blastjunior-website.pages.dev"];
   const allowOrigin = allowedOrigins.includes(origin) ? origin : "";
   
   return {
@@ -162,7 +162,7 @@ function corsHeaders(origin) {
 
 function withCors(response, origin) {
   // CORS 只允许单域名 (BLXST-rules)
-  const allowedOrigins = ["https://blastjunior.com"];
+  const allowedOrigins = ["https://blastjunior.com", "https://blastjunior-website.pages.dev"];
   const allowOrigin = allowedOrigins.includes(origin) ? origin : "";
   response.headers.set("Access-Control-Allow-Origin", allowOrigin);
   return response;
@@ -170,7 +170,7 @@ function withCors(response, origin) {
 
 function jsonResponse(data, status = 200, origin = "") {
   // CORS 只允许单域名 (BLXST-rules)
-  const allowedOrigins = ["https://blastjunior.com"];
+  const allowedOrigins = ["https://blastjunior.com", "https://blastjunior-website.pages.dev"];
   const allowOrigin = allowedOrigins.includes(origin) ? origin : "";
   return new Response(JSON.stringify(data), {
     status,

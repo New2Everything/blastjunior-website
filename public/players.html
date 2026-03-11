@@ -169,7 +169,7 @@
             const html = sorted.map(p => {
                 const isLanxing = p.club_name?.includes('兰星') || false;
                 const age = p.birth_year ? new Date().getFullYear() - p.birth_year : '-';
-                const genderText = p.gender === 'male' ? '男' : p.gender === 'female' ? '女' : '-';
+                const genderText = p.gender === '男' ? '男' : p.gender === '女' ? '女' : '-';
                 const statusText = p.is_active ? '活跃' : '退役';
                 
                 return `
@@ -196,7 +196,7 @@
                         </div>
                         <div class="player-detail-item">
                             <span class="player-detail-label">所属战队</span>
-                            <span class="player-detail-value">${p.team_name || '-'}</span>
+                            <span class="player-detail-value">${p.current_team?.name || '-'}</span>
                         </div>
                         <div class="player-detail-item">
                             <span class="player-detail-label">状态</span>
