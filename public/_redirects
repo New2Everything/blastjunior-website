@@ -1,7 +1,3 @@
-# Fix .html pages - redirect to non-htmlflare Pages automatically serves version
-# Cloud .html files for requests without extension
-# This file ensures backward compatibility
-
-# Explicitly serve login and register pages
-/login /login.html 200
-/register /register.html 200
+# Cloudflare Pages serves .html files for requests without extension
+/login /login.html
+/register /register.html
