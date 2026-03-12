@@ -399,6 +399,51 @@
             }
         }
         
+        // 从 /news API 加载所有新闻
+        async function loadAllNews() {
+            const newsGrid = document.getElementById('newsGrid');
+            try {
+                const resp = await fetch(API_BASE + '/news');
+                const result = await resp.json();
+                
+                if (!result.ok) throw new Error(result.error);
+                
+                const news = result.data || [];
+                renderAllNews(news);
+                
+            } catch (e) {
+                console.error('加载新闻失败:', e);
+                newsGrid.innerHTML = getErrorState('加载失败，请检查网络', 'loadAllNews()');
+            }
+        }
+        
+        // 渲染所有新闻（不限制数量）
+        function renderAllNews(news) {
+            const newsGrid = document.getElementById('newsGrid');
+            
+            if (!news || news.length === 0) {
+                newsGrid.innerHTML = getEmptyState('📰', '暂无新闻', '即将发布最新动态');
+                return;
+            }
+            
+            // 显示所有新闻，不再限制数量
+            const html = news.map(n => {
+                const tag = n.category || '动态';
+                const summary = n.content ? (n.content.length > 100 ? n.content.substring(0, 100) + '...' : n.content) : '';
+                const date = n.published_at ? formatDate(n.published_at) : '';
+                return `
+                    <a href="/news.html?id=${n.id}" class="news-card">
+                        <span class="news-tag">${tag}</span>
+                        <h3 class="news-title">${n.title || ''}</h3>
+                        <p class="news-summary">${summary}</p>
+                        <div class="news-date">${date}</div>
+                    </a>
+                `;
+            }).join('');
+            
+            newsGrid.innerHTML = html;
+        }
+        
         async function loadHomeData() {
             try {
                 const resp = await fetch(API_BASE + '/');
@@ -436,8 +481,8 @@
                     ).join('');
                 }
                 
-                // 新闻 - 从D1
-                renderNews(data.news || []);
+                // 新闻 - 从 /news API 获取所有新闻
+                loadAllNews();
                 
                 // 赞助商 - 从D1
                 renderSponsors(data.sponsors || []);
