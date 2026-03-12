@@ -144,26 +144,36 @@
         const urlParams = new URLSearchParams(window.location.search);
         const playerId = urlParams.get('id') || 'lx_001';
         
-        // 加载选手信息
+        // 加载选手信息 - 使用详细端点
         async function loadPlayerInfo() {
             try {
-                // 获取选手列表（包含当前战队和历史战队）
-                const resp = await fetch(API_BASE + '/players');
+                // 使用 /player/:id 端点获取完整信息
+                const resp = await fetch(API_BASE + '/player/' + playerId);
                 const result = await resp.json();
-                const player = (result.data || []).find(p => p.id === playerId);
                 
-                if (!player) {
+                if (!result.ok || !result.data) {
                     document.getElementById('playerProfile').innerHTML = '<div class="empty">选手不存在</div>';
                     return;
                 }
                 
-                // 渲染Profile
+                const player = result.data;
+                
+                // 渲染Profile - 显示所有可用字段
+                const genderLabel = player.gender === '男' ? '👨' : player.gender === '女' ? '👩' : '😐';
+                const birthYearLabel = player.birth_year ? `出生于 ${player.birth_year}年` : '';
+                const clubLabel = player.club_name || '兰星少年俱乐部';
+                
                 document.getElementById('playerProfile').className = 'player-profile';
                 document.getElementById('playerProfile').innerHTML = `
                     <div class="player-avatar">${player.name?.charAt(0) || '?'}</div>
                     <h1 class="player-name">${player.name}</h1>
-                    <p class="player-nickname">${player.real_name || ''}</p>
-                    <span class="player-club">🏓 3v3选手 · ${player.is_active ? '活跃选手' : '历史选手'}</span>
+                    <p class="player-nickname">${player.real_name || '暂无真名'}</p>
+                    <div style="margin-top:0.5rem;display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+                        <span class="player-club">${genderLabel} ${player.gender || '未知'}</span>
+                        ${player.birth_year ? `<span class="player-club">🎂 ${player.birth_year}年</span>` : ''}
+                        <span class="player-club">🏓 3v3选手 · ${player.is_active ? '活跃选手' : '历史选手'}</span>
+                    </div>
+                    ${player.club_name ? `<p style="margin-top:0.5rem;opacity:0.8;">${clubLabel}</p>` : ''}
                 `;
                 document.title = `${player.name} - 兰星少年 HADO 俱乐部`;
                 
@@ -173,8 +183,8 @@
                 // 加载历史战队信息
                 loadPlayerTeamHistory(player);
                 
-                // 加载内部联赛数据
-                loadPlayerInternalStats(playerId);
+                // 加载内部联赛数据 - 使用详细端点返回的数据
+                renderPlayerInternalStats(player);
             } catch (e) {
                 console.error(e);
                 document.getElementById('playerProfile').innerHTML = '<div class="empty">加载失败</div>';
@@ -186,13 +196,15 @@
             const section = document.getElementById('playerTeam');
             const container = document.getElementById('teamInfo');
             
-            if (!player.current_team) {
+            // 使用详细端点返回的数据结构 (currentTeam vs current_team)
+            const team = player.currentTeam || player.current_team;
+            
+            if (!team) {
                 section.style.display = 'none';
                 return;
             }
             
             section.style.display = 'block';
-            const team = player.current_team;
             const leagueBadge = team.isLeague ? '🏅' : '🏆';
             
             container.innerHTML = `
@@ -223,7 +235,7 @@
             history.forEach((h, idx) => {
                 const typeBadge = h.isLeague ? '🏅' : '🏆';
                 const currentBadge = h.isCurrent ? '· 现役' : '';
-                const seasonLabel = h.season_id?.replace('hpl_', '').replace('_', ' ') || h.season_id;
+                const seasonLabel = h.season_name || h.season_id?.replace('hpl_', '').replace('_', ' ') || h.season_id;
                 
                 html += `
                     <div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:var(--bg-light);border-radius:12px;">
@@ -242,48 +254,66 @@
             container.innerHTML = html;
         }
         
-        // 加载内部联赛数据
-        async function loadPlayerInternalStats(playerId) {
-            try {
-                // 从内部联赛结果中查找该选手
-                const resp = await fetch(API_BASE + '/internal-rounds');
-                const result = await resp.json();
-                
-                const rounds = result.data || [];
-                const playerStats = [];
-                
-                rounds.forEach(round => {
-                    (round.topPlayers || []).forEach(p => {
-                        if (p.name) {
-                            playerStats.push({
-                                season: round.season_id,
-                                rank: p.rank,
-                                points: p.points,
-                                total: p.total
-                            });
-                        }
-                    });
-                });
-                
-                // 只取该选手的数据
-                const myStats = playerStats.slice(0, 10);
-                
-                if (myStats.length > 0) {
-                    document.getElementById('playerInternal').style.display = 'block';
-                    
-                    document.getElementById('internalStats').innerHTML = myStats.map(s => `
-                        <div class="internal-item">
-                            <div class="internal-rank">#${s.rank}</div>
-                            <div class="internal-info">
-                                <div class="internal-season">${s.season || '赛季'}</div>
-                            </div>
-                            <div class="internal-points">${s.points}分</div>
+        // 渲染内部联赛数据 - 使用详细端点返回的数据
+        function renderPlayerInternalStats(player) {
+            const section = document.getElementById('playerInternal');
+            const container = document.getElementById('internalStats');
+            
+            // 首先检查详细数据中的 internal_stats
+            if (player.internal_stats && player.internal_stats.total_points !== null) {
+                section.style.display = 'block';
+                const stats = player.internal_stats;
+                container.innerHTML = `
+                    <div class="internal-item" style="background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;">
+                        <div class="internal-rank">🏆</div>
+                        <div class="internal-info">
+                            <div style="font-weight:600;">总积分</div>
+                            <div class="internal-season">历史累计</div>
                         </div>
-                    `).join('');
-                }
-            } catch (e) {
-                console.error(e);
+                        <div class="internal-points" style="color:white;font-size:1.5rem;">${stats.total_points}分</div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-top:0.75rem;">
+                        <div class="internal-item">
+                            <div class="internal-info">
+                                <div style="font-weight:600;">参赛场次</div>
+                                <div class="internal-season">${stats.rounds_played || 0}场</div>
+                            </div>
+                        </div>
+                        <div class="internal-item">
+                            <div class="internal-info">
+                                <div style="font-weight:600;">总得分</div>
+                                <div class="internal-season">${stats.points || 0}分</div>
+                            </div>
+                        </div>
+                        <div class="internal-item">
+                            <div class="internal-info">
+                                <div style="font-weight:600;">最高排名</div>
+                                <div class="internal-season">#${stats.best_rank || '-'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
             }
+            
+            // 如果没有详细数据，尝试从内部联赛历史中获取
+            if (player.internal_history && player.internal_history.length > 0) {
+                section.style.display = 'block';
+                container.innerHTML = player.internal_history.slice(0, 10).map(h => `
+                    <div class="internal-item">
+                        <div class="internal-rank">#${h.rank}</div>
+                        <div class="internal-info">
+                            <div class="internal-season">${h.season_id || '赛季'}</div>
+                            <div style="font-size:0.75rem;color:var(--text-gray);">${h.round_date || ''}</div>
+                        </div>
+                        <div class="internal-points">${h.points}分</div>
+                    </div>
+                `).join('');
+                return;
+            }
+            
+            // 没有内部联赛数据
+            section.style.display = 'none';
         }
         
         loadPlayerInfo();

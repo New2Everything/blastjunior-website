@@ -180,16 +180,7 @@
                     return;
                 }
                 
-                // 渲染Hero
-                document.getElementById('teamHero').className = 'team-hero';
-                document.getElementById('teamHero').innerHTML = `
-                    <div class="team-logo">${team.name?.charAt(0) || '⚔️'}</div>
-                    <h1 class="team-name">${team.name}</h1>
-                    <span class="team-tag">${team.tag || '战队'}</span>
-                `;
-                document.title = `${team.name} - 兰星少年 HADO 俱乐部`;
-                
-                // 加载其他数据
+                // 加载其他数据（包含详细信息）
                 loadTeamDetail(teamId);
             } catch (e) {
                 console.error(e);
@@ -209,6 +200,20 @@
                 }
                 
                 const team = result.data;
+                
+                // 渲染Hero - 显示详细信息
+                const teamTypeLabel = team.team_type === 'club' ? '🏓 俱乐部战队' : team.team_type === 'school' ? '🏫 学校战队' : '⚔️ 战队';
+                document.getElementById('teamHero').className = 'team-hero';
+                document.getElementById('teamHero').innerHTML = `
+                    <div class="team-logo">${team.name?.charAt(0) || '⚔️'}</div>
+                    <h1 class="team-name">${team.name}</h1>
+                    <div style="margin-top:0.5rem;display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+                        <span class="team-tag">${teamTypeLabel}</span>
+                        ${team.club_id ? `<span class="team-tag">🏢 ${team.club_id}</span>` : ''}
+                    </div>
+                    ${team.note ? `<p style="margin-top:0.5rem;opacity:0.9;font-size:0.9rem;">${team.note}</p>` : ''}
+                `;
+                document.title = `${team.name} - 兰星少年 HADO 俱乐部`;
                 
                 // 渲染当前阵容
                 renderCurrentRoster(team.currentRoster, team.currentSeasonId);
