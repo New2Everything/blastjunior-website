@@ -134,29 +134,63 @@
         const container = document.getElementById('newsContent');
         
         try {
-            // 从API获取新闻（这里使用模拟数据，实际应调用news API）
-            const mockNews = {
-                id: currentTargetId,
-                title: '兰星少年战队夺得2024赛季冠军',
-                tag: '赛事',
-                date: '2024-12-15',
-                content: `<p>在刚刚结束的2024赛季HADO比赛中，兰星少年战队表现出色，最终夺得冠军。</p>
-                <p>本次比赛共有来自全国各地的20支队伍参加，经过激烈的角逐，兰星少年战队凭借出色的团队配合和战术执行，成功问鼎冠军。</p>
-                <p>让我们期待战队在未来的比赛中再创佳绩！</p>`
+            // 从API获取真实新闻数据
+            const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+            const resp = await fetch(API_BASE + '/news');
+            const result = await resp.json();
+            
+            let news = null;
+            if (result.ok && result.data && result.data.length > 0) {
+                // 根据ID过滤新闻
+                news = result.data.find(n => n.id == currentTargetId);
+            }
+            
+            // 如果没找到对应新闻，使用第一条
+            if (!news && result.data && result.data.length > 0) {
+                news = result.data[0];
+            }
+            
+            if (!news) {
+                container.innerHTML = '<div class="error">未找到新闻</div>';
+                return;
+            }
+            
+            // 解析内容，处理换行
+            const contentHtml = news.content 
+                ? news.content.split('\n').map(p => p.trim()).filter(p => p).map(p => `<p>${p}</p>`).join('')
+                : '<p>暂无内容</p>';
+            
+            // 解析发布日期
+            const dateStr = news.published_at ? news.published_at.split(' ')[0] : '';
+            
+            // 解析分类标签
+            const category = news.category || '赛事';
+            const tagMap = {
+                '赛事': '赛事',
+                '动态': '俱乐部',
+                'Opinion': '观点',
+                '转发': '转载',
+                'AI': 'AI资讯',
+                'HADO': 'HADO',
+                'test': '测试'
             };
+            const tag = tagMap[category] || category;
+            
+            // 作者
+            const author = news.real_name || news.author || '官方';
             
             // 渲染新闻
             container.innerHTML = `
                 <article class="news-detail">
-                    <span class="news-tag">${mockNews.tag}</span>
-                    <h1 class="news-title">${mockNews.title}</h1>
-                    <div class="news-meta">发布时间：${mockNews.date}</div>
-                    <div class="news-content">${mockNews.content}</div>
+                    <span class="news-tag">${tag}</span>
+                    <h1 class="news-title">${news.title}</h1>
+                    <div class="news-meta">发布时间：${dateStr} | 作者：${author}</div>
+                    <div class="news-content">${contentHtml}</div>
                 </article>
             `;
             
             // 初始化评论组件
-            initComments('news', currentTargetId);
+            initComments('news', news.id);
             
         } catch (e) {
             console.error('Load news failed:', e);
