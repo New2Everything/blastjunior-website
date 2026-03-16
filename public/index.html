@@ -452,7 +452,7 @@
             newsGrid.innerHTML = html;
         }
         
-        async function loadHomeData() {
+        async function loadHomeData() { console.log("loadHomeData called"); {
             try {
                 const resp = await fetch(API_BASE + '/');
                 const result = await resp.json();
