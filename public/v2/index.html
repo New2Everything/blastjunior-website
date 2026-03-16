@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BLXST - HADO兰星少年俱乐部</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="v2/index.html" class="header-logo">
+      <svg viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2"/>
+        <circle cx="16" cy="16" r="6" fill="#FF6B35"/>
+        <path d="M16 2 L16 8 M16 24 L16 30 M2 16 L8 16 M24 16 L30 16" stroke="#FF6B35" stroke-width="2"/>
+      </svg>
+      BLXST
+    </a>
+    <nav class="nav-links">
+      <a href="v2/index.html" class="nav-link active">首页</a>
+      <a href="v2/events.html" class="nav-link">赛事</a>
+      <a href="v2/teams.html" class="nav-link">战队</a>
+      <a href="v2/players.html" class="nav-link">选手</a>
+      <a href="v2/gallery.html" class="nav-link">图库</a>
+      <a href="v2/news.html" class="nav-link">新闻</a>
+      <a href="v2/sponsors.html" class="nav-link">赞助</a>
+    </nav>
+    <div class="header-right">
+      <a href="v2/profile.html" class="nav-link">👤</a>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- Hero 区域 -->
+    <section class="hero">
+      <div class="hero-content">
+        <div class="hero-badge">🏆 HADO 超级联赛</div>
+        <h1 class="hero-title" id="hero-title">HPL 第二届</h1>
+        <p class="hero-subtitle" id="hero-subtitle">2025.12 - 2026.03 | 32支战队 | 96名选手</p>
+        <div class="hero-stats" id="hero-stats">
+          <!-- 动态加载 -->
+        </div>
+        <div class="hero-actions">
+          <a href="v2/standings.html" class="btn btn-primary">查看积分榜 →</a>
+          <a href="v2/events.html" class="btn btn-secondary">赛程安排 →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 实时数据条 -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-icon">🛡️</div>
+        <div class="stat-info">
+          <div class="stat-number data-number" id="stat-teams">108</div>
+          <div class="stat-label">支战队</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">👤</div>
+        <div class="stat-info">
+          <div class="stat-number data-number" id="stat-players">49</div>
+          <div class="stat-label">名选手</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📸</div>
+        <div class="stat-info">
+          <div class="stat-number data-number" id="stat-photos">257</div>
+          <div class="stat-label">张照片</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📰</div>
+        <div class="stat-info">
+          <div class="stat-number data-number" id="stat-news">36</div>
+          <div class="stat-label">条资讯</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 热门赛事 -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">热门赛事</h2>
+        <a href="v2/events.html" class="section-link">查看全部 →</a>
+      </div>
+      <div class="events-grid" id="events-grid">
+        <div class="loading"><div class="loading-spinner"></div></div>
+      </div>
+    </section>
+
+    <!-- 联赛积分榜 TOP 5 -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">联赛积分榜 TOP 5</h2>
+        <a href="v2/standings.html" class="section-link">查看完整榜 →</a>
+      </div>
+      <div class="standings-section">
+        <div class="standings-header">
+          <span>排名</span>
+          <span>战队</span>
+          <span>胜</span>
+          <span>负</span>
+          <span>平</span>
+          <span>积分</span>
+        </div>
+        <div id="standings-body">
+          <div class="loading"><div class="loading-spinner"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 明星战队 -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">明星战队</h2>
+        <a href="v2/teams.html" class="section-link">查看全部 →</a>
+      </div>
+      <div class="teams-grid" id="teams-grid">
+        <div class="loading"><div class="loading-spinner"></div></div>
+      </div>
+    </section>
+
+    <!-- 明星选手 -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">明星选手</h2>
+        <a href="v2/players.html" class="section-link">查看全部 →</a>
+      </div>
+      <div class="players-grid" id="players-grid">
+        <div class="loading"><div class="loading-spinner"></div></div>
+      </div>
+    </section>
+
+    <!-- 最新资讯 -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">最新资讯</h2>
+        <a href="v2/news.html" class="section-link">查看全部 →</a>
+      </div>
+      <div class="news-grid" id="news-grid">
+        <div class="loading"><div class="loading-spinner"></div></div>
+      </div>
+    </section>
+
+    <!-- 精彩瞬间 -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">精彩瞬间</h2>
+        <a href="v2/gallery.html" class="section-link">查看全部 →</a>
+      </div>
+      <div class="gallery-grid" id="gallery-grid">
+        <div class="loading"><div class="loading-spinner"></div></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="#" class="footer-link">关于我们</a>
+      <a href="#" class="footer-link">联系我们</a>
+      <a href="v2/sponsors.html" class="footer-link">赞助合作</a>
+      <a href="#" class="footer-link">隐私政策</a>
+    </div>
+    <div class="footer-copyright">
+      © 2026 兰星少年俱乐部 | HADO中国官方合作伙伴
+    </div>
+  </footer>
+
+  <script>
+    const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+
+    // 初始化
+    async function init() {
+      try {
+        await Promise.all([
+          loadHomeData(),
+          loadEvents(),
+          loadStandings(),
+          loadTeams(),
+          loadPlayers(),
+          loadNews(),
+          loadGallery()
+        ]);
+      } catch (e) {
+        console.error('Init error:', e);
+      }
+    }
+
+    // 加载首页聚合数据
+    async function loadHomeData() {
+      const res = await fetch(API_BASE + '/');
+      const data = await res.json();
+      
+      if (data.ok && data.data) {
+        const d = data.data;
+        
+        // 更新统计
+        if (d.stats) {
+          document.getElementById('stat-teams').textContent = d.stats.totalTeams || 108;
+          document.getElementById('stat-players').textContent = d.stats.totalPlayers || 49;
+        }
+        
+        // 更新Hero
+        if (d.currentSeason) {
+          const season = d.currentSeason;
+          document.getElementById('hero-title').textContent = `HPL ${season.name || '第二届'}`;
+          document.getElementById('hero-subtitle').textContent = 
+            `${season.start_date || '2025.12'} - 2026.03 | ${d.stats?.totalTeams || 32}支战队 | ${d.stats?.totalPlayers || 96}名选手`;
+        }
+      }
+    }
+
+    // 加载赛事
+    async function loadEvents() {
+      const res = await fetch(API_BASE + '/matches');
+      const data = await res.json();
+      
+      const container = document.getElementById('events-grid');
+      
+      if (!data.ok || !data.data || data.data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-text">暂无赛事数据</div></div>';
+        return;
+      }
+      
+      const events = data.data.slice(0, 3);
+      container.innerHTML = events.map(event => `
+        <div class="event-card" onclick="location.href='v2/events.html'">
+          <span class="event-badge ${event.status === 'ongoing' ? 'ongoing' : 'finished'}">
+            ${event.status === 'ongoing' ? '🔥 进行中' : '✅ 已结束'}
+          </span>
+          <h3 class="event-title">${event.event_name || event.name || 'HADO赛事'}</h3>
+          <div class="event-meta">
+            <span>📅 ${event.start_date || '2025'}</span>
+            <span>👥 ${event.teams || '多'}支战队</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 加载积分榜
+    async function loadStandings() {
+      const res = await fetch(API_BASE + '/standings');
+      const data = await res.json();
+      
+      const container = document.getElementById('standings-body');
+      
+      if (!data.ok || !data.data || data.data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-text">暂无积分榜数据</div></div>';
+        return;
+      }
+      
+      const teams = data.data.slice(0, 5);
+      const rankEmojis = ['🥇', '🥈', '🥉', '4', '5'];
+      
+      container.innerHTML = teams.map((team, i) => `
+        <div class="standings-row" onclick="location.href='v2/team-detail.html?id=${team.team_id}'">
+          <span class="standings-rank rank-${i+1}">${rankEmojis[i]}</span>
+          <div class="standings-team">
+            <span class="team-avatar">🛡️</span>
+            ${team.team_name || team.name || '未知战队'}
+          </div>
+          <span class="standings-wins">${team.wins || 0}</span>
+          <span class="standings-losses">${team.losses || 0}</span>
+          <span class="standings-draws">${team.draws || 0}</span>
+          <span class="standings-points">${team.points || 0}</span>
+        </div>
+      `).join('');
+    }
+
+    // 加载战队
+    async function loadTeams() {
+      const res = await fetch(API_BASE + '/teams');
+      const data = await res.json();
+      
+      const container = document.getElementById('teams-grid');
+      
+      if (!data.ok || !data.data || data.data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-text">暂无战队数据</div></div>';
+        return;
+      }
+      
+      // 取前4个战队
+      const teams = data.data.slice(0, 4);
+      
+      container.innerHTML = teams.map((team, i) => `
+        <div class="team-card" onclick="location.href='v2/team-detail.html?id=${team.id}'">
+          <div class="team-avatar-large">🛡️</div>
+          <div class="team-name">${team.name}</div>
+          <div class="team-rank">#${i + 1}</div>
+          <div class="team-points">-</div>
+        </div>
+      `).join('');
+    }
+
+    // 加载选手
+    async function loadPlayers() {
+      const res = await fetch(API_BASE + '/players');
+      const data = await res.json();
+      
+      const container = document.getElementById('players-grid');
+      
+      if (!data.ok || !data.data || data.data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-text">暂无选手数据</div></div>';
+        return;
+      }
+      
+      const players = data.data.slice(0, 4);
+      
+      container.innerHTML = players.map((player, i) => `
+        <div class="player-card" onclick="location.href='v2/player-detail.html?id=${player.id}'">
+          <div class="player-avatar">👤</div>
+          <div class="player-name">${player.nickname || player.name || '选手'}</div>
+          <div class="player-realname">${player.real_name || ''}</div>
+          <div class="player-rank">#${i + 1}</div>
+        </div>
+      `).join('');
+    }
+
+    // 加载新闻
+    async function loadNews() {
+      const res = await fetch(API_BASE + '/news');
+      const data = await res.json();
+      
+      const container = document.getElementById('news-grid');
+      
+      if (!data.ok || !data.data || data.data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-text">暂无新闻</div></div>';
+        return;
+      }
+      
+      const news = data.data.slice(0, 4);
+      
+      container.innerHTML = news.map(item => {
+        const cat = item.category || 'event';
+        const catClass = cat === 'ai' || item.author?.includes('AI') ? 'ai' : (cat === 'club' ? 'club' : 'event');
+        const catText = cat === 'ai' ? '🤖 AI资讯' : (cat === 'club' ? '📢 俱乐部' : '🏆 赛事报道');
+        
+        return `
+          <div class="news-card" onclick="location.href='v2/news.html'">
+            <div class="news-image">📰</div>
+            <div class="news-content">
+              <span class="news-category ${catClass}">${catText}</span>
+              <h3 class="news-title">${item.title}</h3>
+              <div class="news-meta">
+                <span>📅 ${item.published_at?.split(' ')[0] || '2026'}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 加载图库
+    async function loadGallery() {
+      const res = await fetch(API_BASE + '/gallery');
+      const data = await res.json();
+      
+      const container = document.getElementById('gallery-grid');
+      
+      if (!data.ok || !data.data || data.data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-text">暂无照片</div></div>';
+        return;
+      }
+      
+      const photos = data.data.slice(0, 5);
+      
+      container.innerHTML = photos.map(photo => `
+        <div class="gallery-item" onclick="location.href='v2/gallery.html'">
+          <div class="gallery-placeholder">${photo.title ? photo.title[0] : '📷'}</div>
+        </div>
+      `).join('');
+    }
+
+    // 启动
+    init();
+  </script>
+</body>
+</html>

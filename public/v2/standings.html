@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>积分榜 - BLXST</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+</head>
+<body>
+  <header class="header">
+    <a href="v2/index.html" class="header-logo">
+      <svg viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2"/>
+        <circle cx="16" cy="16" r="6" fill="#FF6B35"/>
+      </svg>
+      BLXST
+    </a>
+    <nav class="nav-links">
+      <a href="v2/index.html" class="nav-link">首页</a>
+      <a href="v2/events.html" class="nav-link">赛事</a>
+      <a href="v2/teams.html" class="nav-link">战队</a>
+      <a href="v2/players.html" class="nav-link">选手</a>
+      <a href="v2/gallery.html" class="nav-link">图库</a>
+      <a href="v2/news.html" class="nav-link">新闻</a>
+      <a href="v2/sponsors.html" class="nav-link">赞助</a>
+    </nav>
+    <div class="header-right">
+      <a href="v2/profile.html" class="nav-link">👤</a>
+    </div>
+  </header>
+
+  <main class="main-content" style="padding-top: 100px;">
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">联赛积分榜</h2>
+        <a href="v2/index.html" class="section-link">← 返回首页</a>
+      </div>
+      
+      <div class="standings-section" style="padding: 0; background: transparent;">
+        <div class="standings-header" style="background: var(--color-bg-mid);">
+          <span>排名</span>
+          <span>战队</span>
+          <span>场次</span>
+          <span>胜</span>
+          <span>负</span>
+          <span>平</span>
+          <span>积分</span>
+        </div>
+        <div id="standings-body">
+          <div class="loading"><div class="loading-spinner"></div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-copyright">© 2026 兰星少年俱乐部</div>
+  </footer>
+
+  <script>
+    const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+
+    async function init() {
+      const res = await fetch(API_BASE + '/standings');
+      const data = await res.json();
+      
+      const container = document.getElementById('standings-body');
+      
+      if (data.ok && data.data && data.data.length > 0) {
+        const teams = data.data;
+        const rankEmojis = ['🥇', '🥈', '🥉', '4', '5', '6', '7', '8'];
+        
+        container.innerHTML = teams.slice(0, 20).map((team, i) => `
+          <div class="standings-row" onclick="location.href='v2/team-detail.html?id=${team.team_id || team.id}'">
+            <span class="standings-rank rank-${i+1 <= 3 ? i+1 : ''}">${rankEmojis[i] || (i+1)}</span>
+            <div class="standings-team">
+              <span class="team-avatar">🛡️</span>
+              ${team.team_name || team.name || '未知战队'}
+            </div>
+            <span class="standings-wins">${(team.wins || 0) + (team.losses || 0) + (team.draws || 0) || '-'}</span>
+            <span class="standings-wins" style="color: var(--color-win);">${team.wins || 0}</span>
+            <span class="standings-losses" style="color: var(--color-loss);">${team.losses || 0}</span>
+            <span class="standings-draws" style="color: var(--color-draw);">${team.draws || 0}</span>
+            <span class="standings-points">${team.points || 0}</span>
+          </div>
+        `).join('');
+      } else {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-text">暂无积分榜数据</div></div>';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

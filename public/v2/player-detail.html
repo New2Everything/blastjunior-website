@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>选手详情 - BLXST</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👤</text></svg>">
+</head>
+<body>
+  <header class="header">
+    <a href="v2/index.html" class="header-logo">⚔️ BLXST</a>
+    <nav class="nav-links">
+      <a href="v2/index.html" class="nav-link">首页</a>
+      <a href="v2/events.html" class="nav-link">赛事</a>
+      <a href="v2/teams.html" class="nav-link">战队</a>
+      <a href="v2/players.html" class="nav-link">选手</a>
+      <a href="v2/gallery.html" class="nav-link">图库</a>
+      <a href="v2/news.html" class="nav-link">新闻</a>
+      <a href="v2/sponsors.html" class="nav-link">赞助</a>
+    </nav>
+  </header>
+
+  <main class="main-content" style="padding-top: 100px;">
+    <section class="section">
+      <a href="v2/players.html" class="section-link" style="margin-bottom: 24px; display: inline-block;">← 返回选手列表</a>
+      
+      <!-- 选手信息 -->
+      <div style="background: var(--color-bg-mid); border-radius: 16px; padding: 32px; border: 1px solid var(--color-border); margin-bottom: 32px;">
+        <div style="display: flex; align-items: center; gap: 32px;">
+          <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--color-bg-light), var(--color-deep)); display: flex; align-items: center; justify-content: center; font-size: 56px; border: 4px solid var(--color-primary);">
+            👤
+          </div>
+          <div>
+            <h1 id="player-name" style="font-size: 32px; margin-bottom: 8px;">加载中...</h1>
+            <p id="player-realname" style="color: var(--color-text-secondary); margin-bottom: 8px;">-</p>
+            <p id="player-info" style="color: var(--color-text-secondary); font-size: 14px;">-</p>
+            <div style="margin-top: 16px;">
+              <button class="btn btn-primary" onclick="toggleFavorite()">❤️ 收藏</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 本赛季数据 -->
+      <h2 class="section-title" style="margin-bottom: 24px;">本赛季数据</h2>
+      <div class="stats-bar" style="margin-bottom: 32px;">
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-number" id="stat-matches">-</div>
+            <div class="stat-label">参赛场次</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-number" style="color: var(--color-win);" id="stat-winrate">-</div>
+            <div class="stat-label">胜率</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-number" style="color: var(--color-primary);" id="stat-points">-</div>
+            <div class="stat-label">场均得分</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-number" id="stat-rank">-</div>
+            <div class="stat-label">排名</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 总数据 -->
+      <h2 class="section-title" style="margin-bottom: 24px;">总数据</h2>
+      <div class="stats-bar" style="margin-bottom: 32px;">
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-number" id="total-points">-</div>
+            <div class="stat-label">总得分</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-number" id="best-score">-</div>
+            <div class="stat-label">最高得分</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-number" id="win-streak">-</div>
+            <div class="stat-label">连胜</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <div class="stat-number" id="mvp-count">-</div>
+            <div class="stat-label">MVP</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 队伍历史 -->
+      <h2 class="section-title" style="margin-bottom: 24px;">队伍历史</h2>
+      <div id="team-history" style="background: var(--color-bg-mid); border-radius: 16px; padding: 24px; border: 1px solid var(--color-border); margin-bottom: 32px;">
+        <div class="loading"><div class="loading-spinner"></div></div>
+      </div>
+      
+      <!-- 荣誉记录 -->
+      <h2 class="section-title" style="margin-bottom: 24px;">荣誉记录</h2>
+      <div id="honors" style="background: var(--color-bg-mid); border-radius: 16px; padding: 24px; border: 1px solid var(--color-border); margin-bottom: 32px;">
+        <div class="loading"><div class="loading-spinner"></div></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-copyright">© 2026 兰星少年俱乐部</div>
+  </footer>
+
+  <script>
+    const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    const params = new URLSearchParams(window.location.search);
+    const playerId = params.get('id');
+
+    async function init() {
+      if (!playerId) {
+        document.getElementById('player-name').textContent = '未指定选手';
+        return;
+      }
+
+      try {
+        const res = await fetch(API_BASE + '/players/' + playerId);
+        const data = await res.json();
+        
+        if (data.ok && data.data) {
+          renderPlayer(data.data);
+        } else {
+          document.getElementById('player-name').textContent = '选手不存在';
+        }
+      } catch (e) {
+        console.error(e);
+        document.getElementById('player-name').textContent = '加载失败';
+      }
+    }
+
+    function renderPlayer(player) {
+      // 基本信息
+      const displayName = player.name || player.real_name || '选手';
+      document.getElementById('player-name').textContent = displayName;
+      
+      let realnameText = player.real_name || '';
+      if (player.birth_year) realnameText += ' | ' + player.birth_year + '年';
+      if (player.gender) realnameText += ' | ' + player.gender;
+      document.getElementById('player-realname').textContent = realnameText || '-';
+
+      // 俱乐部和当前战队
+      let infoText = '';
+      if (player.club_name) infoText += '📍 ' + player.club_name;
+      if (player.currentTeam) {
+        infoText += (infoText ? ' | ' : '') + '🎮 ' + player.currentTeam.name;
+      }
+      document.getElementById('player-info').textContent = infoText || '-';
+
+      // 统计数据 - 从 internal_stats 或 internal_rank 获取
+      if (player.internal_stats) {
+        document.getElementById('stat-matches').textContent = player.internal_stats.matches || '-';
+        document.getElementById('stat-winrate').textContent = (player.internal_stats.winrate || '-') + '%';
+        document.getElementById('stat-points').textContent = player.internal_stats.avg_points || '-';
+        document.getElementById('stat-rank').textContent = '#' + (player.internal_stats.rank || '-');
+        document.getElementById('total-points').textContent = player.internal_stats.total_points || '-';
+        document.getElementById('best-score').textContent = player.internal_stats.best_score || '-';
+        document.getElementById('win-streak').textContent = player.internal_stats.win_streak || '-';
+        document.getElementById('mvp-count').textContent = player.internal_stats.mvp || '-';
+      } else if (player.internal_rank) {
+        document.getElementById('stat-points').textContent = player.internal_rank.points || '-';
+        document.getElementById('total-points').textContent = player.internal_rank.total_points || '-';
+      }
+
+      // 队伍历史
+      const historyContainer = document.getElementById('team-history');
+      if (player.team_history && player.team_history.length > 0) {
+        historyContainer.innerHTML = player.team_history.map(th => `
+          <div style="display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--color-border);">
+            <span style="color: var(--color-text-secondary); width: 100px;">${th.season_name || th.season_id || '-'}</span>
+            <span style="font-weight: 600;">${th.team_name || '-'}</span>
+            <span style="color: var(--color-text-secondary); font-size: 14px;">
+              ${th.isLeague ? '🏆 联赛' : ''} ${th.isCup ? '🥇 杯赛' : ''}
+            </span>
+          </div>
+        `).join('');
+      } else {
+        historyContainer.innerHTML = '<div style="color: var(--color-text-secondary);">暂无队伍历史</div>';
+      }
+
+      // 荣誉记录 - 目前 API 返回空数组，展示队伍历史作为替代
+      const honorsContainer = document.getElementById('honors');
+      if (player.team_history && player.team_history.some(th => th.isCup)) {
+        const cups = player.team_history.filter(th => th.isCup);
+        honorsContainer.innerHTML = cups.map(cup => `
+          <div style="display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--color-border);">
+            <span style="font-size: 32px;">🏆</span>
+            <div>
+              <div style="font-weight: 600;">${cup.season_name || cup.season_id}</div>
+              <div style="color: var(--color-accent);">🥇 ${cup.team_name}</div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        honorsContainer.innerHTML = '<div style="color: var(--color-text-secondary);">暂无荣誉记录</div>';
+      }
+    }
+
+    function toggleFavorite() {
+      alert('收藏功能开发中...');
+    }
+
+    init();
+  </script>
+</body>
+</html>
