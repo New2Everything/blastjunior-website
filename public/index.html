@@ -454,7 +454,7 @@
         
         async function loadHomeData() { console.log("loadHomeData called");
             try {
-                const resp = await fetch(API_BASE + '/');
+                const resp = await fetch(API_BASE + '/'); console.log("fetch resp status:", resp.status);
                 const result = await resp.json();
                 if (!result.ok) throw new Error(result.error);
                 
