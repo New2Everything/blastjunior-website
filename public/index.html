@@ -414,7 +414,7 @@
                 const resp = await fetch(API_BASE + '/news');
                 const result = await resp.json();
                 
-                if (!result.ok) throw new Error(result.error);
+                console.log("result.ok:", result.ok); if (!result.ok) throw new Error(result.error);
                 
                 const news = result.data || [];
                 renderAllNews(news);
@@ -456,7 +456,7 @@
             try {
                 const resp = await fetch(API_BASE + '/'); console.log("fetch resp status:", resp.status);
                 const result = await resp.json();
-                if (!result.ok) throw new Error(result.error);
+                console.log("result.ok:", result.ok); if (!result.ok) throw new Error(result.error);
                 
                 const data = result.data; console.log("data:", JSON.stringify(data).substring(0, 200));
                 
