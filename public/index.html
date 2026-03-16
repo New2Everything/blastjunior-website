@@ -615,7 +615,7 @@
             }
             
             const html = photos.slice(0, 6).map(p => 
-                `<div class="photo-item"><img src="${p.url}" alt="" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'img-placeholder error\\'>🖼️</div>'"></div>`
+                `<div class="photo-item"><img src="${p.url}" alt="图片" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'img-placeholder error\\'>🖼️</div>'"></div>`
             ).join('');
             
             document.getElementById('photoGrid').innerHTML = html;
@@ -679,3 +679,24 @@
 })();
 </script>
 </html>
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "SportsTeam",
+    "name": "兰星少年 HADO 俱乐部",
+    "description": "专业HADO运动战队，培训与比赛资讯，爱好者社区",
+    "url": "https://www.blastjunior.com",
+    "sport": "https://en.wikipedia.org/wiki/HADO",
+    "areaServed": {
+        "@type": "Place",
+        "name": "中国"
+    },
+    "member": {
+        "@type": "OrganizationRole",
+        "numberOfPlayers": 49
+    },
+    "logo": "https://www.blastjunior.com/favicon.ico"
+}
+</script>
