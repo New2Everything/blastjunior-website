@@ -181,7 +181,7 @@
         }
     </style>
 </head>
-<body onload="loadHomeData();">
+<body onload="loadHomeData()">
     <nav>
         <div class="nav-container">
             <a href="/" class="logo"><div class="logo-icon">⚡</div><span>兰星少年</span></a>
@@ -414,7 +414,7 @@
                 const resp = await fetch(API_BASE + '/news');
                 const result = await resp.json();
                 
-                console.log("result.ok:", result.ok); if (!result.ok) throw new Error(result.error);
+                if (!result.ok) throw new Error(result.error);
                 
                 const news = result.data || [];
                 renderAllNews(news);
@@ -452,13 +452,13 @@
             newsGrid.innerHTML = html;
         }
         
-        async function loadHomeData() { console.log("loadHomeData called");
+        async function loadHomeData() {
             try {
-                const resp = await fetch(API_BASE + '/'); console.log("fetch resp status:", resp.status);
+                const resp = await fetch(API_BASE + '/');
                 const result = await resp.json();
-                console.log("result.ok:", result.ok); if (!result.ok) throw new Error(result.error);
+                if (!result.ok) throw new Error(result.error);
                 
-                const data = result.data; console.log("data:", JSON.stringify(data).substring(0, 200));
+                const data = result.data;
                 
                 // 在线用户
                 document.getElementById('onlineCount').textContent = data.onlineCount || 0;
@@ -493,7 +493,7 @@
                 loadAllNews();
                 
                 // 赞助商 - 从D1
-                console.log("calling renderSponsors"); renderSponsors(data.sponsors || []);
+                renderSponsors(data.sponsors || []);
                 
                 // 赛果
                 loadMatches();
