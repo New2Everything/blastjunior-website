@@ -12,3 +12,71 @@
 .top-rank:nth-child(1) { background: linear-gradient(135deg, #FFD700, #FFA500); }
 .top-name { flex: 1; font-weight: 500; font-size: 0.9rem; }
 .top-points { font-size: 0.8rem; color: var(--primary); font-weight: 600; }
+
+/* ===== Dark Mode ===== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-light: #0f172a;
+        --bg-white: #1e293b;
+        --text-dark: #f1f5f9;
+        --text-gray: #94a3b8;
+        --border: #334155;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    body {
+        background: var(--bg-light);
+        color: var(--text-dark);
+    }
+    nav, .sidebar-card, .news-card, .match-card, .sponsor-card {
+        background: var(--bg-white) !important;
+    }
+    .hero {
+        background: linear-gradient(135deg, #c2410c, #ea580c) !important;
+    }
+}
+
+/* Dark mode toggle button styles */
+.dark-toggle {
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s;
+}
+.dark-toggle:hover {
+    background: var(--primary);
+}
+
+/* Manual dark mode (overrides prefers-color-scheme) */
+:root.dark {
+    --bg-light: #0f172a;
+    --bg-white: #1e293b;
+    --text-dark: #f1f5f9;
+    --text-gray: #94a3b8;
+    --border: #334155;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+:root.dark body {
+    background: var(--bg-light);
+    color: var(--text-dark);
+}
+:root.dark nav,
+:root.dark .sidebar-card,
+:root.dark .news-card,
+:root.dark .match-card,
+:root.dark .sponsor-card,
+:root.dark .btn-outline {
+    background: var(--bg-white) !important;
+    color: var(--text-dark) !important;
+}
+:root.dark .hero {
+    background: linear-gradient(135deg, #c2410c, #ea580c) !important;
+}
+:root.dark a {
+    color: #38bdf8;
+}
+:root.dark .nav-link {
+    color: var(--text-gray);
+}

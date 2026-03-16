@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="兰星少年 HADO 俱乐部官方网站 - 专业HADO运动战队，培训与比赛资讯，爱好者社区">
+    <meta name="keywords" content="HADO,兰星少年,AR运动,AR游戏,电子运动,战队,俱乐部,培训">
+    <meta name="theme-color" content="#FF6B35">
+    <meta property="og:title" content="兰星少年 HADO 俱乐部 - 官网">
+    <meta property="og:description" content="专业HADO运动战队，培训与比赛资讯，爱好者社区">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.blastjunior.com">
     <title>兰星少年 HADO 俱乐部 - 官网</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
@@ -650,4 +657,24 @@
         loadHomeData();
     </script>
 </body>
+<script>
+// Dark mode toggle
+(function() {
+    const toggle = document.getElementById("darkModeToggle");
+    if (!toggle) return;
+    
+    const saved = localStorage.getItem("darkMode");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const isDark = saved ? saved === "dark" : prefersDark;
+    
+    function setDark(enabled) {
+        document.documentElement.classList.toggle("dark", enabled);
+        toggle.textContent = enabled ? "☀️" : "🌙";
+        localStorage.setItem("darkMode", enabled ? "dark" : "light");
+    }
+    
+    setDark(isDark);
+    toggle.addEventListener("click", () => setDark(!document.documentElement.classList.contains("dark"));
+})();
+</script>
 </html>
