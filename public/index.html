@@ -458,7 +458,7 @@
                 const result = await resp.json();
                 if (!result.ok) throw new Error(result.error);
                 
-                const data = result.data;
+                const data = result.data; console.log("data:", JSON.stringify(data).substring(0, 200));
                 
                 // 在线用户
                 document.getElementById('onlineCount').textContent = data.onlineCount || 0;
