@@ -240,23 +240,38 @@ async function getHomeData(env, origin = "") {
     topPlayers = p.results || [];
   } catch (e) {}
 
-  // 获取精选照片（首页精彩瞬间）
+  // 获取精选照片（首页精彩瞬间）- 从R2读取
   let featuredPhotos = [];
   try {
-    const photos = await env.PHOTOS.prepare(`
-      SELECT photo_id, photo_key, ext, created_at
-      FROM photos 
-      WHERE status = 'approved' 
-      ORDER BY created_at DESC 
-      LIMIT 6
-    `).all();
+    const bucket = env.BUCKET;
+    let items = [];
+    let cursor = undefined;
     
-    if (photos.results && photos.results.length > 0) {
-      featuredPhotos = photos.results.map(p => ({
-        id: p.photo_id,
-        url: `https://blastjunior-media.kanjiaming2022.workers.dev/media/web/${p.photo_key}`,
-        title: p.photo_key?.replace(/\.[^.]+$/, "") || "精彩瞬间"
-      }));
+    do {
+      const listed = await bucket.list({ prefix: "web/", cursor, limit: 1000 });
+      items.push(...(listed.objects || []));
+      cursor = listed.truncated ? listed.cursor : undefined;
+    } while (cursor);
+    
+    if (items.length > 0) {
+      featuredPhotos = items
+        .map(obj => {
+          const name = obj.key.replace(/^web\//, "");
+          const idMatch = name.match(/HADO\s*\((\d+)\)/i);
+          if (!idMatch) return null;
+          return {
+            id: parseInt(idMatch[1]),
+            cover: `https://blastjunior-media.kanjiaming2022.workers.dev/media/web/${encodeURIComponent(name)}`,
+            title: name.replace(/\.[^.]+$/, ""),
+            date: obj.uploaded ? obj.uploaded.toISOString().split('T')[0] : "2025-12-18",
+            tags: ["其他"],
+            season: "S4",
+            type: "other"
+          };
+        })
+        .filter(item => item !== null)
+        .sort((a, b) => a.id - b.id)
+        .slice(0, 6);
     }
   } catch (e) {
     console.error("获取精选照片失败:", e);
