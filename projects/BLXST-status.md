@@ -1,22 +1,94 @@
 # BLXST 项目状态
 
-> 最后更新：2026-03-11 UTC
+> **Description**: 记录项目当前进度、待办事项和历史更新
+> **维护规则**: 不要增加骨架，只记录变更
+
+> 最后更新：2026-03-16 08:30 UTC
 > 重启session后必读
 
 ---
 
-## 📋 当前状态：全新 UI 上线
+## 📋 当前状态：修复 CORS 问题
 
 | 状态 | 说明 |
 |------|------|
-| ✅ 完成 | 全新 UI 开发完成，数据来自 API |
-| 网站 | https://blastjunior.com |
+| 🔄 进行中 | CORS 问题修复（Coder 处理中）|
+| ⚠️ 待测试 | 聊天室详细测试 |
+| ⚠️ 待开发 | 暗色模式支持 |
+| ⚠️ 待开发 | SEO 优化 |
+| ⚠️ 待开发 | 无障碍优化 |
 
-### 全新 UI (2026-03-11)
-- [x] 全新配色（霓虹橙 + 深色背景）✅
-- [x] 7 个页面完整开发 ✅
-- [x] 数据来自 API（无硬编码）✅
-- [x] 部署主域名 ✅
+### CORS 问题 (2026-03-16)
+- [x] 定位问题：Worker API 缺少 CORS 响应头 ✅
+- [x] 修复 CORS 配置（3轮） ✅
+- [x] 验证网站数据加载 ✅
+
+### 聊天室测试 (2026-03-16)
+- [x] 聊天室功能测试 ✅ (发现 CORS 问题)
+- [x] 修复 blast-chat-api CORS ✅
+- [x] 重新测试通过 ✅
+
+---
+
+## 📋 当前状态：网站优化
+
+### 已完成
+- [x] CORS 问题修复（blast-homepage-api + blast-chat-api）
+- [x] 聊天室测试通过
+
+### 已完成
+- [x] CORS 问题修复（blast-homepage-api + blast-chat-api）
+- [x] 聊天室测试通过
+- [x] SEO 优化（meta description, keywords, theme-color, Open Graph）
+- [x] 暗色模式支持（prefers-color-scheme + toggle按钮）
+- [x] 无障碍优化（skip link, aria-label, 表单labels）
+
+---
+
+## ✅ 网站优化完成
+
+---
+
+## 网站优化方案
+
+### 1. 暗色模式 (Dark Mode)
+- 方案：CSS变量 + prefers-color-scheme + toggle按钮
+- 工作量：中等
+- 优先级：P1
+
+### 2. SEO 优化
+- 添加 meta description
+- 添加 meta keywords
+- 添加 theme-color
+- 添加 Open Graph 标签
+- 工作量：小
+- 优先级：P1
+
+### 3. 无障碍优化
+- 添加 aria-label
+- 添加 skip link
+- 表单添加 label
+- 工作量：中
+- 优先级：P2
+
+### 渲染修复 (2026-03-12)
+- [x] 新闻页面 - 从API获取真实数据，移除硬编码mockNews ✅
+  - 修改 news.html 使用 fetch 从 API 获取新闻数据
+  - API 端点: https://blast-homepage-api.kanjiaming2022.workers.dev/news
+  - 支持按ID获取新闻详情
+  - v2/news.html (新闻列表页) 已正常工作
+
+### 测试技能改进 (2026-03-12)
+- [x] 三层检测体系（HTTP/API/渲染）✅
+- [x] 融入E2E最佳实践 ✅
+- [x] 从设计文档读取测试标准 ✅
+- [x] Controller加入测试标准要求 ✅
+- [x] 新增blxst-deploy技能 ✅
+- [x] 安装e2e-testing-patterns ✅
+
+### 渲染修复 (2026-03-11)
+- [x] 战队列表 - 移除技术字段泄露 (club ID TEAM002) ✅
+- [x] 选手列表 - 修复所属战队显示 ✅
 
 ### 🔴 紧急修复 (2026-03-11)
 - [x] blast-auth-api Worker 重建 ✅
@@ -204,6 +276,29 @@
 | Architect | 小虾 |
 | Coder | subagent |
 | Tester | subagent |
+
+---
+
+## 📝 今日更新 (2026-03-12)
+
+### 规则与架构更新
+- [x] BLXST-rules.md 新增「子智能体 Spawn 五要素」规则 ✅
+  - 五要素：输入、运行、输出、技能、内容
+- [x] 新增 .blxst-controller-bootstrap.sh 脚本 ✅
+
+### 知识库更新
+- [x] BLXST-knowledge-graph.md 添加 description + 维护规则 ✅
+- [x] 清理 knowledge-graph 错误板块（前端、角色、当前阶段）✅
+- [x] 合并 skill-knowledge-map.md 到 knowledge-graph ✅
+- [x] 删除 skill-knowledge-map.md ✅
+
+### Skill 更新
+- [x] blxst-sync/SKILL.md 重写流程 ✅
+  - 新目的：同步变更到 status.md
+  - 步骤：扫描变更 → 从上下文了解变化 → 对比 status → 列出 → 确认 → 执行
+
+### 文件规范化
+- [x] 9个 md 文件添加 description + 维护规则 ✅
 
 ---
 

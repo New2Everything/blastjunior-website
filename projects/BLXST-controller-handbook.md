@@ -1,5 +1,8 @@
 # BLXST Controller 工作手册
 
+> **Description**: Controller 通用工作原则
+> **维护规则**: 不要增加骨架
+
 > 通用工作原则，不预设固定模板
 
 ---

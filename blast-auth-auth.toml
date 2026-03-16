@@ -1,0 +1,19 @@
+name = "blast-auth-api"
+main = "blast-auth-api.js"
+compatibility_date = "2024-12-01"
+
+[[kv_namespaces]]
+binding = "USERS"
+id = "ed0efbdc46714aa4802e07abacb72a6e"
+
+[[kv_namespaces]]
+binding = "USER_IDS"
+id = "ed0efbdc46714aa4802e07abacb72a6e"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "ed0efbdc46714aa4802e07abacb72a6e"
+
+[[kv_namespaces]]
+binding = "CODES"
+id = "ed0efbdc46714aa4802e07abacb72a6e"

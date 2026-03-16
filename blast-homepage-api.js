@@ -10,8 +10,13 @@ export default {
     const origin = request.headers.get("Origin") || "";
 
     // 验证 origin - 只允许单域名 (BLXST-rules)
-    const allowedOrigins = ["https://blastjunior.com", "https://blastjunior-website.pages.dev"];
+    const allowedOrigins = ["https://blastjunior.com", "https://www.blastjunior.com", "https://blastjunior-website.pages.dev"];
     const isAllowedOrigin = allowedOrigins.includes(origin);
+
+    // 静态文件请求 - 返回 404 让 Pages 处理
+    if (path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".ico")) {
+      return new Response("Not Found", { status: 404 });
+    }
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
@@ -149,9 +154,10 @@ export default {
 // ===== 辅助函数 =====
 
 function corsHeaders(origin) {
-  // CORS 只允许单域名 (BLXST-rules)
-  const allowedOrigins = ["https://blastjunior.com", "https://blastjunior-website.pages.dev"];
-  const allowOrigin = allowedOrigins.includes(origin) ? origin : "";
+  // CORS 允许多个域名
+  const allowedOrigins = ["https://blastjunior.com", "https://www.blastjunior.com", "https://blastjunior-website.pages.dev"];
+  const normalizedOrigin = origin.replace(/\/$/, ""); // 去掉末尾斜杠
+  const allowOrigin = allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : "";
   
   return {
     "Access-Control-Allow-Origin": allowOrigin,
@@ -161,17 +167,19 @@ function corsHeaders(origin) {
 }
 
 function withCors(response, origin) {
-  // CORS 只允许单域名 (BLXST-rules)
-  const allowedOrigins = ["https://blastjunior.com", "https://blastjunior-website.pages.dev"];
-  const allowOrigin = allowedOrigins.includes(origin) ? origin : "";
+  // CORS 允许多个域名
+  const allowedOrigins = ["https://blastjunior.com", "https://www.blastjunior.com", "https://blastjunior-website.pages.dev"];
+  const normalizedOrigin = origin.replace(/\/$/, ""); // 去掉末尾斜杠
+  const allowOrigin = allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : "";
   response.headers.set("Access-Control-Allow-Origin", allowOrigin);
   return response;
 }
 
 function jsonResponse(data, status = 200, origin = "") {
-  // CORS 只允许单域名 (BLXST-rules)
-  const allowedOrigins = ["https://blastjunior.com", "https://blastjunior-website.pages.dev"];
-  const allowOrigin = allowedOrigins.includes(origin) ? origin : "";
+  // CORS 允许多个域名
+  const allowedOrigins = ["https://blastjunior.com", "https://www.blastjunior.com", "https://blastjunior-website.pages.dev"];
+  const normalizedOrigin = origin.replace(/\/$/, ""); // 去掉末尾斜杠
+  const allowOrigin = allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : "";
   return new Response(JSON.stringify(data), {
     status,
     headers: { 

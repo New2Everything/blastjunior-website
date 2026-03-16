@@ -1,5 +1,8 @@
 # BLXST 数据源属性分析
 
+> **Description**: 分析 blast-campaigns-db 数据源的属性
+> **维护规则**: 不要增加骨架
+
 > 来源：blast-campaigns-db
 > 日期：2026-03-06
 > 用途：分析每个数据源的属性，确定哪些应该在网站展示

@@ -73,7 +73,7 @@
 ### ✅ 主智能体做
 - 读取文档、理解需求
 - 拆分任务
-- spawn 子智能体 (Architect/Coder/Tester)
+- spawn 子智能体 (Architect/Design Reviewer/Coder/Tester)
 - 收集结果
 - 写回 memory
 - 向老K汇报
@@ -90,6 +90,7 @@
 | 子智能体 | 触发命令 | 用途 |
 |----------|----------|------|
 | Architect | spawn Architect | 设计规划 |
+| Design Reviewer | spawn Design Reviewer | 设计审查，确保符合规则 |
 | Coder | spawn Coder | 写代码 |
 | Tester | spawn Tester | 测试 |
 
@@ -100,9 +101,27 @@
 | 角色 | 需要读取 |
 |------|----------|
 | 主智能体 | BLXST.md, BLXST-rules.md, MEMORY.md |
-| Architect | BLXST-design.md, hado-business.md |
-| Coder | website-builder, wrangler |
-| Tester | website-test, agent-browser |
+| Architect | BLXST-design.md, hado-business.md, web-design-guidelines, **BLXST-rules.md** |
+| Design Reviewer | web-design-guidelines, BLXST-rules.md |
+| Coder | website-builder, website-learning, blxst-deploy, wrangler, **BLXST-rules.md** |
+| Tester | website-test, website-learning, e2e-testing-patterns, agent-browser, scrapling-mcp, **BLXST-rules.md** |
+
+---
+
+## ⚠️ Spawn 规则分配（重要！）
+
+每次 spawn 子智能体时，**必须**在"内容"要素里包含 BLXST-rules.md，并明确告知需要检查的规则：
+
+| 场景 | 必须分配的规则 |
+|------|---------------|
+| **新功能设计** | 全部规则（数据真实性、CORS配置、API契约） |
+| **代码开发** | 开发规范（前端开发铁律、API契约、数据源原则） |
+| **测试验收** | 开发规范（真实环境测试、agent-browser验证） |
+
+### 简化描述
+
+Spawn 时统一告知：
+> "请阅读 BLXST-rules.md，特别是'开发规范'章节的对应部分"
 
 ---
 

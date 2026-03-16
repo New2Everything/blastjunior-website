@@ -1,5 +1,8 @@
 # BLXST - 兰星少年俱乐部官网
 
+> **Description**: 项目入口文件，记录项目基本信息、状态和常用命令
+> **维护规则**: 不要增加骨架，保持简洁
+
 ## 🚧 当前状态：重建准备阶段
 
 > 旧版仍可访问：https://blastjunior.com
@@ -8,14 +11,7 @@
 
 ## 📚 必读文件（每次打开项目必读）
 
-| 优先级 | 文件 | 用途 |
-|--------|------|------|
-| ⭐⭐⭐ | `BLXST-knowledge-graph.md` | 现状图谱 - 现在有什么 |
-| ⭐⭐⭐ | `BLXST-rules.md` | 建站铁律 - 禁止事项+架构原则 |
-| ⭐⭐⭐ | `BLXST-status.md` | 项目进度 - 当前状态 |
-| ⭐⭐⭐ | `BLXST-controller-handbook.md` | 主控工作手册 - 必须遵守 |
-| ⭐⭐ | `knowledge/hado-business.md` | HADO业务规则 |
-| ⭐⭐ | `knowledge/hado-resources.md` | HADO资源链接 |
+> ⚡ 立即执行：bash /root/.openclaw/workspace/projects/.blxst-bootstrap.sh
 
 ---
 
@@ -83,3 +79,4 @@
 ## 📝 更新日志
 
 - 2026-03-10: 重写为简洁入口，进入重建准备阶段
+- 2026-03-12: 必读文件改为脚本触发

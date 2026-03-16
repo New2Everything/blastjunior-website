@@ -40,6 +40,14 @@
     "cursor-cli": {
       "version": "1.1.1",
       "installedAt": 1772604968433
+    },
+    "e2e-testing-patterns": {
+      "version": "1.0.0",
+      "installedAt": 1773288964835
+    },
+    "web-perf": {
+      "version": "1.0.0",
+      "installedAt": 1773289083098
     }
   }
 }
