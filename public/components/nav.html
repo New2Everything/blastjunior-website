@@ -27,10 +27,32 @@
     </div>
     
     <div class="nav-user-area">
+      <button class="dark-mode-toggle" id="darkModeToggle" aria-label="切换暗色模式" style="background:none;border:none;font-size:1.2rem;cursor:pointer;padding:0.5rem;">🌙</button>
       <a href="/join" class="nav-btn nav-btn-primary">加入我们</a>
     </div>
   </div>
 </nav>
+
+<script>
+// Dark mode toggle
+(function() {
+    const toggle = document.getElementById("darkModeToggle");
+    if (!toggle) return;
+    
+    const saved = localStorage.getItem("darkMode");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const isDark = saved ? saved === "dark" : prefersDark;
+    
+    function setDark(enabled) {
+        document.documentElement.classList.toggle("dark", enabled);
+        toggle.textContent = enabled ? "☀️" : "🌙";
+        localStorage.setItem("darkMode", enabled ? "dark" : "light");
+    }
+    
+    setDark(isDark);
+    toggle.addEventListener("click", () => setDark(!document.documentElement.classList.contains("dark")));
+})();
+</script>
 
 <script>
 // 自动高亮当前页面导航
