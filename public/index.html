@@ -485,9 +485,60 @@
             }
         }
         
+        // 初始化登录状态 - 更新导航栏
+        async function initAuthState() {
+            const token = localStorage.getItem('blxst_token');
+            if (!token) return;
+            
+            try {
+                const res = await fetch(AUTH_API + '/user?token=' + token);
+                const data = await res.json();
+                
+                if (data.ok && data.user) {
+                    // 更新桌面端导航
+                    const userArea = document.getElementById('userArea');
+                    if (userArea) {
+                        userArea.innerHTML = `
+                            <a href="/profile" class="btn btn-outline">个人中心</a>
+                            <button class="btn btn-danger" onclick="logout()">退出</button>
+                            <button class="dark-toggle" id="darkModeToggle" aria-label="切换暗色模式" style="background:none;border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.6rem;cursor:pointer;font-size:1.2rem;">🌙</button>
+                        `;
+                    }
+                    
+                    // 更新移动端导航
+                    const mobileNavLinks = document.querySelector('.mobile-nav-links');
+                    if (mobileNavLinks) {
+                        mobileNavLinks.innerHTML = `
+                            <a href="/" class="mobile-nav-link">首页</a>
+                            <a href="/matches" class="mobile-nav-link">赛程</a>
+                            <a href="/standings" class="mobile-nav-link">积分榜</a>
+                            <a href="/teams" class="mobile-nav-link">战队</a>
+                            <a href="/players" class="mobile-nav-link">选手</a>
+                            <a href="/gallery" class="mobile-nav-link">画廊</a>
+                            <a href="/honor" class="mobile-nav-link">荣誉</a>
+                            <a href="/join" class="mobile-nav-link">加入</a>
+                            <hr style="border: none; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+                            <a href="/profile" class="mobile-nav-link">个人中心</a>
+                            <a href="/my-uploads" class="mobile-nav-link">我的上传</a>
+                            <a href="#" class="mobile-nav-link" onclick="logout();return false;">退出登录</a>
+                        `;
+                    }
+                }
+            } catch (e) {
+                // token 无效，忽略
+            }
+        }
+        
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('blxst_token');
+            localStorage.removeItem('blxst_user');
+            window.location.href = '/';
+        }
+        
         // 心跳 - 每分钟更新在线状态
         async function sendHeartbeat() {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('blxst_token');
             if (!token) return;
             try {
                 await fetch(AUTH_API + '/heartbeat', {
@@ -500,6 +551,9 @@
         }
         
         async function loadHomeData() {
+            // 先初始化登录状态
+            initAuthState();
+            
             try {
                 const resp = await fetch(API_BASE + '/');
                 const result = await resp.json();

@@ -202,7 +202,7 @@
 
         // 检查登录状态
         async function checkAuth() {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('blxst_token');
             if (!token) return null;
             
             try {
