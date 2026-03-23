@@ -180,6 +180,17 @@
                 </div>
             </div>
             
+            <!-- 管理员入口 -->
+            <div class="profile-card" id="adminPanel" style="display: none; border: 2px solid var(--primary);">
+                <div class="card-title" style="color: var(--primary);">
+                    🔧 管理后台
+                </div>
+                <div class="info-row">
+                    <span class="info-label">照片管理</span>
+                    <a href="/photo-admin.html" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">进入管理 →</a>
+                </div>
+            </div>
+            
             <button class="btn btn-danger" id="logoutBtn" style="width: 100%; justify-content: center; margin-top: 1rem;">退出登录</button>
         </div>
     </div>
@@ -258,6 +269,11 @@
             
             // 控制修改昵称按钮
             document.getElementById('editUsernameBtn').style.display = user.username_changed ? 'none' : 'inline-flex';
+            
+            // 管理员显示管理面板
+            if (user.role === 'admin') {
+                document.getElementById('adminPanel').style.display = 'block';
+            }
         }
         
         // 修改昵称弹窗

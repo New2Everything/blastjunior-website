@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片管理 - 兰星少年 HADO 俱乐部</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #FF6B35; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); min-height: 100vh; }
+        
+        /* 导航 */
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), #FF8A5C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+        
+        /* 主内容 */
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .page-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 1.5rem; }
+        
+        /* 标签页 */
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+        .tab { padding: 0.75rem 1.5rem; border-radius: 8px 8px 0 0; font-weight: 600; cursor: pointer; color: var(--text-gray); background: transparent; border: none; transition: all 0.2s; }
+        .tab:hover { color: var(--primary); }
+        .tab.active { background: var(--primary); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* 卡片 */
+        .card { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+        .card-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+        
+        /* 标签管理 */
+        .tags-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .tag-item { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem; font-weight: 500; color: white; }
+        .tag-count { background: rgba(255,255,255,0.3); padding: 0.1rem 0.5rem; border-radius: 10px; font-size: 0.75rem; }
+        .tag-delete { cursor: pointer; opacity: 0.7; margin-left: 0.25rem; }
+        .tag-delete:hover { opacity: 1; }
+        
+        .tag-create { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .tag-create input { flex: 1; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; }
+        .tag-create button { padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        
+        /* 颜色选择 */
+        .color-picker { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+        .color-option { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
+        .color-option:hover, .color-option.selected { border-color: var(--text-dark); transform: scale(1.1); }
+        
+        /* 照片管理 */
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+        .photo-item { position: relative; border-radius: 12px; overflow: hidden; background: var(--border); aspect-ratio: 1; }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-item .photo-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 0.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.7)); color: white; font-size: 0.8rem; }
+        .photo-item .photo-tags { position: absolute; top: 0.5rem; left: 0.5rem; right: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.25rem; }
+        .photo-tag { padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.65rem; color: white; }
+        
+        /* 标签选择器 */
+        .photo-tag-selector { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 0.5rem; padding: 1rem; }
+        .photo-tag-selector.active { display: flex; }
+        .photo-tag-selector .mini-tags { display: flex; flex-wrap: wrap; gap: 0.25rem; justify-content: center; }
+        .photo-tag-selector .mini-tag { padding: 0.25rem 0.6rem; border-radius: 10px; font-size: 0.7rem; color: white; cursor: pointer; opacity: 0.5; }
+        .photo-tag-selector .mini-tag.active { opacity: 1; }
+        .photo-tag-selector .close-btn { position: absolute; top: 0.5rem; right: 0.5rem; color: white; font-size: 1.5rem; cursor: pointer; }
+        
+        /* 登录提示 */
+        .login-prompt { text-align: center; padding: 4rem; background: var(--bg-white); border-radius: var(--radius); }
+        .login-prompt h2 { margin-bottom: 1rem; }
+        .login-prompt a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        
+        /* 禁止访问提示 */
+        .no-permission { text-align: center; padding: 4rem; background: var(--bg-white); border-radius: var(--radius); color: #dc2626; }
+        
+        /* 加载状态 */
+        .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem; color: var(--text-gray); }
+        .loading-spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .user-badge { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+        .user-badge .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">🦐</div>
+                <span>兰星少年</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/gallery.html" class="nav-link">画廊</a>
+                <a href="/photo-admin.html" class="nav-link active">管理</a>
+            </div>
+            <div id="userArea"></div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1 class="page-title">照片管理</h1>
+        
+        <div id="mainContent">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <span>加载中...</span>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    const AUTH_API = 'https://blast-auth-api.kanjiaming2022.workers.dev';
+    let currentUser = null;
+    
+    // 检查登录状态
+    async function checkUser() {
+        const token = localStorage.getItem('blxst_token');
+        const mainContent = document.getElementById('mainContent');
+        
+        if (!token) {
+            mainContent.innerHTML = `
+                <div class="login-prompt">
+                    <h2>请先登录</h2>
+                    <p>登录后可管理照片和标签</p>
+                    <p><a href="/login.html">点击登录 →</a></p>
+                </div>
+            `;
+            renderUserArea(null);
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${AUTH_API}/profile`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            
+            if (data.ok && data.user) {
+                currentUser = data.user;
+                renderUserArea(currentUser);
+                
+                if (currentUser.role !== 'admin') {
+                    mainContent.innerHTML = `
+                        <div class="no-permission">
+                            <h2>⚠️ 无权限</h2>
+                            <p>只有管理员才能访问此页面</p>
+                        </div>
+                    `;
+                } else {
+                    initAdmin();
+                }
+            } else {
+                localStorage.removeItem('blxst_token');
+                checkUser();
+            }
+        } catch (e) {
+            console.error('检查用户失败:', e);
+            mainContent.innerHTML = '<div class="error">加载失败，请刷新页面</div>';
+        }
+    }
+    
+    function renderUserArea(user) {
+        const userArea = document.getElementById('userArea');
+        if (!user) {
+            userArea.innerHTML = '<a href="/login.html" class="btn btn-primary">登录</a>';
+            return;
+        }
+        userArea.innerHTML = `
+            <div class="user-badge">
+                <div class="avatar">${user.username?.[0] || '?'}</div>
+                <span>${user.username || '用户'}</span>
+                <a href="#" onclick="logout()" style="color: var(--text-gray); margin-left: 0.5rem;">退出</a>
+            </div>
+        `;
+    }
+    
+    function logout() {
+        localStorage.removeItem('blxst_token');
+        location.reload();
+    }
+    
+    // 初始化管理页面
+    function initAdmin() {
+        const mainContent = document.getElementById('mainContent');
+        mainContent.innerHTML = `
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('photos')">照片管理</button>
+                <button class="tab" onclick="switchTab('tags')">标签管理</button>
+            </div>
+            
+            <div id="tab-photos" class="tab-content active">
+                <div class="card">
+                    <h3 class="card-title">所有照片</h3>
+                    <div id="photoGrid" class="photo-grid">
+                        <div class="loading"><div class="loading-spinner"></div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="tab-tags" class="tab-content">
+                <div class="card">
+                    <h3 class="card-title">标签列表</h3>
+                    <div id="tagsList" class="tags-grid">
+                        <div class="loading"><div class="loading-spinner"></div></div>
+                    </div>
+                    <div class="tag-create">
+                        <input type="text" id="newTagName" placeholder="新标签名称..." onkeypress="if(event.key==='Enter')createTag()">
+                        <button onclick="createTag()">创建标签</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        loadPhotos();
+        loadTags();
+    }
+    
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+    }
+    
+    // ========== 照片管理 ==========
+    let allPhotos = [];
+    let photoTagsMap = {};
+    
+    async function loadPhotos() {
+        try {
+            const resp = await fetch(`${API_BASE}/gallery`);
+            const data = await resp.json();
+            allPhotos = data.data || [];
+            
+            // 同时加载所有照片的标签
+            for (const photo of allPhotos) {
+                const tagsResp = await fetch(`${API_BASE}/photo/${photo.id}/tags`);
+                const tagsData = await tagsResp.json();
+                photoTagsMap[photo.id] = tagsData.data || [];
+            }
+            
+            renderPhotos();
+        } catch (e) {
+            console.error('加载照片失败:', e);
+            document.getElementById('photoGrid').innerHTML = '<div class="error">加载失败</div>';
+        }
+    }
+    
+    function renderPhotos() {
+        const grid = document.getElementById('photoGrid');
+        
+        grid.innerHTML = allPhotos.map(photo => {
+            const tags = photoTagsMap[photo.id] || [];
+            const tagsHtml = tags.map(t => `
+                <span class="photo-tag" style="background: ${t.color}">${t.name}</span>
+            `).join('');
+            
+            return `
+                <div class="photo-item">
+                    <img src="${photo.cover}" alt="${photo.title}" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'><rect fill=\\'%23334155\\' width=\\'100\\' height=\\'100\\'/><text x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' fill=\\'white\\'>📷</text></svg>'">
+                    <div class="photo-info">${photo.title}</div>
+                    <div class="photo-tags">${tagsHtml}</div>
+                    <div class="photo-tag-selector" id="selector-${photo.id}">
+                        <span class="close-btn" onclick="closeTagSelector(${photo.id})">×</span>
+                        <div style="color: white; font-weight: 600; margin-bottom: 0.5rem;">选择标签</div>
+                        <div class="mini-tags" id="mini-tags-${photo.id}"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    async function openTagSelector(photoId) {
+        const selector = document.getElementById(`selector-${photoId}`);
+        const miniTags = document.getElementById(`mini-tags-${photoId}`);
+        
+        // 加载所有标签
+        const resp = await fetch(`${API_BASE}/tags`);
+        const data = await resp.json();
+        const allTags = data.data || [];
+        
+        const currentTags = photoTagsMap[photoId] || [];
+        const currentTagIds = currentTags.map(t => t.id);
+        
+        miniTags.innerHTML = allTags.map(tag => `
+            <span class="mini-tag ${currentTagIds.includes(tag.id) ? 'active' : ''}" 
+                style="background: ${tag.color}"
+                onclick="togglePhotoTag(${photoId}, ${tag.id})">
+                ${tag.name}${currentTagIds.includes(tag.id) ? ' ✓' : ''}
+            </span>
+        `).join('');
+        
+        selector.classList.add('active');
+    }
+    
+    function closeTagSelector(photoId) {
+        document.getElementById(`selector-${photoId}`).classList.remove('active');
+    }
+    
+    async function togglePhotoTag(photoId, tagId) {
+        const currentTags = photoTagsMap[photoId] || [];
+        const isSelected = currentTags.some(t => t.id === tagId);
+        
+        try {
+            if (isSelected) {
+                await fetch(`${API_BASE}/photo/${photoId}/tags/${tagId}`, { method: 'DELETE' });
+                photoTagsMap[photoId] = currentTags.filter(t => t.id !== tagId);
+            } else {
+                await fetch(`${API_BASE}/photo/${photoId}/tags/${tagId}`, { method: 'POST' });
+                const resp = await fetch(`${API_BASE}/tags`);
+                const data = await resp.json();
+                const tag = (data.data || []).find(t => t.id === tagId);
+                if (tag) photoTagsMap[photoId].push(tag);
+            }
+            openTagSelector(photoId); // 刷新
+            renderPhotos();
+        } catch (e) {
+            console.error('操作标签失败:', e);
+        }
+    }
+    
+    // 为所有照片添加点击事件
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('photo-item') || e.target.closest('.photo-item')) {
+            const photoItem = e.target.closest('.photo-item');
+            if (!photoItem.querySelector('.photo-tag-selector.active')) {
+                const photoId = allPhotos.find(p => p.cover === photoItem.querySelector('img').src || p.full_url === photoItem.querySelector('img').src)?.id;
+                if (photoId) openTagSelector(photoId);
+            }
+        }
+    });
+    
+    // ========== 标签管理 ==========
+    async function loadTags() {
+        try {
+            const resp = await fetch(`${API_BASE}/tags`);
+            const data = await resp.json();
+            const tags = data.data || [];
+            
+            const list = document.getElementById('tagsList');
+            list.innerHTML = tags.map(t => `
+                <div class="tag-item" style="background: ${t.color}">
+                    ${t.name}
+                    <span class="tag-count">${t.photo_count || 0}</span>
+                    <span class="tag-delete" onclick="deleteTag(${t.id})">×</span>
+                </div>
+            `).join('') || '<p style="color: var(--text-gray)">暂无标签</p>';
+        } catch (e) {
+            console.error('加载标签失败:', e);
+        }
+    }
+    
+    async function createTag() {
+        const input = document.getElementById('newTagName');
+        const name = input.value.trim();
+        if (!name) return;
+        
+        try {
+            const resp = await fetch(`${API_BASE}/tags`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            const data = await resp.json();
+            
+            if (data.ok) {
+                input.value = '';
+                loadTags();
+            } else {
+                alert(data.error || '创建失败');
+            }
+        } catch (e) {
+            console.error('创建标签失败:', e);
+        }
+    }
+    
+    async function deleteTag(tagId) {
+        if (!confirm('确定删除此标签？')) return;
+        
+        try {
+            const resp = await fetch(`${API_BASE}/tags/${tagId}`, { method: 'DELETE' });
+            const data = await resp.json();
+            
+            if (data.ok) {
+                loadTags();
+            } else {
+                alert(data.error || '删除失败');
+            }
+        } catch (e) {
+            console.error('删除标签失败:', e);
+        }
+    }
+    
+    // 初始化
+    checkUser();
+    </script>
+</body>
+</html>
