@@ -7,7 +7,7 @@
     <!-- DATA_MODULE: random_poster -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@500;700;900;bold&family=ZCOOL+KuaiLe&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Outfit:wght@500;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         :root { --primary: #FF6B35; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
@@ -37,6 +37,24 @@
         .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem 1.5rem; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-decoration: none; }
         .btn-random { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
         .btn-random:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4); }
+        
+        /* 标签选择器 */
+        .tag-selector { margin-bottom: 1rem; }
+        .tag-options { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .tag-option {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            color: white;
+            opacity: 0.6;
+        }
+        .tag-option:hover { opacity: 0.8; transform: scale(1.05); }
+        .tag-option.active { opacity: 1; border-color: white; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+        .tag-option.all { background: linear-gradient(135deg, #667eea, #764ba2); }
         .btn-save { background: linear-gradient(135deg, var(--primary), #FF8A5C); color: white; }
         .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4); }
         .btn-icon { font-size: 1.2rem; }
@@ -48,47 +66,237 @@
         /* 海报预览 */
         .preview-section { position: sticky; top: 80px; }
         .poster-container { background: var(--bg-white); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); }
-        .poster-wrapper { width: 100%; aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; position: relative; }
+        .poster-wrapper { width: 100%; aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
         
-        /* 海报本体 - 各种样式 */
-        .poster { width: 100%; height: 100%; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+        /* ==================== 新版海报样式 ==================== */
+        .poster { 
+            width: 100%; 
+            height: 100%; 
+            position: relative; 
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+        }
         
-        /* 随机渐变背景 */
-        .poster::before { content: ''; position: absolute; inset: 0; z-index: 0; }
+        /* 深色高级感背景 */
+        .poster-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
         
-        /* 布局1: 单图全屏 */
-        .layout-single .poster-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-        .layout-single .poster-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 2rem; z-index: 1; }
+        /* 布局1: 电影感横版 - 大图为主 */
+        .layout-cinema .poster-bg {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+        .layout-cinema .poster-main-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.9) contrast(1.05);
+        }
+        .layout-cinema .poster-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+        }
+        .layout-cinema .poster-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 2.5rem;
+            z-index: 1;
+        }
         
-        /* 布局2: 双图并排 */
-        .layout-dual { flex-direction: row; }
-        .layout-dual .poster-img-container { flex: 1; position: relative; }
-        .layout-dual .poster-img { width: 100%; height: 100%; object-fit: cover; }
-        .layout-dual .poster-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; z-index: 1; }
+        /* 布局2: 杂志风 - 上下结构 */
+        .layout-magazine .poster-bg {
+            background: #0d0d0d;
+        }
+        .layout-magazine .poster-img-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        .layout-magazine .poster-main-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: saturate(1.1);
+        }
+        .layout-magazine .poster-content {
+            flex: 0 0 35%;
+            padding: 2rem;
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
         
-        /* 布局3:  图上字下 */
-        .layout-stack .poster-img-container { flex: 1; position: relative; }
-        .layout-stack .poster-img { width: 100%; height: 70%; object-fit: cover; }
-        .layout-stack .poster-content { flex: 0 0 30%; padding: 1.5rem; display: flex; flex-direction: column; justify-content: center; }
+        /* 布局3: 拼贴风 - 多图组合 */
+        .layout-collage {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+        .layout-collage .poster-bg {
+            background: linear-gradient(145deg, #232526, #414345);
+        }
+        .layout-collage .poster-img-wrap:nth-child(1) {
+            grid-row: span 2;
+        }
+        .layout-collage .poster-img-wrap {
+            position: relative;
+            overflow: hidden;
+        }
+        .layout-collage .poster-main-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .layout-collage .poster-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        }
         
-        /* 布局4: 大小图 */
-        .layout-asymmetric { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; }
-        .layout-asymmetric .poster-img-container:nth-child(1) { grid-row: span 2; }
-        .layout-asymmetric .poster-img { width: 100%; height: 100%; object-fit: cover; }
-        .layout-asymmetric .poster-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; z-index: 1; }
+        /* 布局4: 简洁大图 */
+        .layout-minimal .poster-bg {
+            background: #f5f5f5;
+        }
+        .layout-minimal .poster-main-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .layout-minimal .poster-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,107,53,0.9), rgba(255,138,92,0.7));
+            mix-blend-mode: multiply;
+            opacity: 0.85;
+        }
+        .layout-minimal .poster-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 2.5rem;
+            color: white;
+        }
+        
+        /* 布局5: 暗黑电影 */
+        .layout-darkfilm .poster-bg {
+            background: #000000;
+        }
+        .layout-darkfilm .poster-main-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.6) saturate(1.2);
+        }
+        .layout-darkfilm .poster-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 2rem;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 60%, transparent 100%);
+        }
         
         /* 内容样式 */
-        .poster-title { font-family: 'Outfit', 'ZCOOL KuaiLe', 'Ma Shan Zheng', sans-serif; font-weight: 900; font-size: 2rem; text-shadow: 2px 2px 8px rgba(0,0,0,0.3); line-height: 1.3; }
-        .poster-subtitle { font-size: 1rem; opacity: 0.9; margin-top: 0.5rem; text-shadow: 1px 1px 4px rgba(0,0,0,0.3); }
-        .poster-logo { position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.95); padding: 0.5rem 1rem; border-radius: 20px; font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.85rem; color: var(--text-dark); box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 2; }
+        .poster-brand {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .poster-brand-icon {
+            width: 36px;
+            height: 36px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .poster-brand-text {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .poster-headline {
+            font-family: 'Outfit', 'ZCOOL KuaiLe', sans-serif;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 0.75rem;
+        }
+        .layout-cinema .poster-headline { font-size: 2.4rem; color: white; }
+        .layout-magazine .poster-headline { font-size: 2rem; color: white; }
+        .layout-collage .poster-headline { font-size: 1.8rem; color: white; }
+        .layout-minimal .poster-headline { font-size: 2.2rem; color: white; text-shadow: 0 2px 20px rgba(0,0,0,0.3); }
+        .layout-darkfilm .poster-headline { font-size: 2.4rem; color: #fff; }
+        
+        .poster-sub {
+            font-size: 1rem;
+            opacity: 0.85;
+            font-weight: 500;
+        }
+        .layout-cinema .poster-sub { color: #ccc; }
+        .layout-magazine .poster-sub { color: #aaa; }
+        .layout-collage .poster-sub { color: #bbb; }
+        .layout-minimal .poster-sub { color: rgba(255,255,255,0.9); }
+        .layout-darkfilm .poster-sub { color: #ddd; }
         
         /* 装饰元素 */
-        .poster-decoration { position: absolute; font-size: 3rem; opacity: 0.3; }
-        .deco-1 { top: 10%; left: 10%; }
-        .deco-2 { bottom: 20%; right: 10%; }
+        .poster-accent {
+            position: absolute;
+            z-index: 1;
+        }
+        .accent-line {
+            width: 60px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+            margin-bottom: 1rem;
+        }
+        .layout-minimal .accent-line { background: white; }
+        
+        .poster-tag {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255,255,255,0.95);
+            color: #1a1a1a;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            z-index: 2;
+        }
         
         /* 加载状态 */
-        .loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; z-index: 10; }
+        .loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: center; z-index: 10; }
         .loading-spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
@@ -159,7 +367,14 @@
         <div class="main-content">
             <!-- 操作面板 -->
             <div class="control-panel">
-                <div class="panel-title">🎮 操作</div>
+                <div class="panel-title">🏷️ 标签筛选</div>
+                <div class="tag-selector" id="tagSelector">
+                    <div class="tag-options" id="tagOptions">
+                        <!-- 标签选项将通过JS加载 -->
+                    </div>
+                </div>
+                
+                <div class="panel-title" style="margin-top: 1.5rem;">🎮 操作</div>
                 <div class="btn-group">
                     <button class="btn btn-random" onclick="generateRandomPoster()">
                         <span class="btn-icon">🎲</span>
@@ -174,9 +389,9 @@
                 <div class="tips">
                     <div class="tips-title">💡 提示</div>
                     <div class="tips-text">
-                        • 每次生成都会随机选择图片、配色、文案和布局<br>
-                        • 点击"生成随机海报"可以重新生成<br>
-                        • 点击"保存为图片"即可下载海报
+                        • 选择标签后，只使用该标签的照片生成海报<br>
+                        • 不选标签则使用全部照片<br>
+                        • 不同标签对应不同配色方案和标题风格
                     </div>
                 </div>
             </div>
@@ -185,18 +400,23 @@
             <div class="preview-section">
                 <div class="poster-container">
                     <div class="poster-wrapper">
-                        <div class="poster" id="poster">
+                        <div class="poster layout-cinema" id="poster">
                             <div class="loading-overlay" id="loadingOverlay">
                                 <div class="loading-spinner"></div>
                             </div>
-                            <div class="poster-img-container" id="posterImages"></div>
-                            <div class="poster-content" id="posterContent">
-                                <div class="poster-logo">📷 兰星少年</div>
-                                <div class="poster-title" id="posterTitle">点击生成海报</div>
-                                <div class="poster-subtitle" id="posterSubtitle">让每一次都是惊喜！</div>
+                            <div class="poster-bg"></div>
+                            <img class="poster-main-img" id="posterImg" src="" alt="海报图片">
+                            <div class="poster-overlay" id="posterOverlay"></div>
+                            <div class="poster-brand">
+                                <div class="poster-brand-icon">🎯</div>
+                                <span class="poster-brand-text">兰星少年</span>
                             </div>
-                            <div class="poster-decoration deco-1" id="deco1">⭐</div>
-                            <div class="poster-decoration deco-2" id="deco2">🔥</div>
+                            <div class="poster-tag" id="posterTag">HADO</div>
+                            <div class="poster-content">
+                                <div class="accent-line"></div>
+                                <div class="poster-headline" id="posterTitle">点击生成海报</div>
+                                <div class="poster-sub" id="posterSubtitle">让每一次都是惊喜！</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -209,144 +429,352 @@
     <script>
     const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
     let photos = [];
+    let photoTagsMap = {}; // photo_id -> tags
+    let allTags = [];
+    let selectedTagId = null; // 当前选中的标签ID，null表示全部
     let isGenerating = false;
     
-    // 随机渐变背景色库
-    const gradientPresets = [
-        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-        'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-        'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-        'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-        'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-        'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
-        'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
-        'linear-gradient(135deg, #00b4d8 0%, #48c9b0 100%)',
+    // 布局类型（精选5种高级风格）
+    const layoutTypes = ['layout-cinema', 'layout-magazine', 'layout-collage', 'layout-minimal', 'layout-darkfilm'];
+    
+    // 标签对应的配色方案和文案风格
+    const tagStyles = {
+        1: { // 比赛 - 橙红热血
+            bgGradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #e94560 100%)',
+            textPreset: [
+                { title: '🏆 冠军之战', subtitle: '狭路相逢，勇者胜' },
+                { title: '⚔️ 巅峰对决', subtitle: '为荣誉而战' },
+                { title: '🔥 战意燃起', subtitle: '让激情点燃全场' },
+                { title: '💪 全力以赴', subtitle: '直到最后一刻' },
+                { title: '🎯 一发定胜负', subtitle: '精准出击' }
+            ]
+        },
+        2: { // 训练 - 蓝青专业
+            bgGradient: 'linear-gradient(135deg, #0c1929 0%, #1a3a5c 50%, #00d4ff 100%)',
+            textPreset: [
+                { title: '💪 挥汗如雨', subtitle: '每一次训练都是进步' },
+                { title: '⚡ 速度与激情', subtitle: '训练场上见真章' },
+                { title: '🎯 精益求精', subtitle: '专注每一个细节' },
+                { title: '🏃‍♂️ 极限挑战', subtitle: '突破自我，永不止步' },
+                { title: '🛡️ 磨砺成钢', subtitle: '台上一分钟，台下十年功' }
+            ]
+        },
+        3: { // 活动 - 绿色活力
+            bgGradient: 'linear-gradient(135deg, #0d1f1d 0%, #1a3a32 50%, #10b981 100%)',
+            textPreset: [
+                { title: '🎉 快乐时光', subtitle: '一起创造美好回忆' },
+                { title: '🎪 精彩活动', subtitle: '乐趣无穷' },
+                { title: '🌟 欢乐时刻', subtitle: '定格每一瞬的笑容' },
+                { title: '🎈 美好回忆', subtitle: '活动进行时' },
+                { title: '🎭 精彩瞬间', subtitle: '尽享欢乐时光' }
+            ]
+        },
+        4: { // 荣誉 - 金色荣耀
+            bgGradient: 'linear-gradient(135deg, #1a1709 0%, #3d2e0a 50%, #f59e0b 100%)',
+            textPreset: [
+                { title: '🏅 荣耀时刻', subtitle: '记录每一次辉煌' },
+                { title: '👑 加冕时刻', subtitle: '王者荣光' },
+                { title: '🌟 光荣时刻', subtitle: '汗水铸就辉煌' },
+                { title: '🏆 冠军荣耀', subtitle: '荣耀属于我们' },
+                { title: '🎖️ 荣耀征程', subtitle: '每一枚奖牌背后' }
+            ]
+        },
+        5: { // 团建 - 紫色温馨
+            bgGradient: 'linear-gradient(135deg, #1a1429 0%, #2d1f4a 50%, #8b5cf6 100%)',
+            textPreset: [
+                { title: '💜 团建时光', subtitle: '一起就是最好' },
+                { title: '🤝 团队力量', subtitle: '心在一起' },
+                { title: '🎉 快乐团建', subtitle: '乐趣无穷' },
+                { title: '👥 兄弟情深', subtitle: '并肩成长' },
+                { title: '💕 温馨时刻', subtitle: '我们是一家人' }
+            ]
+        }
+    };
+    
+    // 默认文案（无标签时使用）
+    const defaultTextPreset = [
+        { title: '⚔️ 巅峰对决', subtitle: '狭路相逢，勇者胜' },
+        { title: '🏆 冠军之路', subtitle: '每一步都是荣耀' },
+        { title: '💪 战意燃起', subtitle: '为了胜利，永不放弃' },
+        { title: '🎯 一发入魂', subtitle: '精准定位，绝不犹豫' },
+        { title: '🔥 热血战场', subtitle: '让激情点燃全场' },
+        { title: '🤝 团队协作', subtitle: '1+1>2 的力量' },
+        { title: '👥 兄弟同心', subtitle: '并肩作战，所向披靡' },
+        { title: '🖐️ HADO时刻', subtitle: '科技与运动的融合' },
+        { title: '🌟 星耀HADO', subtitle: '你是最亮的星' },
+        { title: '💙 兰星精神', subtitle: '蓝色星辰，无限可能' }
     ];
     
-    // 趣味文案库
+    // HADO相关高级文案
     const textPresets = [
-        { title: '🏆 冠军时刻', subtitle: '荣耀，属于坚持的我们' },
-        { title: '⚡ 能量全开', subtitle: 'Ready to Battle!' },
-        { title: '🎯 精准打击', subtitle: '每一发都命中目标' },
-        { title: '🔥 火力全开', subtitle: '让对手颤抖吧！' },
-        { title: '💪 战力爆表', subtitle: '超越极限的战斗' },
-        { title: '🌟 星耀时刻', subtitle: '你是最亮的星' },
-        { title: '🏃 速度与激情', subtitle: '快到飞起！' },
-        { title: '🛡️ 铜墙铁壁', subtitle: '防守的艺术' },
-        { title: '🎮 游戏人生', subtitle: '快乐最重要' },
-        { title: '✨ 闪耀瞬间', subtitle: '绽放你的光芒' },
-        { title: '🚀 起飞了', subtitle: '冲上云霄' },
-        { title: '💥 爆炸输出', subtitle: '伤害拉满' },
-        { title: '🏅 奖牌收割机', subtitle: '荣誉收割中' },
-        { title: '🎪 马戏团之王', subtitle: '秀翻全场' },
-        { title: '🌈 彩虹屁', subtitle: '今日份快乐' },
-        { title: '🐼 熊猫出击', subtitle: '萌翻了！' },
-        { title: '🦁 雄狮怒吼', subtitle: '王者降临' },
-        { title: '🌊 海浪之力', subtitle: '势不可挡' },
-        { title: '⚔️ 巅峰对决', subtitle: '强者之战' },
-        { title: '🎪 欢乐派对', subtitle: '燥起来！' },
-        { title: '💫 星光璀璨', subtitle: '你是最棒的！' },
-        { title: '🏆 传奇诞生', subtitle: '书写你的故事' },
-        { title: '🎯 一击必杀', subtitle: '准到没朋友' },
-        { title: '🔥 燃起来了', subtitle: '热血沸腾' },
-        { title: '🌙 夜间模式', subtitle: '越夜越精彩' },
+        // 战斗主题
+        { title: '⚔️ 巅峰对决', subtitle: '狭路相逢，勇者胜' },
+        { title: '🏆 冠军之路', subtitle: '每一步都是荣耀' },
+        { title: '💪 战意燃起', subtitle: '为了胜利，永不放弃' },
+        { title: '🎯 一发入魂', subtitle: '精准定位，绝不犹豫' },
+        { title: '🔥 热血战场', subtitle: '让激情点燃全场' },
+        
+        // 团队精神
+        { title: '🤝 团队协作', subtitle: '1+1>2 的力量' },
+        { title: '👥 兄弟同心', subtitle: '并肩作战，所向披靡' },
+        { title: '🎪 战队荣耀', subtitle: '我们是一个整体' },
+        
+        // HADO特色
+        { title: '🖐️ HADO时刻', subtitle: '科技与运动的融合' },
+        { title: '🌟 星耀HADO', subtitle: '你是最亮的星' },
+        { title: '🚀 未来运动', subtitle: 'AR科技开启新纪元' },
+        { title: '💫 虚拟战场', subtitle: '现实与科技的碰撞' },
+        
+        // 励志
+        { title: '🌅 突破自我', subtitle: '挑战极限，超越自我' },
+        { title: '🏃 速度与策略', subtitle: '智慧与敏捷的较量' },
+        { title: '🛡️ 防守的艺术', subtitle: '以静制动，后发制人' },
+        { title: '⚡ 闪电出击', subtitle: '快到对手反应不及' },
+        
+        // 兰星特色
+        { title: '💙 兰星精神', subtitle: '蓝色星辰，无限可能' },
+        { title: '🌊 浪潮之巅', subtitle: '乘风破浪，勇往直前' },
+        { title: '🦅 雄鹰展翅', subtitle: '俯视全场，称霸赛场' },
+        { title: '🏅 荣誉时刻', subtitle: '记录每一次辉煌' },
     ];
     
-    // 装饰emoji库
-    const decorationEmojis = ['⭐', '🔥', '💥', '⚡', '🎯', '🏆', '💪', '🌟', '✨', '🎪', '🎭', '🎨', '🦁', '🐯', '🦅', '🐲'];
-    
-    // 字体库
-    const fontFamilies = [
-        "'Outfit', sans-serif",
-        "'ZCOOL KuaiLe', cursive",
-        "'Ma Shan Zheng', cursive",
-        "'Noto Sans SC', sans-serif"
-    ];
-    
-    // 布局类型
-    const layoutTypes = ['layout-single', 'layout-dual', 'layout-stack', 'layout-asymmetric'];
+    // 标签选项
+    const tagOptions = ['HADO', '兰星少年', '战斗', '冠军', '荣耀', '团队', '热血', '未来', 'AR运动', '新星'];
     
     // 加载照片
     async function loadPhotos() {
         try {
-            const res = await fetch(`${API_BASE}/gallery`);
-            const data = await res.json();
-            if (data.ok && data.data && data.data.length > 0) {
-                photos = data.data;
-                generateRandomPoster(); // 加载后自动生成
+            // 并行加载照片和标签
+            const [photoRes, tagsRes] = await Promise.all([
+                fetch(`${API_BASE}/gallery`),
+                fetch(`${API_BASE}/tags`)
+            ]);
+            
+            const photoData = await photoRes.json();
+            const tagsData = await tagsRes.json();
+            
+            if (photoData.ok && photoData.data && photoData.data.length > 0) {
+                photos = photoData.data;
+                
+                // 加载标签和照片的标签关联
+                allTags = tagsData.data || [];
+                
+                // 为每张照片加载标签
+                for (const photo of photos) {
+                    try {
+                        const tagRes = await fetch(`${API_BASE}/photo/${photo.id}/tags`);
+                        const tagData = await tagRes.json();
+                        photoTagsMap[photo.id] = tagData.data || [];
+                    } catch (e) {
+                        photoTagsMap[photo.id] = [];
+                    }
+                }
+                
+                // 渲染标签选择器
+                renderTagSelector();
+                
+                generateRandomPoster();
             } else {
-                // 没有照片时使用占位图
                 photos = [];
                 generateWithPlaceholder();
             }
         } catch(e) {
-            console.error('加载照片失败:', e);
+            console.error('加载失败:', e);
             generateWithPlaceholder();
         }
     }
     
-    function generateWithPlaceholder() {
-        // 使用placeholder图片
-        const placeholder = 'https://placehold.co/600x800/667eea/ffffff?text=📷+兰星少年';
-        showPoster([placeholder]);
+    // 渲染标签选择器
+    function renderTagSelector() {
+        const container = document.getElementById('tagOptions');
+        
+        // "全部"选项
+        let html = `<span class="tag-option all active" onclick="selectTag(null)">全部</span>`;
+        
+        // 标签选项
+        allTags.forEach(tag => {
+            html += `<span class="tag-option" style="background: ${tag.color}" onclick="selectTag(${tag.id})">${tag.name}</span>`;
+        });
+        
+        container.innerHTML = html;
     }
     
-    // 随机获取N张不重复的照片
-    function getRandomPhotos(n) {
-        if (photos.length === 0) {
-            return Array(n).fill('https://placehold.co/600x800/667eea/ffffff?text=📷+兰星少年');
+    // 选择标签
+    function selectTag(tagId) {
+        selectedTagId = tagId;
+        
+        // 更新UI
+        document.querySelectorAll('.tag-option').forEach(el => el.classList.remove('active'));
+        if (tagId === null) {
+            document.querySelector('.tag-option.all').classList.add('active');
+        } else {
+            const tag = allTags.find(t => t.id === tagId);
+            if (tag) {
+                // 找到对应的元素并添加active
+                const options = document.querySelectorAll('.tag-option');
+                options.forEach(el => {
+                    if (el.textContent === tag.name) el.classList.add('active');
+                });
+            }
         }
-        const shuffled = [...photos].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, Math.min(n, photos.length)).map(p => p.cover);
+        
+        // 重新生成海报
+        generateRandomPoster();
+    }
+    
+    // 根据当前选中的标签筛选照片
+    function getFilteredPhotos() {
+        if (!selectedTagId) {
+            return photos;
+        }
+        // 返回有该标签的照片
+        return photos.filter(p => {
+            const tags = photoTagsMap[p.id] || [];
+            return tags.some(t => t.id === selectedTagId);
+        });
+    }
+    
+    function generateWithPlaceholder() {
+        const placeholder = 'https://placehold.co/600x800/1a1a2e/ffffff?text=HADO';
+        showPoster(placeholder);
+    }
+    
+    // 随机获取一张高质量照片（考虑标签筛选）
+    function getRandomPhoto() {
+        const filtered = getFilteredPhotos();
+        if (filtered.length === 0) {
+            // 如果筛选后没有照片，回退到全部
+            if (photos.length === 0) {
+                return 'https://placehold.co/600x800/1a1a2e/ffffff?text=HADO';
+            }
+            const shuffled = [...photos].sort(() => 0.5 - Math.random());
+            return shuffled[0].full_url || shuffled[0].cover;
+        }
+        const shuffled = [...filtered].sort(() => 0.5 - Math.random());
+        return shuffled[0].full_url || shuffled[0].cover;
     }
     
     // 显示海报
-    function showPoster(imageUrls) {
+    function showPoster(imageUrl, style = null) {
         const poster = document.getElementById('poster');
-        const imgContainer = document.getElementById('posterImages');
         
-        // 随机布局
+        // 默认样式
+        const defaultStyle = {
+            bgGradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+            textPreset: defaultTextPreset
+        };
+        const currentStyle = style || defaultStyle;
+        
+        // 随机选择布局
         const layout = layoutTypes[Math.floor(Math.random() * layoutTypes.length)];
-        poster.className = `poster ${layout}`;
         
-        // 随机背景
-        const gradient = gradientPresets[Math.floor(Math.random() * gradientPresets.length)];
-        poster.style.background = gradient;
+        // 重置类名
+        poster.className = 'poster ' + layout;
         
-        // 随机字体
-        const font = fontFamilies[Math.floor(Math.random() * fontFamilies.length)];
-        document.getElementById('posterTitle').style.fontFamily = font;
-        
-        // 随机文案
-        const text = textPresets[Math.floor(Math.random() * textPresets.length)];
-        document.getElementById('posterTitle').textContent = text.title;
-        document.getElementById('posterSubtitle').textContent = text.subtitle;
-        
-        // 渲染图片
-        let imgHtml = '';
-        if (layout === 'layout-single') {
-            imgHtml = `<img class="poster-img" src="${imageUrls[0]}" alt="海报图片">`;
-        } else if (layout === 'layout-dual') {
-            imgHtml = imageUrls.slice(0, 2).map(url => `<div class="poster-img-container"><img class="poster-img" src="${url}" alt=""></div>`).join('');
-        } else if (layout === 'layout-stack') {
-            imgHtml = `<div class="poster-img-container"><img class="poster-img" src="${imageUrls[0]}" alt=""></div>`;
-        } else if (layout === 'layout-asymmetric') {
-            imgHtml = imageUrls.slice(0, 3).map(url => `<div class="poster-img-container"><img class="poster-img" src="${url}" alt=""></div>`).join('');
+        // 设置背景渐变
+        const bgEl = poster.querySelector('.poster-bg');
+        if (bgEl) {
+            bgEl.style.background = currentStyle.bgGradient;
         }
-        imgContainer.innerHTML = imgHtml;
         
-        // 随机装饰
-        const deco1 = decorationEmojis[Math.floor(Math.random() * decorationEmojis.length)];
-        const deco2 = decorationEmojis[Math.floor(Math.random() * decorationEmojis.length)];
-        document.getElementById('deco1').textContent = deco1;
-        document.getElementById('deco2').textContent = deco2;
+        // 根据布局调整元素显示
+        if (layout === 'layout-magazine') {
+            // 杂志风：图片在上半部分
+            poster.innerHTML = `
+                <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
+                <div class="poster-bg" style="background: ${currentStyle.bgGradient}"></div>
+                <div class="poster-img-wrap"><img class="poster-main-img" id="posterImg" src="${imageUrl}" alt=""></div>
+                <div class="poster-content">
+                    <div class="poster-brand"><div class="poster-brand-icon">🎯</div><span class="poster-brand-text">兰星少年</span></div>
+                    <div class="accent-line"></div>
+                    <div class="poster-headline" id="posterTitle"></div>
+                    <div class="poster-sub" id="posterSubtitle"></div>
+                </div>
+            `;
+        } else if (layout === 'layout-collage') {
+            // 拼贴风：2x2网格
+            const imgs = getCollageImages(imageUrl);
+            poster.innerHTML = `
+                <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
+                <div class="poster-bg" style="background: ${currentStyle.bgGradient}"></div>
+                <div class="poster-img-wrap"><img class="poster-main-img" src="${imgs[0]}" alt=""></div>
+                <div class="poster-img-wrap"><img class="poster-main-img" src="${imgs[1]}" alt=""></div>
+                <div class="poster-img-wrap"><img class="poster-main-img" src="${imgs[2]}" alt=""></div>
+                <div class="poster-content">
+                    <div class="poster-brand"><div class="poster-brand-icon">🎯</div><span class="poster-brand-text">兰星少年</span></div>
+                    <div class="accent-line"></div>
+                    <div class="poster-headline" id="posterTitle"></div>
+                    <div class="poster-sub" id="posterSubtitle"></div>
+                </div>
+            `;
+        } else if (layout === 'layout-minimal') {
+            // 简洁风
+            poster.innerHTML = `
+                <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
+                <div class="poster-bg" style="background: ${currentStyle.bgGradient}"></div>
+                <img class="poster-main-img" id="posterImg" src="${imageUrl}" alt="">
+                <div class="poster-overlay" id="posterOverlay"></div>
+                <div class="poster-brand"><div class="poster-brand-icon">🎯</div><span class="poster-brand-text">兰星少年</span></div>
+                <div class="poster-tag" id="posterTag">HADO</div>
+                <div class="poster-content">
+                    <div class="accent-line"></div>
+                    <div class="poster-headline" id="posterTitle"></div>
+                    <div class="poster-sub" id="posterSubtitle"></div>
+                </div>
+            `;
+        } else {
+            // cinema / darkfilm - 需要设置背景
+            const overlay = document.getElementById('posterOverlay');
+            overlay.style.display = (layout === 'layout-cinema') ? 'block' : 'none';
+            
+            // 设置背景元素
+            let bgElement = poster.querySelector('.poster-bg');
+            if (!bgElement) {
+                bgElement = document.createElement('div');
+                bgElement.className = 'poster-bg';
+                poster.insertBefore(bgElement, poster.firstChild);
+            }
+            bgElement.style.background = currentStyle.bgGradient;
+        }
+        
+        // 使用标签对应的文案（如果没有则用默认）
+        const textPreset = currentStyle.textPreset || defaultTextPreset;
+        const text = textPreset[Math.floor(Math.random() * textPreset.length)];
+        
+        // 获取title元素（可能在新的innerHTML中）
+        const titleEl = document.getElementById('posterTitle');
+        const subtitleEl = document.getElementById('posterSubtitle');
+        const tagEl = document.getElementById('posterTag');
+        
+        if (titleEl) titleEl.textContent = text.title;
+        if (subtitleEl) subtitleEl.textContent = text.subtitle;
+        
+        // 标签显示选中的标签名
+        if (tagEl) {
+            if (selectedTagId) {
+                const tag = allTags.find(t => t.id === selectedTagId);
+                tagEl.textContent = tag ? tag.name : 'HADO';
+            } else {
+                tagEl.textContent = tagOptions[Math.floor(Math.random() * tagOptions.length)];
+            }
+        }
         
         // 隐藏loading
-        document.getElementById('loadingOverlay').style.display = 'none';
+        const loading = document.getElementById('loadingOverlay');
+        if (loading) loading.style.display = 'none';
+    }
+    
+    // 获取拼贴图片
+    function getCollageImages(mainImg) {
+        if (photos.length < 3) {
+            return [mainImg, mainImg, mainImg];
+        }
+        const shuffled = [...photos].sort(() => 0.5 - Math.random());
+        return [
+            shuffled[0]?.full_url || mainImg,
+            shuffled[1]?.full_url || mainImg,
+            shuffled[2]?.full_url || mainImg
+        ];
     }
     
     // 生成随机海报
@@ -354,16 +782,22 @@
         if (isGenerating) return;
         isGenerating = true;
         
-        document.getElementById('loadingOverlay').style.display = 'flex';
+        const loading = document.getElementById('loadingOverlay');
+        if (loading) loading.style.display = 'flex';
         
-        // 模拟一点延迟，让用户感觉在生成
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        // 随机选择1-3张图片
-        const numImages = Math.floor(Math.random() * 3) + 1; // 1-3
-        const selectedPhotos = getRandomPhotos(numImages);
+        const photo = getRandomPhoto();
         
-        showPoster(selectedPhotos);
+        // 根据标签获取配色和文案
+        const currentStyle = selectedTagId && tagStyles[selectedTagId] 
+            ? tagStyles[selectedTagId] 
+            : { 
+                bgGradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+                textPreset: defaultTextPreset
+              };
+        
+        showPoster(photo, currentStyle);
         
         isGenerating = false;
     }
@@ -376,14 +810,13 @@
         
         try {
             const canvas = await html2canvas(poster, {
-                scale: 2,
+                scale: 3,
                 backgroundColor: null,
                 useCORS: true,
                 allowTaint: true,
                 logging: false
             });
             
-            // 转换为blob并下载
             canvas.toBlob(function(blob) {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
