@@ -24,12 +24,6 @@
         .form-input { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: inherit; transition: all 0.2s; }
         .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,107,53,0.1); }
         
-        .code-input-group { display: flex; gap: 0.5rem; }
-        .code-input-group .form-input { flex: 1; }
-        .btn-code { padding: 0.75rem 1rem; background: var(--bg-light); border: 1px solid var(--border); border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
-        .btn-code:hover:not(:disabled) { background: var(--primary); color: white; border-color: var(--primary); }
-        .btn-code:disabled { opacity: 0.5; cursor: not-allowed; }
-        
         .btn { width: 100%; padding: 0.875rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 1rem; font-family: inherit; transition: all 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-light); }
@@ -51,6 +45,8 @@
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         .toast.success { background: #10B981; }
         .toast.error { background: #DC2626; }
+        
+        .password-hint { font-size: 0.8rem; color: var(--text-gray); margin-top: 0.25rem; }
     </style>
 </head>
 <body>
@@ -62,7 +58,7 @@
                     BLXST
                 </a>
                 <h1 class="auth-title">登录</h1>
-                <p class="auth-subtitle">使用邮箱验证码登录</p>
+                <p class="auth-subtitle">使用邮箱和密码登录</p>
             </div>
             
             <div id="errorMsg" class="error-msg"></div>
@@ -74,11 +70,9 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">验证码</label>
-                    <div class="code-input-group">
-                        <input type="text" class="form-input" id="code" placeholder="6位验证码" maxlength="6" required>
-                        <button type="button" class="btn-code" id="sendCodeBtn">发送验证码</button>
-                    </div>
+                    <label class="form-label">密码</label>
+                    <input type="password" class="form-input" id="password" placeholder="6位数字密码" maxlength="6" required>
+                    <p class="password-hint">请输入6位数字密码</p>
                 </div>
                 
                 <div class="loading" id="loading">
@@ -98,7 +92,6 @@
     
     <script>
         const API_BASE = 'https://blast-auth-api.kanjiaming2022.workers.dev';
-        let codeCountdown = 0;
         
         function showToast(message, type = '') {
             const toast = document.getElementById('toast');
@@ -122,52 +115,6 @@
             document.getElementById('loginBtn').disabled = loading;
         }
         
-        // 发送验证码
-        document.getElementById('sendCodeBtn').addEventListener('click', async () => {
-            const email = document.getElementById('email').value.trim();
-            if (!email) {
-                showError('请输入邮箱');
-                return;
-            }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showError('邮箱格式不正确');
-                return;
-            }
-            
-            hideError();
-            const btn = document.getElementById('sendCodeBtn');
-            btn.disabled = true;
-            
-            try {
-                const res = await fetch(`${API_BASE}/auth/send-code`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, purpose: 'login' })
-                });
-                const data = await res.json();
-                
-                if (data.ok) {
-                    showToast('验证码已发送到您的邮箱', 'success');
-                    // 开发环境显示验证码
-                    if (data.code) {
-                        showToast(`验证码: ${data.code}`, 'success');
-                    }
-                    codeCountdown = 60;
-                    const interval = setInterval(() => {
-                        codeCountdown--;
-                        btn.textContent = codeCountdown > 0 ? `${codeCountdown}秒` : '发送验证码';
-                        if (codeCountdown <= 0) clearInterval(interval);
-                    }, 1000);
-                } else {
-                    showError(data.error || '发送失败');
-                    btn.disabled = false;
-                }
-            } catch (e) {
-                showError('网络错误');
-                btn.disabled = false;
-            }
-        });
-        
         // 登录
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -175,13 +122,20 @@
             setLoading(true);
             
             const email = document.getElementById('email').value.trim();
-            const code = document.getElementById('code').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            // 验证密码是6位数字
+            if (!/^\d{6}$/.test(password)) {
+                showError('密码必须是6位数字');
+                setLoading(false);
+                return;
+            }
             
             try {
-                const res = await fetch(`${API_BASE}/auth/login`, {
+                const res = await fetch(`${API_BASE}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, code })
+                    body: JSON.stringify({ email, password })
                 });
                 const data = await res.json();
                 

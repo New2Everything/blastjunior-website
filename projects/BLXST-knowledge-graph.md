@@ -48,9 +48,13 @@
 | `/gallery` | 257张照片 |
 | `/news` | 新闻列表 |
 | `/sponsors` | 赞助商 |
-| `/matches` | 赛季和参赛队伍列表 |
+| `/matches` | 赛季和参赛队伍列表（按赛季查看） |
 | `/matches/:id` | 比赛详情 (内部联赛结果) |
-| `/standings` | 积分榜 |
+| `/standings` | 积分榜（支持?season=参数） |
+| `/standings-v2` | 积分榜V2（支持选择赛季） |
+| `/seasons` | 赛季列表（含displayName优化） |
+| `/online` | 在线用户列表（D1查询，last_seen 30分钟） |
+| `/heartbeat` | 心跳 - 更新用户 last_seen（需认证） |
 
 ---
 
@@ -59,7 +63,13 @@
 | 数据库 | UUID后4位 | 用途 |
 |--------|-----------|------|
 | blast-campaigns-db | bc11dbe6 | 战队/选手/赛季/比赛 |
+| blast-user-db | 520d5c63 | 用户/在线状态 |
 | news-database | c2d2f16b | 新闻内容 |
+| blast-photo-db | 9f259478 | 照片元数据 |
+
+#### 数据表 (blast-user-db)
+- users (用户信息)
+- online_users (在线状态 last_seen)
 
 #### 数据表 (blast-campaigns-db)
 - events (赛事)

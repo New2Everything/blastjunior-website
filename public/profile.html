@@ -218,7 +218,7 @@
             }
             
             try {
-                const res = await fetch(`${API_BASE}/auth/profile`, {
+                const res = await fetch(`${API_BASE}/profile`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
@@ -280,7 +280,7 @@
             
             const token = localStorage.getItem('blxst_token');
             try {
-                const res = await fetch(`${API_BASE}/auth/username`, {
+                const res = await fetch(`${API_BASE}/username`, {
                     method: 'PUT',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -306,7 +306,7 @@
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             const token = localStorage.getItem('blxst_token');
             try {
-                await fetch(`${API_BASE}/auth/logout`, {
+                await fetch(`${API_BASE}/logout`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });

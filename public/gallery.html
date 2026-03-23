@@ -3,631 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>画廊 - 兰星少年 HADO 俱乐部</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>相册 - 兰星少年 HADO 俱乐部</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; }
-        body { 
-            font-family: 'Noto Sans SC', sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            color: #fff;
-        }
+        :root { --primary: #FF6B35; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
+        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), #FF8A5C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
         
-        h1 { 
-            text-align: center; 
-            color: #fff; 
-            font-size: 2rem;
-            margin-bottom: 30px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+        .page-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 1.5rem; }
         
-        /* 筛选器区域 */
-        .filters {
-            background: rgba(255,255,255,0.1);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 30px;
-            backdrop-filter: blur(10px);
-        }
+        /* 分类筛选 */
+        .category-filter { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .cat-btn { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 50px; background: var(--bg-white); color: var(--text-gray); font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .cat-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         
-        .filter-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 12px;
-        }
+        /* 统计 */
+        .stats { margin-bottom: 1rem; color: var(--text-gray); font-size: 0.9rem; }
         
-        .filter-row:last-child { margin-bottom: 0; }
+        /* 照片网格 */
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
+        .photo-card { background: var(--bg-white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); cursor: pointer; transition: all 0.2s; }
+        .photo-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+        .photo-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: var(--bg-light); }
+        .photo-info { padding: 1rem; }
+        .photo-title { font-weight: 600; margin-bottom: 0.5rem; }
+        .photo-meta { font-size: 0.85rem; color: var(--text-gray); display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .photo-tag { padding: 0.2rem 0.5rem; background: var(--bg-light); border-radius: 4px; font-size: 0.75rem; }
         
-        .filter-label {
-            font-weight: 500;
-            color: #aaa;
-            min-width: 60px;
-        }
+        .loading { text-align: center; padding: 3rem; color: var(--text-gray); }
+        .empty { text-align: center; padding: 3rem; color: var(--text-gray); }
         
-        .filter-btn {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-        
-        .filter-btn:hover {
-            background: rgba(255,255,255,0.2);
-        }
-        
-        .filter-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: transparent;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .search-input {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            width: 200px;
-        }
-        
-        .search-input::placeholder { color: #888; }
-        .search-input:focus { outline: none; border-color: #667eea; }
-        
-        /* 统计信息 */
-        .stats {
-            text-align: center;
-            color: #888;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        
-        /* 瀑布流布局 */
-        .masonry {
-            column-count: 4;
-            column-gap: 16px;
-        }
-        
-        @media (max-width: 1200px) { .masonry { column-count: 3; } }
-        @media (max-width: 900px) { .masonry { column-count: 2; } }
-        @media (max-width: 600px) { .masonry { column-count: 1; } }
-        
-        .card {
-            break-inside: avoid;
-            margin-bottom: 16px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        
-        .card img {
-            width: 100%;
-            display: block;
-            transition: transform 0.3s ease;
-        }
-        
-        .card:hover img {
-            transform: scale(1.05);
-        }
-        
-        .card-info {
-            padding: 16px;
-        }
-        
-        .card-title {
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: #fff;
-        }
-        
-        .card-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-        
-        .tag {
-            font-size: 11px;
-            padding: 4px 10px;
-            border-radius: 12px;
-            background: rgba(102, 126, 234, 0.3);
-            color: #a0a0ff;
-        }
-        
-        .tag.training { background: rgba(72, 187, 120, 0.3); color: #68d391; }
-        .tag.match { background: rgba(245, 101, 101, 0.3); color: #fc8181; }
-        .tag.event { background: rgba(237, 137, 54, 0.3); color: #f6ad55; }
-        .tag.team { background: rgba(66, 153, 225, 0.3); color: #63b3ed; }
-        
-        .card-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 12px;
-        }
-        
-        .like-btn {
-            background: none;
-            border: none;
-            color: #888;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            transition: all 0.3s ease;
-        }
-        
-        .like-btn:hover { color: #ff6b6b; }
-        .like-btn.liked { color: #ff6b6b; }
-        .like-btn.liked .heart { animation: heartbeat 0.6s ease; }
-        
-        @keyframes heartbeat {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.3); }
-        }
-        
-        .card-date {
-            font-size: 12px;
-            color: #666;
-        }
-        
-        /* 加载更多 */
-        .load-more {
-            text-align: center;
-            margin-top: 30px;
-        }
-        
-        .load-more-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: #fff;
-            padding: 14px 40px;
-            border-radius: 30px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .load-more-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-        
-        .load-more-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .loading { 
-            text-align: center; 
-            padding: 40px; 
-            color: #888; 
-        }
-        
-        /* 弹窗预览 */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 40px;
-        }
-        
-        .modal.active { display: flex; }
-        
-        .modal-content {
-            max-width: 90%;
-            max-height: 90%;
-            position: relative;
-        }
-        
-        .modal-content img {
-            max-width: 100%;
-            max-height: 80vh;
-            border-radius: 8px;
-        }
-        
-        .modal-info {
-            text-align: center;
-            margin-top: 20px;
-            color: #fff;
-        }
-        
-        .modal-close {
-            position: absolute;
-            top: -40px;
-            right: 0;
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 30px;
-            cursor: pointer;
-        }
-        
-        /* 骨架屏 */
-        .skeleton { background: linear-gradient(90deg, #2a2a4a 25%, #3a3a5a 50%, #2a2a4a 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        
-        .skeleton-card { background: rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden; }
-        .skeleton-card .skeleton-img { width: 100%; aspect-ratio: 4/3; }
-        .skeleton-card .skeleton-info { padding: 16px; }
-        .skeleton-card .skeleton-title { height: 18px; width: 70%; border-radius: 4px; margin-bottom: 12px; }
-        .skeleton-card .skeleton-tags { display: flex; gap: 6px; margin-bottom: 12px; }
-        .skeleton-card .skeleton-tag { height: 20px; width: 50px; border-radius: 12px; }
-        
-        /* 空状态优化 */
-        .empty {
-            text-align: center;
-            padding: 60px 20px;
-            color: #888;
-        }
-        
-        .empty-icon {
-            font-size: 60px;
-            margin-bottom: 16px;
-            opacity: 0.7;
-        }
-        
-        .empty-text {
-            font-size: 16px;
-            margin-bottom: 8px;
-        }
-        
-        .empty-hint {
-            font-size: 13px;
-            opacity: 0.7;
-        }
-        
-        /* 错误状态 */
-        .error {
-            text-align: center;
-            padding: 60px 20px;
-            color: #f87171;
-        }
-        
-        .error-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-        
-        .retry-btn {
-            margin-top: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: #fff;
-            padding: 10px 24px;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .retry-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
+        /* 点击查看大图 */
+        .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
+        .lightbox.show { display: flex; }
+        .lightbox-img { max-width: 90%; max-height: 70%; object-fit: contain; }
+        .lightbox-close { position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer; }
+        .lightbox-info { color: white; text-align: center; margin-top: 1rem; }
+        .lightbox-title { font-size: 1.25rem; font-weight: 600; }
+        .lightbox-category { color: #aaa; margin-top: 0.5rem; }
     </style>
-<!-- JSON-LD Structured Data -->
-<script type="application/ld+json">
-{
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "gallery - 兰星少年 HADO 俱乐部"
-}
-</script>
-
 </head>
 <body>
-    <h1>📷 兰星画廊</h1>
-    
-    <!-- 筛选器 -->
-    <div class="filters">
-        <div class="filter-row">
-            <span class="filter-label">类型:</span>
-            <button class="filter-btn active" data-filter="type" data-value="all">全部</button>
-            <button class="filter-btn" data-filter="type" data-value="training">🏋️ 训练</button>
-            <button class="filter-btn" data-filter="type" data-value="match">🏆 比赛</button>
-            <button class="filter-btn" data-filter="type" data-value="event">🎉 活动</button>
-            <button class="filter-btn" data-filter="type" data-value="team">👥 团队</button>
-        </div>
-        <div class="filter-row">
-            <span class="filter-label">赛季:</span>
-            <button class="filter-btn active" data-filter="season" data-value="all">全部</button>
-            <button class="filter-btn" data-filter="season" data-value="S4">S4</button>
-            <button class="filter-btn" data-filter="season" data-value="S3">S3</button>
-            <button class="filter-btn" data-filter="season" data-value="S2">S2</button>
-        </div>
-        <div class="filter-row">
-            <span class="filter-label">战队:</span>
-            <button class="filter-btn active" data-filter="team" data-value="all">全部</button>
-            <button class="filter-btn" data-filter="team" data-value="蓝队">蓝队</button>
-            <button class="filter-btn" data-filter="team" data-value="红队">红队</button>
-            <button class="filter-btn" data-filter="team" data-value="绿队">绿队</button>
-        </div>
-        <div class="filter-row">
-            <span class="filter-label">搜索:</span>
-            <input type="text" class="search-input" id="searchInput" placeholder="搜索照片...">
-        </div>
-    </div>
-    
-    <div class="stats" id="stats"></div>
-    <div id="app">
-        <!-- 骨架屏 -->
-        <div class="masonry">
-            <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton-info"><div class="skeleton skeleton-title"></div><div class="skeleton-tags"><div class="skeleton skeleton-tag"></div><div class="skeleton skeleton-tag"></div></div></div></div>
-            <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton-info"><div class="skeleton skeleton-title"></div><div class="skeleton-tags"><div class="skeleton skeleton-tag"></div><div class="skeleton skeleton-tag"></div></div></div></div>
-            <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton-info"><div class="skeleton skeleton-title"></div><div class="skeleton-tags"><div class="skeleton skeleton-tag"></div><div class="skeleton skeleton-tag"></div></div></div></div>
-            <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton-info"><div class="skeleton skeleton-title"></div><div class="skeleton-tags"><div class="skeleton skeleton-tag"></div><div class="skeleton skeleton-tag"></div></div></div></div>
-            <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton-info"><div class="skeleton skeleton-title"></div><div class="skeleton-tags"><div class="skeleton skeleton-tag"></div><div class="skeleton skeleton-tag"></div></div></div></div>
-            <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton-info"><div class="skeleton skeleton-title"></div><div class="skeleton-tags"><div class="skeleton skeleton-tag"></div><div class="skeleton skeleton-tag"></div></div></div></div>
-            <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton-info"><div class="skeleton skeleton-title"></div><div class="skeleton-tags"><div class="skeleton skeleton-tag"></div><div class="skeleton skeleton-tag"></div></div></div></div>
-            <div class="skeleton-card"><div class="skeleton skeleton-img"></div><div class="skeleton-info"><div class="skeleton skeleton-title"></div><div class="skeleton-tags"><div class="skeleton skeleton-tag"></div><div class="skeleton skeleton-tag"></div></div></div></div>
-        </div>
-    </div>
-    <div class="load-more" id="loadMore" style="display:none;">
-        <button class="load-more-btn" id="loadMoreBtn">加载更多</button>
-    </div>
-    
-    <!-- 弹窗 -->
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <button class="modal-close" id="modalClose">×</button>
-            <img id="modalImg" src="" alt="">
-            <div class="modal-info" id="modalInfo"></div>
-        </div>
-    </div>
-
-    <script>
-    // 模拟数据 - 当API不可用时使用
-    const MOCK_PHOTOS = [
-        { id: 1, title: "S4赛季开幕式", cover: "https://picsum.photos/seed/hado1/400/300", tags: ["活动", "S4"], season: "S4", type: "event" },
-        { id: 2, title: "战队训练日常", cover: "https://picsum.photos/seed/hado2/400/500", tags: ["训练", "S4"], season: "S4", type: "training" },
-        { id: 3, title: "常规赛第三轮", cover: "https://picsum.photos/seed/hado3/400/350", tags: ["比赛", "S4"], season: "S4", type: "match" },
-        { id: 4, title: "团队合影", cover: "https://picsum.photos/seed/hado4/400/400", tags: ["团队", "S4"], season: "S4", type: "team" },
-        { id: 5, title: "选手采访", cover: "https://picsum.photos/seed/hado5/400/280", tags: ["选手", "S4"], season: "S4", type: "team" },
-        { id: 6, title: "S3总决赛", cover: "https://picsum.photos/seed/hado6/400/450", tags: ["比赛", "S3"], season: "S3", type: "match" },
-        { id: 7, title: "训练赛精彩瞬间", cover: "https://picsum.photos/seed/hado7/400/320", tags: ["训练", "S3"], season: "S3", type: "training" },
-        { id: 8, title: "周年庆活动", cover: "https://picsum.photos/seed/hado8/400/380", tags: ["活动", "S3"], season: "S3", type: "event" },
-        { id: 9, title: "新赛季发布会", cover: "https://picsum.photos/seed/hado9/400/420", tags: ["活动", "S4"], season: "S4", type: "event" },
-        { id: 10, title: "战术研讨会", cover: "https://picsum.photos/seed/hado10/400/300", tags: ["训练", "S4"], season: "S4", type: "training" },
-        { id: 11, title: "选手集训", cover: "https://picsum.photos/seed/hado11/400/360", tags: ["训练", "S3"], season: "S3", type: "training" },
-        { id: 12, title: "友谊赛", cover: "https://picsum.photos/seed/hado12/400/340", tags: ["比赛", "S2"], season: "S2", type: "match" },
-        { id: 13, title: "战队团建", cover: "https://picsum.photos/seed/hado13/400/400", tags: ["活动", "S2"], season: "S2", type: "event" },
-        { id: 14, title: "S2冠军时刻", cover: "https://picsum.photos/seed/hado14/400/500", tags: ["比赛", "S2"], season: "S2", type: "match" },
-        { id: 15, title: "日常训练", cover: "https://picsum.photos/seed/hado15/400/280", tags: ["训练", "S4"], season: "S4", type: "training" },
-        { id: 16, title: "战队定妆照", cover: "https://picsum.photos/seed/hado16/400/450", tags: ["团队", "S3"], season: "S3", type: "team" },
-        { id: 17, title: "开幕式表演", cover: "https://picsum.photos/seed/hado17/400/320", tags: ["活动", "S3"], season: "S3", type: "event" },
-        { id: 18, title: "赛后握手", cover: "https://picsum.photos/seed/hado18/400/380", tags: ["比赛", "S4"], season: "S4", type: "match" },
-        { id: 19, title: "获奖合影", cover: "https://picsum.photos/seed/hado19/400/340", tags: ["团队", "S4"], season: "S4", type: "team" },
-        { id: 20, title: "体能训练", cover: "https://picsum.photos/seed/hado20/400/420", tags: ["训练", "S2"], season: "S2", type: "training" },
-    ];
-
-    // 状态管理
-    let allPhotos = [];
-    let filteredPhotos = [];
-    let displayCount = 12;
-    let currentFilter = { type: 'all', season: 'all', team: 'all', search: '' };
-    
-    // 获取点赞状态
-    function getLikes() {
-        const likes = localStorage.getItem('gallery_likes');
-        return likes ? JSON.parse(likes) : {};
-    }
-    
-    // 切换点赞
-    function toggleLike(photoId) {
-        const likes = getLikes();
-        likes[photoId] = !likes[photoId];
-        localStorage.setItem('gallery_likes', JSON.stringify(likes));
-        return likes[photoId];
-    }
-    
-    // 渲染照片卡片
-    function renderCard(photo) {
-        const likes = getLikes();
-        const likeCount = likes[photo.id] ? 1 : 0;
-        const typeClass = photo.type || 'other';
-        
-        return `
-            <div class="card" data-id="${photo.id}" data-type="${photo.type}" data-season="${photo.season}">
-                <img src="${photo.cover}" alt="${photo.title}" loading="lazy" onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%232a2a4a%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22%23668%22>🖼️</text></svg>'">
-                <div class="card-info">
-                    <div class="card-title">${photo.title}</div>
-                    <div class="card-tags">
-                        ${photo.tags.map(t => `<span class="tag ${t === '训练' ? 'training' : t === '比赛' ? 'match' : t === '活动' ? 'event' : t === '团队' ? 'team' : ''}">${t}</span>`).join('')}
-                    </div>
-                    <div class="card-actions">
-                        <button class="like-btn ${likes[photo.id] ? 'liked' : ''}" data-id="${photo.id}">
-                            <span class="heart">${likes[photo.id] ? '❤️' : '🤍'}</span>
-                            <span class="like-count">${likeCount}</span>
-                        </button>
-                        <span class="card-date">${photo.season || ''}</span>
-                    </div>
-                </div>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">⚡</div>
+                BLXST
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/teams" class="nav-link">战队</a>
+                <a href="/players" class="nav-link">选手</a>
+                <a href="/standings" class="nav-link">积分榜</a>
+                <a href="/matches" class="nav-link">赛程</a>
+                <a href="/gallery" class="nav-link active">相册</a>
             </div>
-        `;
-    }
-    
-    // 筛选照片
-    function filterPhotos() {
-        filteredPhotos = allPhotos.filter(p => {
-            const typeMatch = currentFilter.type === 'all' || p.type === currentFilter.type;
-            const seasonMatch = currentFilter.season === 'all' || p.season === currentFilter.season;
-            const teamMatch = currentFilter.team === 'all' || (p.team_name && p.team_name.includes(currentFilter.team));
-            const searchMatch = !currentFilter.search || p.title.toLowerCase().includes(currentFilter.search.toLowerCase());
-            return typeMatch && seasonMatch && teamMatch && searchMatch;
-        });
-        displayCount = 12;
-        renderGallery();
-    }
-    
-    // 渲染画廊
-    function renderGallery() {
-        const container = document.getElementById('app');
-        const toShow = filteredPhotos.slice(0, displayCount);
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1 class="page-title">📷 相册</h1>
         
-        if (toShow.length === 0) {
-            container.innerHTML = `
-                <div class="empty">
-                    <div class="empty-icon">📷</div>
-                    <div class="empty-text">没有找到匹配的照片</div>
-                    <div class="empty-hint">试试其他筛选条件</div>
-                </div>
-            `;
-        } else {
-            container.innerHTML = `<div class="masonry">${toShow.map(renderCard).join('')}</div>`;
-        }
+        <!-- 分类筛选 -->
+        <div class="category-filter" id="categoryFilter">
+            <button class="cat-btn active" data-category="全部">全部</button>
+        </div>
         
-        // 更新统计
-        document.getElementById('stats').textContent = 
-            `共 ${filteredPhotos.length} 张照片 · 显示 ${toShow.length} 张`;
+        <div class="stats" id="stats"></div>
         
-        // 显示/隐藏加载更多
-        document.getElementById('loadMore').style.display = 
-            displayCount < filteredPhotos.length ? 'block' : 'none';
-        
-        // 绑定事件
-        bindCardEvents();
-    }
+        <div class="photo-grid" id="photoGrid">
+            <div class="loading">加载中...</div>
+        </div>
+    </main>
     
-    // 绑定卡片事件
-    function bindCardEvents() {
-        // 点赞
-        document.querySelectorAll('.like-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const id = parseInt(btn.dataset.id);
-                const isLiked = toggleLike(id);
-                btn.classList.toggle('liked', isLiked);
-                btn.querySelector('.heart').textContent = isLiked ? '❤️' : '🤍';
-                btn.querySelector('.like-count').textContent = isLiked ? '1' : '0';
-            });
-        });
-        
-        // 点击查看大图
-        document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('click', () => {
-                const id = parseInt(card.dataset.id);
-                const photo = allPhotos.find(p => p.id === id);
-                if (photo) showModal(photo);
-            });
-        });
-    }
-    
-    // 显示弹窗
-    function showModal(photo) {
-        document.getElementById('modalImg').src = photo.cover;
-        document.getElementById('modalInfo').innerHTML = `
-            <h3>${photo.title}</h3>
-            <p>${photo.tags.join(' · ')}</p>
-        `;
-        document.getElementById('modal').classList.add('active');
-    }
-    
-    // 关闭弹窗
-    document.getElementById('modalClose').addEventListener('click', () => {
-        document.getElementById('modal').classList.remove('active');
-    });
-    
-    document.getElementById('modal').addEventListener('click', (e) => {
-        if (e.target.id === 'modal') {
-            document.getElementById('modal').classList.remove('active');
-        }
-    });
-    
-    // 加载更多
-    document.getElementById('loadMoreBtn').addEventListener('click', () => {
-        displayCount += 12;
-        renderGallery();
-    });
-    
-    // 筛选按钮
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const filter = btn.dataset.filter;
-            const value = btn.dataset.value;
-            
-            // 更新激活状态
-            document.querySelectorAll(`.filter-btn[data-filter="${filter}"]`).forEach(b => {
-                b.classList.remove('active');
-            });
-            btn.classList.add('active');
-            
-            // 更新筛选条件
-            currentFilter[filter] = value;
-            filterPhotos();
-        });
-    });
-    
-    // 搜索
-    let searchTimeout;
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            currentFilter.search = e.target.value;
-            filterPhotos();
-        }, 300);
-    });
-    
-    // 初始化
-    async function init() {
-        try {
-            // 尝试获取API数据
-            const resp = await fetch('https://blast-homepage-api.kanjiaming2022.workers.dev/gallery');
-            const data = await resp.json();
-            
-            if (data.ok && data.data && data.data.length > 0) {
-                // 转换API数据格式
-                allPhotos = data.data.map((p, i) => ({
-                    id: p.id || i + 1,
-                    title: p.title || '照片',
-                    cover: p.cover,
-                    tags: p.tags || [],
-                    season: p.season || 'S4',
-                    type: (p.tags || []).find(t => ['训练', '比赛', '活动', '团队'].includes(t)) || 'other'
-                }));
-            } else {
-                // 使用模拟数据
-                allPhotos = MOCK_PHOTOS;
-            }
-        } catch (e) {
-            console.log('API不可用，使用模拟数据');
-            allPhotos = MOCK_PHOTOS;
-        }
-        
-        filteredPhotos = [...allPhotos];
-        renderGallery();
-    }
-    
-    init();
-    </script>
+
+
     <script src="/components/nav-loader.js"></script>
+    <script>
+        const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+        let allPhotos = [];
+        let currentCategory = '全部';
+        
+        // 初始化
+        async function init() {
+            try {
+                const resp = await fetch(API_BASE + '/gallery');
+                const result = await resp.json();
+                
+                if (!result.ok) {
+                    document.getElementById('photoGrid').innerHTML = '<div class="empty">加载失败</div>';
+                    return;
+                }
+                
+                // 设置分类按钮
+                const categories = result.categories || [];
+                const filterContainer = document.getElementById('categoryFilter');
+                let filterHtml = '<button class="cat-btn active" data-category="全部">全部</button>';
+                categories.forEach(cat => {
+                    filterHtml += `<button class="cat-btn" data-category="${cat.name}">${cat.name} (${cat.count})</button>`;
+                });
+                filterContainer.innerHTML = filterHtml;
+                
+                // 绑定点击事件
+                document.querySelectorAll('.cat-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        currentCategory = btn.dataset.category;
+                        renderGallery();
+                    });
+                });
+                
+                // 转换数据
+                allPhotos = (result.data || []).map(p => ({
+                    id: p.id,
+                    title: p.title,
+                    cover: p.cover,
+                    full_url: p.full_url,
+                    category: p.category || '未分类'
+                }));
+                
+                renderGallery();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('photoGrid').innerHTML = '<div class="empty">加载失败</div>';
+            }
+        }
+        
+        function renderGallery() {
+            const filtered = currentCategory === '全部' 
+                ? allPhotos 
+                : allPhotos.filter(p => p.category === currentCategory);
+            
+            document.getElementById('stats').textContent = `共 ${filtered.length} 张照片`;
+            
+            if (filtered.length === 0) {
+                document.getElementById('photoGrid').innerHTML = '<div class="empty">暂无照片</div>';
+                return;
+            }
+            
+            document.getElementById('photoGrid').innerHTML = filtered.map(p => `
+                <div class="photo-card" onclick="openLightbox(${p.id})">
+                    <img class="photo-img" src="${p.cover}" alt="${p.title}" loading="lazy"
+                        onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 400 300\\'><rect fill=\\'%23334155\\' width=\\'400\\' height=\\'300\\'/><text x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' fill=\\'white\\' font-size=\\'24\\'>📷</text></svg>'">
+                    <div class="photo-info">
+                        <div class="photo-title">${p.title}</div>
+                        <div class="photo-meta">
+                            <span class="photo-tag">${p.category}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 大图查看
+        let currentPhoto = null;
+        
+        function openLightbox(id) {
+            // 跳转到 photo 页面
+            window.location.href = `/photo.html?id=${id}`;
+        }
+        
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('show');
+        }
+        
+        // 点击背景关闭
+        document.getElementById('lightbox').addEventListener('click', (e) => {
+            if (e.target.id === 'lightbox') closeLightbox();
+        });
+        
+        init();
+    </script>
 </body>
 </html>

@@ -82,9 +82,17 @@
 | 照片/媒体 | R2 (blastjunior-media) | 禁止从D1伪造 |
 | 配置/缓存 | KV | 临时配置 |
 
-### 前端字段映射
-- 前端必须严格匹配 API 返回的字段名
-- 禁止在代码里改字段映射，必须改 API 返回值
+### 3. 字段映射
+```
+✅ 正确做法:
+  - 开发前先调用 API 确认返回字段
+  - 写代码时对照实际 API 返回字段
+
+❌ 禁止:
+  - 假设字段名（如 p.url, p.image）
+  - 不查 API 就写代码
+  - 在代码里改字段映射，必须改 API 返回值
+```
 
 ---
 
@@ -92,20 +100,68 @@
 
 ### 1. CORS 配置
 ```
-✅ 正确:
-  Access-Control-Allow-Origin: https://blastjunior.com
+✅ 正确（多域名数组）:
+  allowedOrigins = [
+    "https://blastjunior.com",           # 主站
+    "https://www.blastjunior.com",       # 别名
+    "https://blastjunior-website.pages.dev"  # 预览环境
+  ]
   
 ❌ 错误:
   - 空格分隔多域名: "https://blastjunior.com https://www.blastjunior.com"
   - 通配符: "*"
 ```
 
+### 2. KV 使用规则（2026-03-23 新增）
+```
+✅ 正确使用:
+  - KV.get("已知key") - 用完整key查询
+  - KV.put("known_key", value) - 写入
+  - KV.delete("known_key") - 删除已知key
+
+❌ 禁止在公开接口中使用:
+  - KV.list() / KV.list({ prefix: "xxx" })
+  - 原因：KV.list() 消耗大量 read operations，free tier 限额极低
+  - 前端轮询会快速触发超额（30秒轮询 = 单标签页每天 2880 次操作）
+
+✅ 正确替代方案:
+  - 使用 D1 数据库存储需要遍历的数据
+  - 示例：在线用户列表 → D1 表 + last_seen 时间戳 + 前端心跳更新
+```
+
+### 3. 获取照片的正确 API
+```
+✅ 正确（必须使用）:
+  GET /gallery - 从 D1 (photo_metadata) 读取元数据 + R2 读取图片
+  - category: 分类（如"未分类"）
+  - cover: 缩略图 URL (R2)
+  - full_url: 完整图片 URL (R2)
+  
+✅ D1 表结构 (blast-photo-db.photo_metadata):
+  - id: 自增主键
+  - r2_key: R2文件名
+  - title: 标题
+  - category: 分类（默认"未分类"）
+  - description: 描述
+  - season: 赛季
+  - team_id, team_name: 关联战队
+  
+❌ 错误:
+  - 直接从 R2 遍历文件名生成元数据（已废弃）
+  - 使用 blastjunior-media 域名（已废弃）
+```
+
 ### 2. 数据展示
 ```
+✅ 允许:
+  - 页面无数据时显示空状态 ("暂无内容")
+
 ❌ 禁止:
   - 伪造占位数据填充空内容
   - 硬编码战队/选手列表
   - Gallery 数据从 D1 伪造（必须从 R2 读取）
+  - 使用 picsum/placeholder 等外部图床作为 fallback
+  - 代码中保留 MOCK_PHOTOS 等模拟数据变量
 ```
 
 ### 3. 数据库内容（核心铁律）
@@ -128,12 +184,51 @@
 - AI写的新闻 → ✅ 可以进，但要标注
 - 虚构的队伍/选手/比赛 → ❌ 绝对不行
 
-### 4. API 改动
+### 4. 用户认证系统
+```
+✅ blast-auth-api 端点:
+  - POST /register - 注册（email + password + nickname）
+  - POST /login - 登录（email + password）
+  - GET /verify?token=xxx - 验证token
+  - GET /user?token=xxx - 获取用户信息
+  - PUT /username - 修改昵称（需认证，限1次）
+  - POST /logout - 退出登录
+  - GET /online - 获取在线用户列表
+  
+✅ 数据存储:
+  - 用户信息: D1 (blast-user-db.users)
+  - Session/在线状态: KV (sess:xxx, online:xxx)
+  
+✅ 密码: SHA256 哈希存储，6位数字
+```
+
+### 5. API 改动
 ```
 ❌ 禁止:
   - 修改 API_BASE 地址
   - 移除已有的端点
   - 改变数据源绑定
+```
+
+### 5. 邮件发送（验证码/通知）
+```
+✅ 正确方式:
+  - 使用 Resend API 发送邮件
+  - API Key 存为 Cloudflare Secret（wrangler secret put）
+  - 验证码必须存 KV（10分钟有效期）
+  
+❌ 错误方式:
+  - 把 API Key 硬编码在代码里
+  - 不存储验证码直接比较
+  - 使用不安全的邮件服务
+
+示例（Resend）:
+  npx wrangler secret put RESEND_API_KEY  # 部署时执行
+  
+  # 代码中通过 env.RESEND_API_KEY 访问
+  fetch('https://api.resend.com/emails', {
+    headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}` }
+  })
 ```
 
 ---
@@ -154,14 +249,24 @@
 # 1. 验证 CORS
 curl -I https://blast-homepage-api.kanjiaming2022.workers.dev/ \
   -H "Origin: https://blastjunior.com" -X OPTIONS | grep access-control
+curl -I https://blast-auth-api.kanjiaming2022.workers.dev/ \
+  -H "Origin: https://blastjunior.com" -X OPTIONS | grep access-control
 
 # 2. 验证 API 数据
 curl -s https://blast-homepage-api.kanjiaming2022.workers.dev/ | jq '.data.news | length'
 
-# 3. 验证 Gallery (必须从 R2)
-curl -s https://blast-homepage-api.kanjiaming2022.workers.dev/gallery | jq '.data | length'
+# 3. 验证 Gallery (从D1)
+curl -s https://blast-homepage-api.kanjiaming2022.workers.dev/gallery | jq '.categories'
 
-# 4. 验证网站状态
+# 4. 验证用户系统
+curl -s -X POST https://blast-auth-api.kanjiaming2022.workers.dev/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"123456"}' | jq '.ok'
+
+# 5. 验证在线用户
+curl -s https://blast-auth-api.kanjiaming2022.workers.dev/online | jq '.ok'
+
+# 6. 验证网站状态
 curl -s -o /dev/null -w "%{http_code}" https://blastjunior.com
 ```
 
@@ -300,3 +405,4 @@ curl -s -o /dev/null -w "%{http_code}" https://blastjunior.com
 - 2026-03-10: 新增文档同步原则
 - 2026-03-10: 新增数据库内容铁律（AI生成新闻 vs 虚构数据）
 - 2026-03-16: 新增开发规范（Spawn规则分配 + 开发/测试必检清单）
+- 2026-03-18: 更新照片API规则（D1元数据）、新增用户认证系统规则

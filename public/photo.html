@@ -134,23 +134,29 @@
         const container = document.getElementById('photoContent');
         
         try {
-            // 模拟照片数据
-            const mockPhoto = {
-                id: currentTargetId,
-                title: '比赛精彩瞬间',
-                date: '2024-12-10',
-                url: 'https://blastjunior-media.kanjiaming2022.workers.dev/photos/sample.jpg',
-                description: '记录比赛中的精彩瞬间'
-            };
+            // 从 API 获取照片数据
+            const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+            const resp = await fetch(`${API_BASE}/gallery`);
+            const data = await resp.json();
             
-            // 渲染照片
+            // 找到对应的照片
+            const photos = data.data || [];
+            const photo = photos.find(p => p.id == currentTargetId) || photos[0];
+            
+            if (!photo) {
+                container.innerHTML = '<div class="error">照片不存在</div>';
+                initComments('photo', currentTargetId);
+                return;
+            }
+            
+            // 渲染照片（使用API返回的数据）
             container.innerHTML = `
                 <div class="photo-detail">
-                    <img class="photo-image" src="${mockPhoto.url}" alt="${mockPhoto.title}" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 400 300\\'><rect fill=\\'%23334155\\' width=\\'400\\' height=\\'300\\'/><text x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' fill=\\'white\\' font-size=\\'24\\'>📷 照片</text></svg>'">
+                    <img class="photo-image" src="${photo.full_url || photo.url || ''}" alt="${photo.title || ''}" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 400 300\\'><rect fill=\\'%23334155\\' width=\\'400\\' height=\\'300\\'/><text x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' fill=\\'white\\' font-size=\\'24\\'>📷 照片</text></svg>'">
                     <div class="photo-info">
-                        <h1 class="photo-title">${mockPhoto.title}</h1>
-                        <div class="photo-meta">上传于 ${mockPhoto.date}</div>
-                        <p class="photo-desc">${mockPhoto.description}</p>
+                        <h1 class="photo-title">${photo.title || '照片'}</h1>
+                        <div class="photo-meta">上传于 ${photo.created_at ? photo.created_at.split('T')[0] : ''}</div>
+                        <p class="photo-desc">${photo.description || ''}</p>
                     </div>
                 </div>
             `;

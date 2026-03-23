@@ -350,6 +350,7 @@
     
     <script>
         const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+        const AUTH_API = 'https://blast-auth-api.kanjiaming2022.workers.dev';
         
         // 移动端菜单切换
         function toggleMobileMenu() {
@@ -452,6 +453,52 @@
             newsGrid.innerHTML = html;
         }
         
+        // 加载在线用户 - 使用 D1 查询（不触发 KV.list）
+        async function loadOnlineUsers() {
+            try {
+                const resp = await fetch(AUTH_API + '/online');
+                const result = await resp.json();
+                
+                if (result.ok && result.users) {
+                    const count = result.users.length;
+                    document.getElementById('onlineCount').textContent = count;
+                    
+                    // 渲染在线用户列表（最多显示5个）
+                    const listEl = document.getElementById('onlineList');
+                    if (count > 0) {
+                        listEl.innerHTML = result.users.slice(0, 5).map(u => 
+                            `<div class="online-item">
+                                <span class="online-dot"></span>
+                                <span>${u.nickname || u.email.split('@')[0]}</span>
+                            </div>`
+                        ).join('');
+                        if (count > 5) {
+                            listEl.innerHTML += `<div class="online-item" style="color: var(--text-gray);">还有 ${count - 5} 人...</div>`;
+                        }
+                    } else {
+                        listEl.innerHTML = '<div class="online-item" style="color: var(--text-gray);">暂无在线用户</div>';
+                    }
+                }
+            } catch (e) {
+                console.error('loadOnlineUsers error:', e);
+                document.getElementById('onlineCount').textContent = '-';
+            }
+        }
+        
+        // 心跳 - 每分钟更新在线状态
+        async function sendHeartbeat() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            try {
+                await fetch(AUTH_API + '/heartbeat', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+            } catch (e) {
+                // 心跳失败不阻塞
+            }
+        }
+        
         async function loadHomeData() {
             try {
                 const resp = await fetch(API_BASE + '/');
@@ -460,12 +507,12 @@
                 
                 const data = result.data;
                 
-                // 在线用户
-                document.getElementById('onlineCount').textContent = data.onlineCount || 0;
+                // 在线用户 - 从 auth-api 获取
+                loadOnlineUsers();
                 
                 // 统计数据
                 if (data.stats) {
-                    document.getElementById('statMatches').textContent = data.stats.totalMatches || '-';
+                    document.getElementById('statMatches').textContent = data.stats.totalSeasons || '-';
                     document.getElementById('statPlayers').textContent = data.stats.totalPlayers || '-';
                     document.getElementById('statTeams').textContent = data.stats.totalTeams || '-';
                 }
@@ -507,7 +554,7 @@
             } catch (e) {
                 console.error('加载数据失败:', e);
                 // 显示错误状态
-                document.getElementById('newsGrid').innerHTML = getErrorState('加载失败，请检查网络', 'loadHomeData()');
+                document.getElementById('newsGrid').innerHTML = getErrorState('加载失败: ' + e.message, 'loadHomeData()');
                 document.getElementById('matchesGrid').innerHTML = getErrorState('加载失败，请检查网络', 'loadMatches()');
                 document.getElementById('photoGrid').innerHTML = getErrorState('加载失败，请检查网络', 'loadHomeData()');
             }
@@ -545,7 +592,7 @@
             
             // 字段映射: logo_key → 完整URL
             const html = sponsors.slice(0, 3).map(s => {
-                const logoUrl = s.logo_key ? `https://blastjunior-media.kanjiaming2022.workers.dev/media/web/${encodeURIComponent(s.logo_key)}` : '';
+                const logoUrl = s.logo_key ? `https://blast-homepage-api.kanjiaming2022.workers.dev/media/web/${encodeURIComponent(s.logo_key)}` : '';
                 return `
                     <div class="sponsor-card">
                         ${logoUrl ? `<img src="${logoUrl}" alt="${s.name}" style="max-width: 80px; max-height: 40px; margin-bottom: 0.5rem;" onerror="this.style.display='none'">` : ''}
@@ -615,7 +662,7 @@
             }
             
             const html = photos.slice(0, 6).map(p => 
-                `<div class="photo-item"><img src="${p.url}" alt="图片" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'img-placeholder error\\'>🖼️</div>'"></div>`
+                `<div class="photo-item"><img src="${p.cover}" alt="图片" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'img-placeholder error\\'>🖼️</div>'"></div>`
             ).join('');
             
             document.getElementById('photoGrid').innerHTML = html;
@@ -652,10 +699,15 @@
         }
         
         function showAuth(type) {
-            alert('登录/注册功能开发中，敬请期待！');
+            window.location.href = type === 'login' ? '/login' : '/register';
         }
         
         loadHomeData();
+        
+        // 每30秒刷新在线用户列表（D1 查询，无超额风险）
+        setInterval(loadOnlineUsers, 30000);
+        // 每分钟发送心跳更新 last_seen
+        setInterval(sendHeartbeat, 60000);
     </script>
 </body>
 <script>

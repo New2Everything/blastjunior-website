@@ -124,6 +124,14 @@
     <main class="container">
         <h1 class="page-title">积分榜</h1>
         
+        <!-- 赛季选择 -->
+        <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <label for="seasonSelect" style="font-weight: 500;">选择赛季：</label>
+            <select id="seasonSelect" onchange="changeSeason()" style="padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: inherit; cursor: pointer; min-width: 200px;">
+                <option value="">加载中...</option>
+            </select>
+        </div>
+        
         <!-- DATA_MODULE: standings -->
         <div class="standings-card">
             <div class="standings-header">
@@ -157,10 +165,81 @@
     <script>
         const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
         
+        // 当前选中的赛季
+        let currentSeason = '';
+        
+        // 加载赛季列表
+        async function loadSeasons() {
+            try {
+                const resp = await fetch(API_BASE + '/seasons');
+                const result = await resp.json();
+                
+                if (!result.ok || !result.data) {
+                    return;
+                }
+                
+                const seasons = result.data;
+                const select = document.getElementById('seasonSelect');
+                
+                // 构建选项（进行中的赛季放前面）
+                const ongoing = seasons.filter(s => s.status === 'ongoing');
+                const finished = seasons.filter(s => s.status !== 'ongoing');
+                
+                let optionsHtml = '';
+                if (ongoing.length > 0) {
+                    optionsHtml += `<optgroup label="🏃 进行中">`;
+                    ongoing.forEach(s => {
+                        const selected = s.id === currentSeason ? 'selected' : '';
+                        const label = s.displayName || s.name;
+                        const cat = s.category ? `（${s.category}）` : '';
+                        optionsHtml += `<option value="${s.id}" ${selected}>${label}${cat}</option>`;
+                    });
+                    optionsHtml += `</optgroup>`;
+                }
+                if (finished.length > 0) {
+                    optionsHtml += `<optgroup label="✅ 已结束">`;
+                    finished.forEach(s => {
+                        const selected = s.id === currentSeason ? 'selected' : '';
+                        const label = s.displayName || s.name;
+                        const cat = s.category ? `（${s.category}）` : '';
+                        optionsHtml += `<option value="${s.id}" ${selected}>${label}${cat}</option>`;
+                    });
+                    optionsHtml += `</optgroup>`;
+                }
+                
+                select.innerHTML = optionsHtml;
+                
+                // 默认选中当前赛季
+                if (!currentSeason && ongoing.length > 0) {
+                    currentSeason = ongoing[0].id;
+                    select.value = currentSeason;
+                } else if (!currentSeason && seasons.length > 0) {
+                    currentSeason = seasons[0].id;
+                    select.value = currentSeason;
+                }
+                
+                // 加载积分榜
+                loadStandings();
+            } catch (e) {
+                console.error('loadSeasons error:', e);
+                document.getElementById('seasonSelect').innerHTML = '<option value="">加载失败</option>';
+                loadStandings();
+            }
+        }
+        
+        // 切换赛季
+        function changeSeason() {
+            currentSeason = document.getElementById('seasonSelect').value;
+            loadStandings();
+        }
+        
         async function loadStandings() {
             try {
-                // 使用standings-v2 API从blast-campaigns-db读取
-                const resp = await fetch(API_BASE + '/standings-v2');
+                // 使用standings-v2 API，支持season参数
+                const url = currentSeason 
+                    ? `${API_BASE}/standings-v2?season=${currentSeason}`
+                    : `${API_BASE}/standings-v2`;
+                const resp = await fetch(url);
                 const result = await resp.json();
                 
                 if (!result.ok) {
@@ -205,7 +284,7 @@
                             </div>
                         </td>
                         <td class="points-cell">${item.points}</td>
-                        <td class="rounds-cell">${item.rounds}场</td>
+                        <td class="rounds-cell">${item.rounds ? item.rounds + '场' : '-'}</td>
                     </tr>`;
                 }).join('');
             } catch (e) {
@@ -214,7 +293,7 @@
             }
         }
         
-        loadStandings();
+        loadSeasons();
     </script>
     <script src="/components/nav-loader.js"></script>
 </body>

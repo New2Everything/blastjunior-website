@@ -43,8 +43,9 @@
 
 1. **数据真实性** - 数据必须来自 D1/R2/KV，禁止硬编码
 2. **单API架构** - 所有端点走 blast-homepage-api
-3. **CORS规则** - 只允许 blastjunior.com，禁止通配符
-4. **双Skill检测** - website-test + agent-browser 必须同时通过
+3. **CORS规则** - 允许 blastjunior.com + www + pages.dev，禁止通配符
+4. **Gallery/R2** - 照片必须从 R2 读取，禁止从 D1 伪造
+5. **双Skill检测** - website-test + agent-browser 必须同时通过
 
 ---
 

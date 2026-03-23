@@ -13,6 +13,81 @@ export default {
     const allowedOrigins = ["https://blastjunior.com", "https://www.blastjunior.com", "https://blastjunior-website.pages.dev"];
     const isAllowedOrigin = allowedOrigins.includes(origin);
 
+    // 媒体文件请求 - 从 R2 thumb/ 目录读取（必须在静态文件检查之前）
+    if (path.startsWith("/media/web/")) {
+      const fileName = decodeURIComponent(path.replace("/media/web/", ""));
+      const r2Key = "thumb/" + fileName;
+      
+      try {
+        const object = await env.BUCKET.get(r2Key);
+        if (object === null) {
+          return new Response("R2 key not found: " + r2Key, { status: 404 });
+        }
+        
+        const contentType = getContentType(fileName);
+        return new Response(object.body, {
+          headers: {
+            "Content-Type": contentType,
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Cache-Control": "public, max-age=86400"
+          }
+        });
+      } catch (e) {
+        return new Response("Error: " + e.message, { status: 500 });
+      }
+    }
+
+    // 媒体文件请求 - 完整尺寸 (从 thumb/ 目录读取)
+    if (path.startsWith("/media/full/")) {
+      const fileName = decodeURIComponent(path.replace("/media/full/", ""));
+      const r2Key = "thumb/" + fileName; // 暂时使用 thumb/，后续可接入图片处理服务
+      
+      try {
+        const object = await env.BUCKET.get(r2Key);
+        if (object === null) {
+          return new Response("R2 key not found: " + r2Key, { status: 404 });
+        }
+        
+        const contentType = getContentType(fileName);
+        return new Response(object.body, {
+          headers: {
+            "Content-Type": contentType,
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Cache-Control": "public, max-age=86400"
+          }
+        });
+      } catch (e) {
+        return new Response("Error: " + e.message, { status: 500 });
+      }
+    }
+
+    // 媒体文件请求 - 从 R2 根目录读取（如 sponsors/）
+    if (path.startsWith("/media/") && !path.startsWith("/media/web/") && !path.startsWith("/media/full/")) {
+      const fileName = decodeURIComponent(path.replace("/media/", ""));
+      const r2Key = fileName; // 直接使用，不加 thumb/ 前缀
+      
+      try {
+        const object = await env.BUCKET.get(r2Key);
+        if (object === null) {
+          return new Response("R2 key not found: " + r2Key, { status: 404 });
+        }
+        
+        const contentType = getContentType(fileName);
+        return new Response(object.body, {
+          headers: {
+            "Content-Type": contentType,
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Cache-Control": "public, max-age=86400"
+          }
+        });
+      } catch (e) {
+        return new Response("Error: " + e.message, { status: 500 });
+      }
+    }
+
     // 静态文件请求 - 返回 404 让 Pages 处理
     if (path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".ico")) {
       return new Response("Not Found", { status: 404 });
@@ -61,12 +136,13 @@ export default {
       
       // 积分榜
       if (path === "/standings" || path === "/standings-v2") {
-        return withCors(await getStandingsV2(env, origin), origin);
+        const seasonParam = url.searchParams.get("season");
+        return withCors(await getStandingsV2(env, origin, seasonParam), origin);
       }
       
       // 画廊
       if (path === "/gallery") {
-        return withCors(await getGallery(env, origin), origin);
+        return withCors(await getGallery(env, origin, url), origin);
       }
       
       // 赛季
@@ -154,10 +230,10 @@ export default {
 // ===== 辅助函数 =====
 
 function corsHeaders(origin) {
-  // CORS 允许多个域名
+  // CORS 单域名白名单 (BLXST-rules)
   const allowedOrigins = ["https://blastjunior.com", "https://www.blastjunior.com", "https://blastjunior-website.pages.dev"];
   const normalizedOrigin = origin.replace(/\/$/, ""); // 去掉末尾斜杠
-  const allowOrigin = allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : "";
+  const allowOrigin = allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : "*";  // 不匹配时返回 * 作为后备
   
   return {
     "Access-Control-Allow-Origin": allowOrigin,
@@ -166,20 +242,34 @@ function corsHeaders(origin) {
   };
 }
 
+function getContentType(fileName) {
+  const ext = fileName.split('.').pop().toLowerCase();
+  const types = {
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+    'webp': 'image/webp',
+    'svg': 'image/svg+xml',
+    'ico': 'image/x-icon'
+  };
+  return types[ext] || 'application/octet-stream';
+}
+
 function withCors(response, origin) {
-  // CORS 允许多个域名
+  // CORS 单域名白名单 (BLXST-rules)
   const allowedOrigins = ["https://blastjunior.com", "https://www.blastjunior.com", "https://blastjunior-website.pages.dev"];
   const normalizedOrigin = origin.replace(/\/$/, ""); // 去掉末尾斜杠
-  const allowOrigin = allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : "";
+  const allowOrigin = allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : "*";  // 不匹配时返回 *
   response.headers.set("Access-Control-Allow-Origin", allowOrigin);
   return response;
 }
 
 function jsonResponse(data, status = 200, origin = "") {
-  // CORS 允许多个域名
+  // CORS 单域名白名单 (BLXST-rules)
   const allowedOrigins = ["https://blastjunior.com", "https://www.blastjunior.com", "https://blastjunior-website.pages.dev"];
   const normalizedOrigin = origin.replace(/\/$/, ""); // 去掉末尾斜杠
-  const allowOrigin = allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : "";
+  const allowOrigin = allowedOrigins.includes(normalizedOrigin) ? normalizedOrigin : "*";  // 不匹配时返回 *
   return new Response(JSON.stringify(data), {
     status,
     headers: { 
@@ -261,7 +351,7 @@ async function getHomeData(env, origin = "") {
           if (!idMatch) return null;
           return {
             id: parseInt(idMatch[1]),
-            cover: `https://blastjunior-media.kanjiaming2022.workers.dev/media/web/${encodeURIComponent(name)}`,
+            cover: `https://blast-homepage-api.kanjiaming2022.workers.dev/media/thumb/${encodeURIComponent(name)}`,
             title: name.replace(/\.[^.]+$/, ""),
             date: obj.uploaded ? obj.uploaded.toISOString().split('T')[0] : "2025-12-18",
             tags: ["其他"],
@@ -663,19 +753,41 @@ async function getMatchDetail(env, seasonId, origin = "") {
   }
 }
 
-async function getStandingsV2(env, origin = "") {
+async function getStandingsV2(env, origin = "", seasonParam = null) {
   try {
-    // 获取当前赛季信息
-    const currentSeason = await env.CAMPAIGNS.prepare(`
-      SELECT season_id, name, season_type FROM seasons 
-      WHERE status = 'ongoing' ORDER BY start_date DESC LIMIT 1
-    `).first();
+    let seasonId, seasonName, seasonType;
     
-    const seasonId = currentSeason?.season_id || 'hpl_s2_2025';
-    const seasonName = currentSeason?.name || '第二届HPL超级联赛';
-    const seasonType = currentSeason?.season_type || null;
+    // 如果传入了赛季参数，优先使用
+    if (seasonParam) {
+      const seasonInfo = await env.CAMPAIGNS.prepare(`
+        SELECT season_id, name, season_type FROM seasons 
+        WHERE season_id = ? OR name LIKE ?
+      `).bind(seasonParam, `%${seasonParam}%`).first();
+      
+      if (seasonInfo) {
+        seasonId = seasonInfo.season_id;
+        seasonName = seasonInfo.name;
+        seasonType = seasonInfo.season_type;
+      } else {
+        // 没找到指定的赛季，使用默认
+        seasonId = 'hpl_s2_2025';
+        seasonName = '第二届';
+        seasonType = null;
+      }
+    } else {
+      // 获取当前赛季信息
+      const currentSeason = await env.CAMPAIGNS.prepare(`
+        SELECT season_id, name, season_type FROM seasons 
+        WHERE status = 'ongoing' ORDER BY start_date DESC LIMIT 1
+      `).first();
+      
+      seasonId = currentSeason?.season_id || 'hpl_s2_2025';
+      seasonName = currentSeason?.name || '第二届HPL超级联赛';
+      seasonType = currentSeason?.season_type || null;
+    }
     
     // 获取该赛季积分（区分联赛和杯赛）
+    // 注意：如果每队只有1条记录（总积分），则rounds为空
     const r = await env.CAMPAIGNS.prepare(`
       SELECT r.team_id, t.canonical_name as team, 
              SUM(tcp.points) as points, 
@@ -690,12 +802,16 @@ async function getStandingsV2(env, origin = "") {
       ORDER BY points DESC LIMIT 50
     `).bind(seasonId).all();
     
+    // 如果所有队伍rounds都是1，说明只有总积分数据，显示为空
+    const hasRealRounds = (r.results || []).some(x => (x.rounds || 0) > 1);
+    
     const data = (r.results || []).map((s, i) => ({
       rank: i + 1,
       team_id: s.team_id,
       team: s.team,
       points: s.points || 0,
-      rounds: s.rounds || 0,
+      // 只有当有真实多场次数据时才显示场次，否则为空
+      rounds: hasRealRounds ? (s.rounds || 0) : null,
       isLeague: s.season_type !== 'cup',
       isCup: s.season_type === 'cup'
     }));
@@ -714,84 +830,111 @@ async function getStandingsV2(env, origin = "") {
   catch (e) { return jsonResponse({ ok: false, error: e.message }, 500, origin); }
 }
 
-async function getGallery(env, origin = "") {
-  const R2_BASE = "https://blastjunior-media.kanjiaming2022.workers.dev";
+async function getGallery(env, origin = "", urlObj = null) {
+  const R2_BASE = "https://blast-homepage-api.kanjiaming2022.workers.dev";
+  
+  // 获取参数
+  let category = null;
+  let season = null;
+  if (urlObj) {
+    category = urlObj.searchParams.get("category");
+    season = urlObj.searchParams.get("season");
+  }
   
   try {
-    // 直接从 R2 列出 thumb/ 目录的文件
-    const bucket = env.BUCKET;
-    let items = [];
-    let cursor = undefined;
+    // 从 D1 读取照片元数据
+    let sql = "SELECT id, r2_key, title, category, description, season, team_id, team_name, event, created_at FROM photo_metadata";
+    let bindings = [];
     
-    do {
-      const listed = await bucket.list({ prefix: "thumb/", cursor, limit: 1000 });
-      items.push(...(listed.objects || []));
-      cursor = listed.truncated ? listed.cursor : undefined;
-    } while (cursor);
-    
-    if (items.length > 0) {
-      const data = items
-        .map(obj => {
-          // key: "thumb/HADO (1).png" -> name: "HADO (1).png"
-          const name = obj.key.replace(/^thumb\//, "");
-          // 过滤无效文件名
-          if (!name || !name.match(/HADO\s*\(\d+\)/i)) {
-            return null;
-          }
-          const title = name.replace(/\.[^.]+$/, "");
-          const key = name.toLowerCase();
-          
-          // 解析 id: "HADO (1).png" -> id = 1
-          const idMatch = name.match(/HADO\s*\((\d+)\)/i);
-          const id = idMatch ? parseInt(idMatch[1]) : 0;
-          
-          // 赛季检测
-          let season = "S4";
-          if (key.includes("s1") || key.includes("season1")) season = "S1";
-          else if (key.includes("s2") || key.includes("season2")) season = "S2";
-          else if (key.includes("s3") || key.includes("season3")) season = "S3";
-          else if (key.includes("s4") || key.includes("season4")) season = "S4";
-          
-          // 类型标签
-          let tags = ["其他"];
-          let type = "other";
-          if (key.includes("training") || key.includes("训练")) { tags = ["训练"]; type = "training"; }
-          else if (key.includes("match") || key.includes("比赛")) { tags = ["比赛"]; type = "match"; }
-          else if (key.includes("team") || key.includes("队")) { tags = ["团队"]; type = "team"; }
-          else if (key.includes("player") || key.includes("选手")) { tags = ["选手"]; type = "team"; }
-          else if (key.includes("event") || key.includes("活动")) { tags = ["活动"]; type = "event"; }
-          
-          // 日期从 R2 metadata 或使用上传日期
-          const date = obj.uploaded ? obj.uploaded.toISOString().split('T')[0] : "2026-01-01";
-          
-          // 构建 web URL (注意需要 encodeURIComponent 处理空格)
-          const webUrl = `${R2_BASE}/media/web/${encodeURIComponent(name)}`;
-          
-          return {
-            id,
-            title,
-            cover: webUrl,
-            date,
-            tags,
-            season,
-            type,
-            team_id: null,
-            team_name: null
-          };
-        })
-        .filter(item => item !== null);
-      
-      // 按 id 排序
-      data.sort((a, b) => a.id - b.id);
-      return jsonResponse({ ok: true, data }, 200, origin);
+    if (category && category !== "全部") {
+      sql += " WHERE category = ?";
+      bindings.push(category);
     }
+    
+    sql += " ORDER BY id DESC";
+    
+    const stmt = await env.PHOTOS.prepare(sql);
+    if (bindings.length > 0) {
+      stmt.bind(...bindings);
+    }
+    const result = await stmt.all();
+    
+    const data = (result.results || []).map(p => {
+      const name = p.r2_key;
+      const webUrl = `${R2_BASE}/media/web/${encodeURIComponent(name)}`;
+      const fullUrl = `${R2_BASE}/media/full/${encodeURIComponent(name)}`;
+      
+      return {
+        id: p.id,
+        title: p.title,
+        r2_key: p.r2_key,
+        cover: webUrl,
+        full_url: fullUrl,
+        category: p.category || '未分类',
+        description: p.description || '',
+        season: p.season || '',
+        team_id: p.team_id || null,
+        team_name: p.team_name || null,
+        created_at: p.created_at
+      };
+    });
+    
+    // 获取分类统计
+    const catStmt = await env.PHOTOS.prepare("SELECT category, COUNT(*) as count FROM photo_metadata GROUP BY category");
+    const catResult = await catStmt.all();
+    const categories = (catResult.results || []).map(c => ({
+      name: c.category,
+      count: c.count
+    }));
+    
+    return jsonResponse({ 
+      ok: true, 
+      data,
+      categories,
+      meta: { total: data.length }
+    }, 200, origin);
   } catch (e) { 
     console.error("getGallery error:", e); 
   }
   return jsonResponse({ ok: true, data: [] }, 200, origin);
 }
 
-async function getSeasons(env, origin = "") { try { const r = await env.CAMPAIGNS.prepare("SELECT season_id as id, name, year, start_date, end_date, status FROM seasons ORDER BY start_date DESC").all(); return jsonResponse({ ok: true, data: r.results || [] }, 200, origin); } catch (e) { return jsonResponse({ ok: false, error: e.message }, 500, origin); } }
+async function getSeasons(env, origin = "") { 
+  try { 
+    const r = await env.CAMPAIGNS.prepare("SELECT season_id, event_id, name, year, start_date, end_date, status, notes FROM seasons ORDER BY start_date DESC").all(); 
+    const data = (r.results || []).map(s => {
+      // 生成更友好的显示名称
+      let displayName = s.name;
+      let category = '';
+      
+      if (s.event_id === 'hpl') {
+        if (s.name === '第一届') {
+          displayName = 'HPL 第一届（2025）';
+          category = 'HADO WORLD 精英赛 + 新秀赛';
+        } else if (s.name === '第二届') {
+          displayName = 'HPL 第二届（2025）';
+          category = 'HADO PVP + WORLD 精英赛 + 新秀赛';
+        } else if (s.name.includes('秋季杯')) {
+          displayName = 'HPL 秋季杯（2025）';
+          category = '杯赛';
+        }
+      } else if (s.event_id === 'worldcup') {
+        displayName = 'HADO 世界杯（2025）';
+        category = '国际赛事';
+      }
+      
+      return {
+        id: s.season_id,
+        name: s.name,
+        displayName,
+        category: category || s.notes || '',
+        year: s.year,
+        status: s.status
+      };
+    });
+    return jsonResponse({ ok: true, data }, 200, origin); 
+  } catch (e) { return jsonResponse({ ok: false, error: e.message }, 500, origin); } 
+}
 
 async function getScoreComponents(env, origin = "") { try { const r = await env.CAMPAIGNS.prepare("SELECT component_id as id, name, component_type FROM score_components ORDER BY component_id").all(); return jsonResponse({ ok: true, data: r.results || [] }, 200, origin); } catch (e) { return jsonResponse({ ok: false, error: e.message }, 500, origin); } }
 

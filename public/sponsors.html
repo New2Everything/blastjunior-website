@@ -248,7 +248,7 @@
                 
                 grid.innerHTML = sorted.map(s => {
                     const tier = (s.tier || 'silver').toLowerCase();
-                    const logoUrl = s.logo_key ? `https://blastjunior-media.kanjiaming2022.workers.dev/media/${s.logo_key}` : '';
+                    const logoUrl = s.logo_key ? `https://blast-homepage-api.kanjiaming2022.workers.dev/media/${s.logo_key}` : '';
                     return `
                         <div class="sponsor-card ${tier}">
                             <div class="sponsor-logo">

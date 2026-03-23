@@ -2,14 +2,13 @@ name = "blast-auth-api"
 main = "blast-auth-api.js"
 compatibility_date = "2024-12-01"
 
-[[kv_namespaces]]
-binding = "USERS"
-id = "ed0efbdc46714aa4802e07abacb72a6e"
+# D1 数据库 - 存储用户数据
+[[d1_databases]]
+binding = "USERS_DB"
+database_name = "blast-user-db"
+database_id = "520d5c63-ba38-46db-b4b9-ac3a15e1c298"
 
-[[kv_namespaces]]
-binding = "USER_IDS"
-id = "ed0efbdc46714aa4802e07abacb72a6e"
-
+# KV - 临时数据（验证码、会话）
 [[kv_namespaces]]
 binding = "SESSIONS"
 id = "ed0efbdc46714aa4802e07abacb72a6e"
