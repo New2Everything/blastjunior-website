@@ -556,19 +556,8 @@
             if (photoData.ok && photoData.data && photoData.data.length > 0) {
                 photos = photoData.data;
                 
-                // 加载标签和照片的标签关联
+                // 只加载标签列表，不加载每张照片的标签（按需加载）
                 allTags = tagsData.data || [];
-                
-                // 为每张照片加载标签
-                for (const photo of photos) {
-                    try {
-                        const tagRes = await fetch(`${API_BASE}/photo/${photo.id}/tags`);
-                        const tagData = await tagRes.json();
-                        photoTagsMap[photo.id] = tagData.data || [];
-                    } catch (e) {
-                        photoTagsMap[photo.id] = [];
-                    }
-                }
                 
                 // 渲染标签选择器
                 renderTagSelector();
@@ -599,7 +588,37 @@
         container.innerHTML = html;
     }
     
-    // 选择标签
+    // 按需加载单张照片的标签
+    async function loadPhotoTags(photoId) {
+        if (photoTagsMap[photoId]) return photoTagsMap[photoId];
+        try {
+            const res = await fetch(`${API_BASE}/photo/${photoId}/tags`);
+            const data = await res.json();
+            photoTagsMap[photoId] = data.data || [];
+        } catch (e) {
+            photoTagsMap[photoId] = [];
+        }
+        return photoTagsMap[photoId];
+    }
+    
+    // 批量预加载指定照片的标签（用于筛选）
+    async function preloadPhotoTags(photoIds) {
+        const promises = photoIds.map(id => loadPhotoTags(id));
+        await Promise.all(promises);
+    }
+    
+    function getFilteredPhotos() {
+        if (!selectedTagId) {
+            return photos;
+        }
+        // 返回有该标签的照片
+        return photos.filter(p => {
+            const tags = photoTagsMap[p.id] || [];
+            return tags.some(t => t.id === selectedTagId);
+        });
+    }
+    
+    // 选择标签时预加载相关照片的标签
     function selectTag(tagId) {
         selectedTagId = tagId;
         
@@ -610,7 +629,6 @@
         } else {
             const tag = allTags.find(t => t.id === tagId);
             if (tag) {
-                // 找到对应的元素并添加active
                 const options = document.querySelectorAll('.tag-option');
                 options.forEach(el => {
                     if (el.textContent === tag.name) el.classList.add('active');
@@ -618,20 +636,13 @@
             }
         }
         
+        // 预加载所有照片的标签（后台并行）
+        if (tagId !== null) {
+            preloadPhotoTags(photos.map(p => p.id));
+        }
+        
         // 重新生成海报
         generateRandomPoster();
-    }
-    
-    // 根据当前选中的标签筛选照片
-    function getFilteredPhotos() {
-        if (!selectedTagId) {
-            return photos;
-        }
-        // 返回有该标签的照片
-        return photos.filter(p => {
-            const tags = photoTagsMap[p.id] || [];
-            return tags.some(t => t.id === selectedTagId);
-        });
     }
     
     function generateWithPlaceholder() {
