@@ -646,7 +646,7 @@
             
             // 字段映射: logo_key → 完整URL
             const html = sponsors.slice(0, 3).map(s => {
-                const logoUrl = s.logo_key ? `https://blast-homepage-api.kanjiaming2022.workers.dev/media/web/${encodeURIComponent(s.logo_key)}` : '';
+                const logoUrl = s.logo_key ? `https://blast-homepage-api.kanjiaming2022.workers.dev/media/${encodeURIComponent(s.logo_key)}` : '';
                 return `
                     <div class="sponsor-card">
                         ${logoUrl ? `<img src="${logoUrl}" alt="${s.name}" style="max-width: 80px; max-height: 40px; margin-bottom: 0.5rem;" onerror="this.style.display='none'">` : ''}
