@@ -145,6 +145,46 @@ export default {
         return withCors(await getGallery(env, origin, url), origin);
       }
       
+      // 标签管理 - 获取所有标签
+      if (path === "/tags") {
+        return withCors(await getTags(env, origin), origin);
+      }
+      
+      // 标签管理 - 创建标签
+      if (path === "/tags" && request.method === "POST") {
+        return withCors(await createTag(env, origin, request), origin);
+      }
+      
+      // 标签详情/删除 - /tags/:id
+      if (path.startsWith("/tags/")) {
+        const tagId = path.replace("/tags/", "");
+        if (request.method === "GET") {
+          return withCors(await getTagDetail(env, origin, tagId), origin);
+        } else if (request.method === "DELETE") {
+          return withCors(await deleteTag(env, origin, tagId), origin);
+        }
+      }
+      
+      // 照片标签 - 获取照片的所有标签
+      if (path.startsWith("/photo/") && path.endsWith("/tags")) {
+        const photoId = path.replace("/photo/", "").replace("/tags", "");
+        return withCors(await getPhotoTags(env, origin, photoId), origin);
+      }
+      
+      // 照片标签 - 添加/移除标签
+      if (path.startsWith("/photo/") && path.includes("/tags/")) {
+        const match = path.match(/^\/photo\/(\d+)\/tags\/(\d+)$/);
+        if (match) {
+          const photoId = match[1];
+          const tagId = match[2];
+          if (request.method === "POST") {
+            return withCors(await addPhotoTag(env, origin, photoId, tagId), origin);
+          } else if (request.method === "DELETE") {
+            return withCors(await removePhotoTag(env, origin, photoId, tagId), origin);
+          }
+        }
+      }
+      
       // 赛季
       if (path === "/seasons") {
         return withCors(await getSeasons(env, origin), origin);
@@ -898,6 +938,129 @@ async function getGallery(env, origin = "", urlObj = null) {
   }
   return jsonResponse({ ok: true, data: [] }, 200, origin);
 }
+
+// ========== 标签系统 API ==========
+
+// 获取所有标签
+async function getTags(env, origin = "") {
+  try {
+    const r = await env.PHOTOS.prepare(`
+      SELECT t.*, COUNT(pt.photo_id) as photo_count 
+      FROM tags t 
+      LEFT JOIN photo_tags pt ON t.id = pt.tag_id 
+      GROUP BY t.id 
+      ORDER BY t.created_at DESC
+    `).all();
+    return jsonResponse({ ok: true, data: r.results || [] }, 200, origin);
+  } catch (e) {
+    console.error("getTags error:", e);
+    return jsonResponse({ ok: false, error: e.message }, 500, origin);
+  }
+}
+
+// 创建标签
+async function createTag(env, origin = "", request) {
+  try {
+    const body = await request.json();
+    const { name, color } = body;
+    if (!name || !name.trim()) {
+      return jsonResponse({ ok: false, error: "标签名称不能为空" }, 400, origin);
+    }
+    const tagColor = color || '#6b7280';
+    const r = await env.PHOTOS.prepare("INSERT INTO tags (name, color) VALUES (?, ?)").bind(name.trim(), tagColor).run();
+    const newId = r.meta.last_row_id;
+    return jsonResponse({ 
+      ok: true, 
+      data: { id: newId, name: name.trim(), color: tagColor }
+    }, 201, origin);
+  } catch (e) {
+    console.error("createTag error:", e);
+    if (e.message.includes("UNIQUE constraint")) {
+      return jsonResponse({ ok: false, error: "标签名称已存在" }, 400, origin);
+    }
+    return jsonResponse({ ok: false, error: e.message }, 500, origin);
+  }
+}
+
+// 获取标签详情
+async function getTagDetail(env, origin = "", tagId) {
+  try {
+    const r = await env.PHOTOS.prepare(`
+      SELECT t.*, COUNT(pt.photo_id) as photo_count 
+      FROM tags t 
+      LEFT JOIN photo_tags pt ON t.id = pt.tag_id 
+      WHERE t.id = ?
+      GROUP BY t.id
+    `).bind(parseInt(tagId)).first();
+    if (!r) {
+      return jsonResponse({ ok: false, error: "标签不存在" }, 404, origin);
+    }
+    return jsonResponse({ ok: true, data: r }, 200, origin);
+  } catch (e) {
+    console.error("getTagDetail error:", e);
+    return jsonResponse({ ok: false, error: e.message }, 500, origin);
+  }
+}
+
+// 删除标签
+async function deleteTag(env, origin = "", tagId) {
+  try {
+    // 先删除关联
+    await env.PHOTOS.prepare("DELETE FROM photo_tags WHERE tag_id = ?").bind(parseInt(tagId)).run();
+    const r = await env.PHOTOS.prepare("DELETE FROM tags WHERE id = ?").bind(parseInt(tagId)).run();
+    if (r.meta.changes === 0) {
+      return jsonResponse({ ok: false, error: "标签不存在" }, 404, origin);
+    }
+    return jsonResponse({ ok: true, data: { deleted: true } }, 200, origin);
+  } catch (e) {
+    console.error("deleteTag error:", e);
+    return jsonResponse({ ok: false, error: e.message }, 500, origin);
+  }
+}
+
+// 获取照片的所有标签
+async function getPhotoTags(env, origin = "", photoId) {
+  try {
+    const r = await env.PHOTOS.prepare(`
+      SELECT t.* FROM tags t
+      JOIN photo_tags pt ON t.id = pt.tag_id
+      WHERE pt.photo_id = ?
+      ORDER BY t.name
+    `).bind(parseInt(photoId)).all();
+    return jsonResponse({ ok: true, data: r.results || [] }, 200, origin);
+  } catch (e) {
+    console.error("getPhotoTags error:", e);
+    return jsonResponse({ ok: false, error: e.message }, 500, origin);
+  }
+}
+
+// 给照片添加标签
+async function addPhotoTag(env, origin = "", photoId, tagId) {
+  try {
+    await env.PHOTOS.prepare(
+      "INSERT OR IGNORE INTO photo_tags (photo_id, tag_id) VALUES (?, ?)"
+    ).bind(parseInt(photoId), parseInt(tagId)).run();
+    return jsonResponse({ ok: true, data: { added: true } }, 200, origin);
+  } catch (e) {
+    console.error("addPhotoTag error:", e);
+    return jsonResponse({ ok: false, error: e.message }, 500, origin);
+  }
+}
+
+// 移除照片的标签
+async function removePhotoTag(env, origin = "", photoId, tagId) {
+  try {
+    const r = await env.PHOTOS.prepare(
+      "DELETE FROM photo_tags WHERE photo_id = ? AND tag_id = ?"
+    ).bind(parseInt(photoId), parseInt(tagId)).run();
+    return jsonResponse({ ok: true, data: { deleted: r.meta.changes > 0 } }, 200, origin);
+  } catch (e) {
+    console.error("removePhotoTag error:", e);
+    return jsonResponse({ ok: false, error: e.message }, 500, origin);
+  }
+}
+
+// ========== 标签系统 API 结束 ==========
 
 async function getSeasons(env, origin = "") { 
   try { 

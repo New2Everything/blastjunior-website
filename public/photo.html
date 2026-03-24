@@ -34,7 +34,31 @@
         .photo-info { padding: 1.5rem; }
         .photo-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
         .photo-meta { color: var(--text-gray); font-size: 0.9rem; margin-bottom: 1rem; }
-        .photo-desc { line-height: 1.6; color: #334155; }
+        .photo-desc { line-height: 1.6; color: #334155; margin-bottom: 1rem; }
+        
+        /* 标签样式 */
+        .photo-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+        .tag { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; color: white; cursor: default; transition: all 0.2s; }
+        .tag:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .tag-remove { cursor: pointer; opacity: 0.7; margin-left: 0.25rem; font-size: 1rem; line-height: 1; }
+        .tag-remove:hover { opacity: 1; }
+        .tag-add-btn { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; background: var(--border); color: var(--text-gray); cursor: pointer; transition: all 0.2s; border: 2px dashed transparent; }
+        .tag-add-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(255,107,53,0.1); }
+        
+        /* 标签选择弹窗 */
+        .tag-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .tag-modal.active { display: flex; }
+        .tag-modal-content { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .tag-modal-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+        .tag-modal-close { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-gray); }
+        .tag-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+        .tag-option { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem; font-weight: 500; color: white; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .tag-option:hover { transform: scale(1.05); }
+        .tag-option.selected { border-color: #1E293B; transform: scale(1.05); }
+        .tag-option.disabled { opacity: 0.5; cursor: not-allowed; }
+        .tag-create { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .tag-create input { flex: 1; padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+        .tag-create button { padding: 0.5rem 1rem; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; }
         
         /* 加载状态 */
         .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem; color: var(--text-gray); }
@@ -115,6 +139,19 @@
         <div id="comments-section" data-target-type="photo" data-target-id="1"></div>
     </main>
 
+    <!-- 标签选择弹窗 -->
+    <div class="tag-modal" id="tagModal" onclick="closeTagModal()">
+        <div class="tag-modal-content" onclick="event.stopPropagation()">
+            <button class="tag-modal-close" onclick="closeTagModal()">×</button>
+            <h3 class="tag-modal-title">选择标签</h3>
+            <div class="tag-list" id="tagList"></div>
+            <div class="tag-create">
+                <input type="text" id="newTagName" placeholder="新建标签名称..." onkeypress="if(event.key==='Enter')createTag()">
+                <button onclick="createTag()">创建</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 评论组件 (内联) -->
     <script>
     // 评论API配置
@@ -157,6 +194,9 @@
                         <h1 class="photo-title">${photo.title || '照片'}</h1>
                         <div class="photo-meta">上传于 ${photo.created_at ? photo.created_at.split('T')[0] : ''}</div>
                         <p class="photo-desc">${photo.description || ''}</p>
+                        <div class="photo-tags" id="photoTags">
+                            <span class="loading">加载标签...</span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -164,9 +204,135 @@
             // 初始化评论组件
             initComments('photo', currentTargetId);
             
+            // 加载并显示标签
+            loadPhotoTags(photo.id);
+            
         } catch (e) {
             console.error('Load photo failed:', e);
             container.innerHTML = '<div class="error">加载失败，请稍后重试</div>';
+        }
+    }
+    
+    // ========== 标签系统 ==========
+    const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    let allTags = [];
+    let photoTags = [];
+    
+    // 加载照片的标签
+    async function loadPhotoTags(photoId) {
+        try {
+            const resp = await fetch(`${API_BASE}/photo/${photoId}/tags`);
+            const data = await resp.json();
+            photoTags = data.data || [];
+            renderPhotoTags(photoId);
+        } catch (e) {
+            console.error('加载标签失败:', e);
+        }
+    }
+    
+    // 渲染照片的标签
+    function renderPhotoTags(photoId) {
+        const tagsContainer = document.getElementById('photoTags');
+        if (!tagsContainer) return;
+        
+        const tagsHtml = photoTags.map(t => `
+            <span class="tag" style="background: ${t.color}">
+                ${t.name}
+                <span class="tag-remove" onclick="removeTag(${photoId}, ${t.id})">×</span>
+            </span>
+        `).join('');
+        
+        tagsContainer.innerHTML = tagsHtml + `<span class="tag-add-btn" onclick="openTagModal(${photoId})">+ 添加标签</span>`;
+    }
+    
+    // 打开标签选择弹窗
+    async function openTagModal(photoId) {
+        const modal = document.getElementById('tagModal');
+        const tagList = document.getElementById('tagList');
+        
+        // 加载所有标签
+        try {
+            const resp = await fetch(`${API_BASE}/tags`);
+            const data = await resp.json();
+            allTags = data.data || [];
+            
+            // 渲染标签选项（排除已添加的）
+            const photoTagIds = photoTags.map(t => t.id);
+            tagList.innerHTML = allTags.map(t => {
+                const isSelected = photoTagIds.includes(t.id);
+                return `<span class="tag-option ${isSelected ? 'selected' : ''} ${isSelected ? 'disabled' : ''}" 
+                    style="background: ${t.color}" 
+                    ${!isSelected ? `onclick="toggleTag(${photoId}, ${t.id})"` : ''}>
+                    ${t.name}${isSelected ? ' ✓' : ''}
+                </span>`;
+            }).join('');
+            
+            modal.classList.add('active');
+        } catch (e) {
+            console.error('加载标签列表失败:', e);
+        }
+    }
+    
+    // 关闭标签弹窗
+    function closeTagModal() {
+        document.getElementById('tagModal').classList.remove('active');
+    }
+    
+    // 切换标签（添加/移除）
+    async function toggleTag(photoId, tagId) {
+        const isSelected = photoTags.some(t => t.id === tagId);
+        
+        try {
+            if (isSelected) {
+                await fetch(`${API_BASE}/photo/${photoId}/tags/${tagId}`, { method: 'DELETE' });
+                photoTags = photoTags.filter(t => t.id !== tagId);
+            } else {
+                await fetch(`${API_BASE}/photo/${photoId}/tags/${tagId}`, { method: 'POST' });
+                const tag = allTags.find(t => t.id === tagId);
+                if (tag) photoTags.push(tag);
+            }
+            renderPhotoTags(photoId);
+            openTagModal(photoId); // 刷新弹窗
+        } catch (e) {
+            console.error('操作标签失败:', e);
+        }
+    }
+    
+    // 移除标签
+    async function removeTag(photoId, tagId) {
+        try {
+            await fetch(`${API_BASE}/photo/${photoId}/tags/${tagId}`, { method: 'DELETE' });
+            photoTags = photoTags.filter(t => t.id !== tagId);
+            renderPhotoTags(photoId);
+        } catch (e) {
+            console.error('移除标签失败:', e);
+        }
+    }
+    
+    // 创建新标签
+    async function createTag() {
+        const input = document.getElementById('newTagName');
+        const name = input.value.trim();
+        if (!name) return;
+        
+        try {
+            const resp = await fetch(`${API_BASE}/tags`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            const data = await resp.json();
+            
+            if (data.ok) {
+                input.value = '';
+                // 重新加载标签列表
+                const photoId = currentTargetId;
+                await openTagModal(photoId);
+            } else {
+                alert(data.error || '创建失败');
+            }
+        } catch (e) {
+            console.error('创建标签失败:', e);
         }
     }
     
