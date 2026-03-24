@@ -550,6 +550,8 @@
             }
         }
         
+        // ⚠️ 修复记录(2026-03-24): 之前这里有<body onload="loadHomeData()">导致重复调用
+        // 修复: 只保留这里的调用，删除onload，解决问题：API请求2次
         async function loadHomeData() {
             // 先初始化登录状态
             initAuthState();

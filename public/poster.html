@@ -542,9 +542,11 @@
     const tagOptions = ['HADO', '兰星少年', '战斗', '冠军', '荣耀', '团队', '热血', '未来', 'AR运动', '新星'];
     
     // 加载照片
+    // ⚠️ 修复记录(2026-03-24): 之前for循环串行请求每张照片的tags导致17秒加载
+    // 修复: 首屏只加载标签列表，不加载每张照片的tags，改为selectTag时按需预加载
     async function loadPhotos() {
         try {
-            // 并行加载照片和标签
+            // 并行加载照片和标签列表
             const [photoRes, tagsRes] = await Promise.all([
                 fetch(`${API_BASE}/gallery`),
                 fetch(`${API_BASE}/tags`)
