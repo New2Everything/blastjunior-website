@@ -48,6 +48,10 @@
     "web-perf": {
       "version": "1.0.0",
       "installedAt": 1773289083098
+    },
+    "brainstorm": {
+      "version": "1.0.0",
+      "installedAt": 1774300323624
     }
   }
 }
