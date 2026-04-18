@@ -9,81 +9,142 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <script src="/components/nav-loader.js"></script>
+  <style>
+    .admin-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .admin-tab { padding: 0.75rem 1.25rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-white); cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .admin-tab:hover { border-color: var(--primary); }
+    .admin-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
+    .pending-badge { background: #EF4444; color: white; padding: 0.15rem 0.4rem; border-radius: 10px; font-size: 0.7rem; font-weight: 700; margin-left: 0.5rem; }
+  </style>
 </head>
 <body>
-  <div class="container" style="max-width:800px;">
+  <div class="container" style="max-width:900px;">
     <div class="page-header">
       <h1 class="page-title">⚙️ 管理员后台</h1>
-      <p class="page-subtitle">管理俱乐部成员和审核申请</p>
+      <p class="page-subtitle">管理俱乐部日常运营</p>
     </div>
 
     <div id="notAdmin" style="display:none;" class="card">
-      <div class="empty-state">
-        <div class="empty-state-icon">🔒</div>
-        <div>您没有管理员权限</div>
-      </div>
+      <div class="empty-state"><div class="empty-state-icon">🔒</div><div>您没有管理员权限</div></div>
     </div>
 
     <div id="adminPanel">
-      <section class="section">
-        <h2 class="section-title">📋 待审核成员</h2>
-        <div id="pendingList">
-          <div class="card" style="text-align:center;color:var(--text-gray);"><span class="spinner"></span>加载中...</div>
-        </div>
-      </section>
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="switchTab('members')">👥 待审核成员</button>
+        <button class="admin-tab" onclick="switchTab('moderation')">🛡️ 内容审核 <span id="modBadge" class="pending-badge" style="display:none;">0</span></button>
+      </div>
+
+      <!-- 待审核成员 -->
+      <div id="membersTab" class="admin-section active">
+        <div id="pendingList"><div class="card" style="text-align:center;color:var(--text-gray);"><span class="spinner"></span>加载中...</div></div>
+      </div>
+
+      <!-- 内容审核 -->
+      <div id="moderationTab" class="admin-section">
+        <div id="moderationList"><div class="card" style="text-align:center;color:var(--text-gray);"><span class="spinner"></span>加载中...</div></div>
+      </div>
     </div>
   </div>
 
   <script>
     const API = 'https://blast-api.kanjiaming2022.workers.dev';
     let pendingMembers = [];
+    let pendingMod = [];
 
-    async function loadPending() {
+    async function init() {
       const token = localStorage.getItem('blxst_token');
-      if (!token) {
-        window.location.href = '/login.html';
-        return;
-      }
+      if (!token) { window.location.href = '/login.html'; return; }
 
       try {
-        const res = await fetch(API + '/admin/pending-members', {
-          headers: { 'Authorization': 'Bearer ' + token, 'Origin': 'https://blastjunior.com' }
-        });
+        const res = await fetch(API + '/auth/me', { headers: { 'Authorization': 'Bearer ' + token, 'Origin': 'https://blastjunior.com' } });
         const result = await res.json();
-
-        if (!result.ok) {
+        if (!result.ok || (result.user.role !== 'admin' && result.user.role !== 'leader')) {
           document.getElementById('notAdmin').style.display = 'block';
           document.getElementById('adminPanel').style.display = 'none';
           return;
         }
+        loadAll();
+      } catch (e) {
+        window.location.href = '/login.html';
+      }
+    }
 
+    async function loadAll() {
+      await Promise.all([loadPending(), loadModeration()]);
+    }
+
+    async function loadPending() {
+      try {
+        const res = await fetch(API + '/admin/pending-members', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Origin': 'https://blastjunior.com' } });
+        const result = await res.json();
         pendingMembers = result.data || [];
         renderPending();
-      } catch (e) {
-        document.getElementById('notAdmin').style.display = 'block';
-        document.getElementById('adminPanel').style.display = 'none';
-      }
+      } catch (e) {}
+    }
+
+    async function loadModeration() {
+      try {
+        const res = await fetch(API + '/admin/pending-moderation', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Origin': 'https://blastjunior.com' } });
+        const result = await res.json();
+        pendingMod = result.data || [];
+        renderModeration();
+        document.getElementById('modBadge').style.display = pendingMod.length > 0 ? 'inline' : 'none';
+        document.getElementById('modBadge').textContent = pendingMod.length;
+      } catch (e) {}
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+      document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+      document.getElementById(tab + 'Tab').classList.add('active');
     }
 
     function renderPending() {
       const el = document.getElementById('pendingList');
-      
       if (!pendingMembers.length) {
         el.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-state-icon">✅</div><div>暂无待审核成员</div></div></div>';
         return;
       }
-
       el.innerHTML = '<div style="display:flex;flex-direction:column;gap:0.75rem;">' +
         pendingMembers.map(m => `
           <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:1rem;">
             <div>
               <div style="font-weight:600;">${m.nickname || m.email}</div>
               <div style="font-size:0.8rem;color:var(--text-gray);">${m.email}</div>
-              <div style="font-size:0.75rem;color:var(--text-gray);margin-top:0.25rem;">申请身份: ${getRoleLabel(m.role)} ${m.player_level ? '(' + getLevelLabel(m.player_level) + ')' : ''}</div>
+              <div style="font-size:0.75rem;color:var(--text-gray);margin-top:0.25rem;">身份: ${getRoleLabel(m.role)}</div>
             </div>
             <div style="display:flex;gap:0.5rem;">
               <button onclick="approveMember('${m.id}', '${m.role}', '${m.player_level || ''}')" class="btn btn-primary" style="padding:0.5rem 1rem;">批准</button>
               <button onclick="rejectMember('${m.id}')" class="btn btn-outline" style="padding:0.5rem 1rem;color:#dc2626;border-color:#dc2626;">拒绝</button>
+            </div>
+          </div>
+        `).join('') + '</div>';
+    }
+
+    function renderModeration() {
+      const el = document.getElementById('moderationList');
+      if (!pendingMod.length) {
+        el.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-state-icon">✅</div><div>暂无待审核内容</div></div></div>';
+        return;
+      }
+      const typeIcons = { chat: '💬', news: '📰', photo: '📷', profile: '👤' };
+      const typeLabels = { chat: '聊天消息', news: '新闻', photo: '图片', profile: '用户资料' };
+      el.innerHTML = '<div style="display:flex;flex-direction:column;gap:0.75rem;">' +
+        pendingMod.map(m => `
+          <div class="card" style="padding:1rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+              <span style="font-size:1.2rem;">${typeIcons[m.type] || '❓'}</span>
+              <span style="font-weight:600;">${typeLabels[m.type] || m.type}</span>
+              <span style="font-size:0.75rem;color:var(--text-gray);">by ${m.user_name || '未知'}</span>
+            </div>
+            <div style="font-size:0.9rem;color:var(--text-gray);margin-bottom:0.5rem;padding:0.5rem;background:var(--bg-light);border-radius:4px;">${escapeHtml(m.content || '')}</div>
+            <div style="font-size:0.8rem;color:#dc2626;margin-bottom:0.75rem;">⚠️ ${m.reason || '内容违规'}</div>
+            <div style="display:flex;gap:0.5rem;">
+              <button onclick="modAction('${m.id}', 'approve')" class="btn btn-primary" style="padding:0.5rem 1rem;">✅ 通过</button>
+              <button onclick="modAction('${m.id}', 'reject')" class="btn btn-outline" style="padding:0.5rem 1rem;color:#dc2626;border-color:#dc2626;">🚫 拒绝</button>
             </div>
           </div>
         `).join('') + '</div>';
@@ -94,58 +155,51 @@
       return labels[role] || role;
     }
 
-    function getLevelLabel(level) {
-      const labels = { 'T0': 'T0', 'elite': '精英', 'rookie': '新秀', 'newbie': '新人' };
-      return labels[level] || level;
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
 
     async function approveMember(id, role, playerLevel) {
       if (!confirm('批准该成员加入？')) return;
-
       try {
         const res = await fetch(API + '/admin/members/' + id + '/status', {
-          method: 'PUT',
-          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
+          method: 'PUT', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
           body: JSON.stringify({ status: 'approved', role, player_level: playerLevel || null })
         });
         const result = await res.json();
-
-        if (result.ok) {
-          pendingMembers = pendingMembers.filter(m => m.id !== id);
-          renderPending();
-          alert('已批准！');
-        } else {
-          alert(result.error || '操作失败');
-        }
-      } catch (e) {
-        alert('操作失败');
-      }
+        if (result.ok) { pendingMembers = pendingMembers.filter(m => m.id !== id); renderPending(); alert('已批准！'); }
+        else alert(result.error || '操作失败');
+      } catch (e) { alert('操作失败'); }
     }
 
     async function rejectMember(id) {
       if (!confirm('拒绝该成员加入？')) return;
-
       try {
         const res = await fetch(API + '/admin/members/' + id + '/status', {
-          method: 'PUT',
-          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
+          method: 'PUT', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
           body: JSON.stringify({ status: 'rejected' })
         });
         const result = await res.json();
-
-        if (result.ok) {
-          pendingMembers = pendingMembers.filter(m => m.id !== id);
-          renderPending();
-          alert('已拒绝');
-        } else {
-          alert(result.error || '操作失败');
-        }
-      } catch (e) {
-        alert('操作失败');
-      }
+        if (result.ok) { pendingMembers = pendingMembers.filter(m => m.id !== id); renderPending(); alert('已拒绝'); }
+        else alert(result.error || '操作失败');
+      } catch (e) { alert('操作失败'); }
     }
 
-    loadPending();
+    async function modAction(id, action) {
+      try {
+        const res = await fetch(API + '/admin/moderation/' + id, {
+          method: 'PUT', headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
+          body: JSON.stringify({ action })
+        });
+        const result = await res.json();
+        if (result.ok) { pendingMod = pendingMod.filter(m => m.id !== id); renderModeration(); document.getElementById('modBadge').textContent = pendingMod.length; document.getElementById('modBadge').style.display = pendingMod.length > 0 ? 'inline' : 'none'; alert(action === 'approve' ? '已通过' : '已拒绝'); }
+        else alert(result.error || '操作失败');
+      } catch (e) { alert('操作失败'); }
+    }
+
+    init();
   </script>
 </body>
 </html>

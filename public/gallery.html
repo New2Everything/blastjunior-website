@@ -3,63 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>照片画廊 - 兰星少年 HADO 俱乐部</title>
-  <meta name="description" content="兰星少年 HADO 俱乐部照片画廊">
+  <title>图库 - 兰星少年 HADO 俱乐部</title>
   <meta name="theme-color" content="#FF6B35">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <script src="/components/nav-loader.js"></script>
   <style>
-    .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
-    .photo-item { aspect-ratio: 1; background: var(--bg-light); border-radius: var(--radius); overflow: hidden; position: relative; }
-    .photo-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-    .photo-item:hover img { transform: scale(1.05); }
-    .photo-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--text-gray); }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+    .gallery-item { position: relative; border-radius: var(--radius); overflow: hidden; background: var(--bg-white); box-shadow: var(--shadow); cursor: pointer; transition: transform 0.2s; }
+    .gallery-item:hover { transform: translateY(-4px); }
+    .gallery-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+    .gallery-item-info { padding: 1rem; }
+    .gallery-item-title { font-weight: 600; margin-bottom: 0.25rem; }
+    .gallery-item-meta { font-size: 0.8rem; color: var(--text-gray); }
+    .upload-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 3rem; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+    .upload-area:hover { border-color: var(--primary); }
+    .upload-area-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+    .modal img { max-width: 90vw; max-height: 80vh; border-radius: var(--radius); }
+    .modal-close { position: absolute; top: 1rem; right: 1rem; background: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="page-header">
-      <h1 class="page-title">📸 照片画廊</h1>
-      <p class="page-subtitle">精彩瞬间，记录成长</p>
+      <h1 class="page-title">📸 图库</h1>
+      <p class="page-subtitle">俱乐部精彩瞬间</p>
     </div>
 
-    <div class="section">
-      <div class="photo-grid" id="photoGrid">
-        <div class="card" style="text-align:center;color:var(--text-gray);grid-column:1/-1;"><span class="spinner"></span>加载中</div>
-      </div>
+    <div id="uploadSection" style="display:none;margin-bottom:2rem;" class="upload-area" onclick="document.getElementById('uploadInput').click()">
+      <div class="upload-area-icon">📤</div>
+      <div style="font-weight:600;">点击上传图片</div>
+      <div style="font-size:0.85rem;color:var(--text-gray);margin-top:0.5rem;">支持 JPG、PNG、GIF，最大 10MB</div>
+      <input type="file" id="uploadInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+    </div>
+
+    <div id="galleryGrid" class="gallery-grid">
+      <div class="card" style="grid-column:1/-1;text-align:center;color:var(--text-gray);"><span class="spinner"></span>加载中...</div>
     </div>
   </div>
 
+  <div id="imgModal" class="modal" style="display:none;" onclick="document.getElementById('imgModal').style.display='none'">
+    <button class="modal-close">×</button>
+    <img id="modalImg" src="" alt="">
+  </div>
+
   <script>
-    const API = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    const API = 'https://blast-api.kanjiaming2022.workers.dev';
+
+    async function init() {
+      const token = localStorage.getItem('blxst_token');
+      if (token) {
+        try {
+          const res = await fetch(API + '/auth/me', { headers: { 'Authorization': 'Bearer ' + token, 'Origin': 'https://blastjunior.com' } });
+          const result = await res.json();
+          if (result.ok) {
+            document.getElementById('uploadSection').style.display = 'block';
+          }
+        } catch (e) {}
+      }
+      loadGallery();
+    }
 
     async function loadGallery() {
       try {
-        const res = await fetch(API + '/gallery');
-        const result = await res.json();
-        renderPhotos(result.data || []);
+        const res = await fetch(API + '/gallery', { headers: { 'Origin': 'https://blastjunior.com' } });
+        const data = await res.json();
+        renderGallery(data.data || []);
       } catch (e) {
-        // 如果 gallery API 失败，尝试从 R2 加载
-        document.getElementById('photoGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">📸</div><div>暂无照片</div></div>';
+        document.getElementById('galleryGrid').innerHTML = '<div class="card" style="grid-column:1/-1;text-align:center;color:var(--text-gray);">加载失败</div>';
       }
     }
 
-    function renderPhotos(photos) {
-      const grid = document.getElementById('photoGrid');
-      if (!photos.length) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">📸</div><div>暂无照片</div></div>';
+    function renderGallery(items) {
+      const grid = document.getElementById('galleryGrid');
+      if (!items.length) {
+        grid.innerHTML = '<div class="card empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">📸</div><div>暂无图片</div></div>';
         return;
       }
-      grid.innerHTML = photos.map(p => `
-        <div class="photo-item">
-          ${p.cover ? `<img src="${p.cover}" alt="${p.title || ''}" loading="lazy">` : '<div class="photo-placeholder">🖼️</div>'}
+      grid.innerHTML = items.map(item => `
+        <div class="gallery-item" onclick="showModal('${item.image_url}')">
+          <img src="${item.image_url}" alt="${item.title || ''}" loading="lazy">
+          <div class="gallery-item-info">
+            <div class="gallery-item-title">${item.title || '无标题'}</div>
+            <div class="gallery-item-meta">${item.uploader_name || '匿名'} · ${formatDate(item.created_at)}</div>
+          </div>
         </div>
       `).join('');
     }
 
-    loadGallery();
+    function showModal(url) {
+      document.getElementById('modalImg').src = url;
+      document.getElementById('imgModal').style.display = 'flex';
+    }
+
+    function formatDate(str) {
+      if (!str) return '';
+      return new Date(str).toLocaleDateString('zh-CN');
+    }
+
+    async function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.size > 10 * 1024 * 1024) {
+        alert('图片大小不能超过 10MB');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async function() {
+        const imageUrl = reader.result;
+        
+        const title = prompt('请输入图片标题（可选）:', '');
+        
+        try {
+          const res = await fetch(API + '/gallery', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
+            body: JSON.stringify({ title, image_url: imageUrl })
+          });
+          const result = await res.json();
+          
+          if (result.pending) {
+            alert('图片已提交，请等待审核');
+          } else if (result.ok) {
+            alert('图片上传成功！');
+            loadGallery();
+          } else {
+            alert(result.error || '上传失败');
+          }
+        } catch (err) {
+          alert('上传失败');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    init();
   </script>
 </body>
 </html>
