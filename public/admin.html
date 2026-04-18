@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理员后台 - 兰星少年 HADO 俱乐部</title>
+  <meta name="theme-color" content="#FF6B35">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/components/nav-loader.js"></script>
+</head>
+<body>
+  <div class="container" style="max-width:800px;">
+    <div class="page-header">
+      <h1 class="page-title">⚙️ 管理员后台</h1>
+      <p class="page-subtitle">管理俱乐部成员和审核申请</p>
+    </div>
+
+    <div id="notAdmin" style="display:none;" class="card">
+      <div class="empty-state">
+        <div class="empty-state-icon">🔒</div>
+        <div>您没有管理员权限</div>
+      </div>
+    </div>
+
+    <div id="adminPanel">
+      <section class="section">
+        <h2 class="section-title">📋 待审核成员</h2>
+        <div id="pendingList">
+          <div class="card" style="text-align:center;color:var(--text-gray);"><span class="spinner"></span>加载中...</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://blast-api.kanjiaming2022.workers.dev';
+    let pendingMembers = [];
+
+    async function loadPending() {
+      const token = localStorage.getItem('blxst_token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(API + '/admin/pending-members', {
+          headers: { 'Authorization': 'Bearer ' + token, 'Origin': 'https://blastjunior.com' }
+        });
+        const result = await res.json();
+
+        if (!result.ok) {
+          document.getElementById('notAdmin').style.display = 'block';
+          document.getElementById('adminPanel').style.display = 'none';
+          return;
+        }
+
+        pendingMembers = result.data || [];
+        renderPending();
+      } catch (e) {
+        document.getElementById('notAdmin').style.display = 'block';
+        document.getElementById('adminPanel').style.display = 'none';
+      }
+    }
+
+    function renderPending() {
+      const el = document.getElementById('pendingList');
+      
+      if (!pendingMembers.length) {
+        el.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-state-icon">✅</div><div>暂无待审核成员</div></div></div>';
+        return;
+      }
+
+      el.innerHTML = '<div style="display:flex;flex-direction:column;gap:0.75rem;">' +
+        pendingMembers.map(m => `
+          <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:1rem;">
+            <div>
+              <div style="font-weight:600;">${m.nickname || m.email}</div>
+              <div style="font-size:0.8rem;color:var(--text-gray);">${m.email}</div>
+              <div style="font-size:0.75rem;color:var(--text-gray);margin-top:0.25rem;">申请身份: ${getRoleLabel(m.role)} ${m.player_level ? '(' + getLevelLabel(m.player_level) + ')' : ''}</div>
+            </div>
+            <div style="display:flex;gap:0.5rem;">
+              <button onclick="approveMember('${m.id}', '${m.role}', '${m.player_level || ''}')" class="btn btn-primary" style="padding:0.5rem 1rem;">批准</button>
+              <button onclick="rejectMember('${m.id}')" class="btn btn-outline" style="padding:0.5rem 1rem;color:#dc2626;border-color:#dc2626;">拒绝</button>
+            </div>
+          </div>
+        `).join('') + '</div>';
+    }
+
+    function getRoleLabel(role) {
+      const labels = { 'leader': '俱乐部领队', 'admin': '俱乐部管理', 'member': '俱乐部队员', 'support': '俱乐部后勤保障', 'sponsor': '俱乐部赞助商' };
+      return labels[role] || role;
+    }
+
+    function getLevelLabel(level) {
+      const labels = { 'T0': 'T0', 'elite': '精英', 'rookie': '新秀', 'newbie': '新人' };
+      return labels[level] || level;
+    }
+
+    async function approveMember(id, role, playerLevel) {
+      if (!confirm('批准该成员加入？')) return;
+
+      try {
+        const res = await fetch(API + '/admin/members/' + id + '/status', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
+          body: JSON.stringify({ status: 'approved', role, player_level: playerLevel || null })
+        });
+        const result = await res.json();
+
+        if (result.ok) {
+          pendingMembers = pendingMembers.filter(m => m.id !== id);
+          renderPending();
+          alert('已批准！');
+        } else {
+          alert(result.error || '操作失败');
+        }
+      } catch (e) {
+        alert('操作失败');
+      }
+    }
+
+    async function rejectMember(id) {
+      if (!confirm('拒绝该成员加入？')) return;
+
+      try {
+        const res = await fetch(API + '/admin/members/' + id + '/status', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
+          body: JSON.stringify({ status: 'rejected' })
+        });
+        const result = await res.json();
+
+        if (result.ok) {
+          pendingMembers = pendingMembers.filter(m => m.id !== id);
+          renderPending();
+          alert('已拒绝');
+        } else {
+          alert(result.error || '操作失败');
+        }
+      } catch (e) {
+        alert('操作失败');
+      }
+    }
+
+    loadPending();
+  </script>
+</body>
+</html>

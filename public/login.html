@@ -155,6 +155,19 @@
         // 保存 token
         localStorage.setItem('blxst_token', result.token);
         localStorage.setItem('blxst_user', JSON.stringify(result.user));
+        if (result.pending) {
+          showSuccess('注册成功！请等待管理员审核，审核通过后即可登录。');
+          setTimeout(() => {
+            window.location.href = '/login.html';
+          }, 2000);
+          return;
+        }
+        
+        if (result.status && result.status !== 'approved') {
+          showError('您的账号还在审核中，请耐心等待管理员审批。');
+          return;
+        }
+        
         showSuccess('登录成功！');
         
         setTimeout(() => {

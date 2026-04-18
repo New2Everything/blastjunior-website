@@ -9,6 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <script src="/components/nav-loader.js"></script>
+  <style>
+    .pending-badge { background: #F59E0B; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem; }
+  </style>
 </head>
 <body>
   <div class="container" style="max-width:600px;">
@@ -47,7 +50,8 @@
     }
 
     function renderProfile(user) {
-      const isAdmin = user.role === 'admin' || user.role === 'leader';
+      const isAdmin = (user.role === 'admin' || user.role === 'leader') && user.status === 'approved';
+      const isPending = user.status !== 'approved';
       const isMember = user.role === 'member';
 
       const roleLabels = {
@@ -70,10 +74,28 @@
           <div style="width:80px;height:80px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:white;">
             ${user.avatar ? '<img src="' + user.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : '👤'}
           </div>
-          <h1 style="font-family:var(--font-display);font-size:1.5rem;font-weight:700;">${user.nickname || '未设置昵称'}</h1>
-          <p style="color:var(--text-gray);margin-top:0.25rem;">${roleLabels[user.role] || user.role}</p>
+          <h1 style="font-family:var(--font-display);font-size:1.5rem;font-weight:700;">
+            ${user.nickname || '未设置昵称'}
+            ${isPending ? '<span class="pending-badge">审核中</span>' : ''}
+          </h1>
+          <p style="color:var(--text-gray);margin-top:0.25rem;">
+            ${roleLabels[user.role] || user.role}
+            ${isPending ? ' (待审核)' : ''}
+          </p>
           ${isMember && user.player_level ? '<span class="tag" style="margin-top:0.5rem;">' + (levelLabels[user.player_level] || user.player_level) + '</span>' : ''}
         </div>
+
+        ${isPending ? `
+        <div class="card" style="margin-bottom:1.5rem;background:#FEF3C7;border:1px solid #F59E0B;">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span style="font-size:1.5rem;">⏳</span>
+            <div>
+              <div style="font-weight:600;color:#92400E;">您的账号正在审核中</div>
+              <div style="font-size:0.85rem;color:#92400E;">请耐心等待管理员审批，审批通过后即可使用完整功能</div>
+            </div>
+          </div>
+        </div>
+        ` : ''}
 
         <div class="card" style="margin-bottom:1.5rem;">
           <h2 style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;margin-bottom:1rem;">基本信息</h2>
@@ -122,7 +144,10 @@
         </div>
 
         <div class="card">
-          <button onclick="logout()" class="btn btn-outline" style="width:100%;padding:0.875rem;color:#dc2626;border-color:#dc2626;">退出登录</button>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+            ${isAdmin ? '<a href="/admin.html" class="btn btn-primary" style="flex:1;text-align:center;">⚙️ 管理后台</a>' : ''}
+            <button onclick="logout()" class="btn btn-outline" style="flex:1;padding:0.875rem;color:#dc2626;border-color:#dc2626;">退出登录</button>
+          </div>
         </div>
       `;
 
@@ -140,7 +165,6 @@
         avatar: form.avatar.value
       };
 
-      // 管理员可以修改角色
       if (currentUser.role === 'admin' || currentUser.role === 'leader') {
         data.role = form.role.value;
         data.player_level = form.player_level.value || null;
@@ -167,7 +191,6 @@
         msg.style.color = '#16a34a';
         msg.style.display = 'block';
 
-        // 刷新页面
         setTimeout(() => loadProfile(), 500);
       } catch (err) {
         msg.textContent = '网络错误';
