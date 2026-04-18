@@ -31,7 +31,7 @@
 <script>
 function toggleMobileMenu(){document.querySelector(".nav-mobile-btn").classList.toggle("active");document.getElementById("mobileMenu").classList.toggle("active")}
 (function(){var p=location.pathname;document.querySelectorAll(".nav-link, .nav-mobile-link").forEach(function(l){var m=l.dataset.page;if(m==="home"?p==="/"||p==="/index.html":p.includes("/"+m))l.classList.add("active")}})();
-(function(){var token=localStorage.getItem("blxst_token");if(token){var user=JSON.parse(localStorage.getItem("blxst_user")||"{}");var actions=document.getElementById("navActions");if(actions){actions.innerHTML='<a href="/profile.html" class="nav-btn nav-btn-outline">'+((user.nickname||"我")+"</a>")}var mobileAuth=document.getElementById("mobileAuth");if(mobileAuth){mobileAuth.href="/profile.html";mobileAuth.textContent=user.nickname||"个人中心"}}})();
+(function(){var token=localStorage.getItem("blxst_token");if(token){var user=JSON.parse(localStorage.getItem("blxst_user")||"{}");var actions=document.getElementById("navActions");var isAdmin=user.role==='admin'||user.role==='leader';if(actions){actions.innerHTML=isAdmin?'<a href="/admin.html" class="nav-btn nav-btn-primary">⚙️ 管理</a>':'<a href="/profile.html" class="nav-btn nav-btn-outline">'+(user.nickname||"我")+"</a>"}var mobileAuth=document.getElementById("mobileAuth");if(mobileAuth){mobileAuth.href=isAdmin?"/admin.html":"/profile.html";mobileAuth.textContent=isAdmin?"管理后台":(user.nickname||"个人中心")}}})();
 </script>`;
   
   var existingNav = document.querySelector('nav, .nav-wrap');

@@ -168,10 +168,11 @@
           return;
         }
         
+        // 管理员登录后直接跳转审核页面
+        const isAdmin = result.user && (result.user.role === 'admin' || result.user.role === 'leader');
         showSuccess('登录成功！');
-        
         setTimeout(() => {
-          window.location.href = '/profile.html';
+          window.location.href = isAdmin ? '/admin.html' : '/profile.html';
         }, 500);
       } catch (err) {
         showError('网络错误，请重试');
