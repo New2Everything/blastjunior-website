@@ -1,258 +1,78 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>参赛队伍 - 兰星少年 HADO 俱乐部</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #FF6B35; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
-        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
-        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
-        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), #FF8A5C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
-        .nav-links { display: flex; gap: 0.5rem; }
-        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
-        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
-        
-        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
-        .page-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 1.5rem; }
-        
-        /* 赛季选择 */
-        .season-select-wrap { margin-bottom: 1.5rem; }
-        .season-select-wrap label { font-weight: 500; margin-right: 1rem; }
-        #seasonSelect { padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: inherit; min-width: 300px; cursor: pointer; }
-        
-        /* 赛季信息 */
-        .season-info { background: var(--bg-white); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
-        .season-info h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-bottom: 0.5rem; }
-        .season-meta { display: flex; gap: 1rem; flex-wrap: wrap; }
-        .season-tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 50px; font-size: 0.85rem; font-weight: 500; }
-        .season-tag.ongoing { background: #10B981; color: white; }
-        .season-tag.finished { background: var(--text-gray); color: white; }
-        .season-tag.division { background: var(--secondary); color: white; }
-        
-        /* 分组/赛区 */
-        .divisions { margin-bottom: 1.5rem; }
-        .divisions h3 { font-family: 'Outfit', sans-serif; font-size: 1.1rem; margin-bottom: 1rem; }
-        .division-list { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-        .division-item { background: linear-gradient(135deg, var(--secondary), #00D4FF); color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 500; }
-        
-        /* 队伍列表 */
-        .teams-section h3 { font-family: 'Outfit', sans-serif; font-size: 1.1rem; margin-bottom: 1rem; }
-        .teams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-        .team-card { background: var(--bg-white); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); display: flex; align-items: center; gap: 1rem; transition: all 0.2s; }
-        .team-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
-        .team-rank { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.25rem; color: var(--primary); min-width: 40px; }
-        .team-rank.gold { color: #FFD700; }
-        .team-rank.silver { color: #C0C0C0; }
-        .team-rank.bronze { color: #CD7F32; }
-        .team-info { flex: 1; }
-        .team-name { font-weight: 600; font-size: 1.05rem; }
-        .team-division { font-size: 0.85rem; color: var(--text-gray); }
-        
-        .loading { text-align: center; padding: 3rem; color: var(--text-gray); }
-        .empty { text-align: center; padding: 3rem; color: var(--text-gray); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>赛程 - 兰星少年 HADO 俱乐部</title>
+  <meta name="description" content="兰星少年 HADO 俱乐部赛程安排">
+  <meta name="theme-color" content="#FF6B35">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/components/nav-loader.js"></script>
 </head>
 <body>
-    <nav>
-        <div class="nav-container">
-            <a href="/" class="logo">
-                <div class="logo-icon">⚡</div>
-                BLXST
-            </a>
-            <div class="nav-links">
-                <a href="/" class="nav-link">首页</a>
-                <a href="/teams" class="nav-link">战队</a>
-                <a href="/players" class="nav-link">选手</a>
-                <a href="/standings" class="nav-link">积分榜</a>
-                <a href="/matches" class="nav-link active">赛程</a>
-                <a href="/gallery" class="nav-link">相册</a>
-            </div>
-        </div>
-    </nav>
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">🏆 赛程</h1>
+      <p class="page-subtitle">查看比赛安排和结果</p>
+    </div>
 
-    <main class="container">
-        <h1 class="page-title">📋 参赛队伍</h1>
-        
-        <!-- 赛季选择 -->
-        <div class="season-select-wrap">
-            <label for="seasonSelect">选择赛季：</label>
-            <select id="seasonSelect" onchange="changeSeason()">
-                <option value="">加载中...</option>
-            </select>
-        </div>
-        
-        <!-- 赛季信息 -->
-        <div id="seasonInfo" class="season-info" style="display: none;">
-            <h2 id="seasonName">-</h2>
-            <div class="season-meta">
-                <span class="season-tag" id="seasonStatus">-</span>
-                <span class="season-tag division" id="seasonDates">-</span>
-            </div>
-        </div>
-        
-        <!-- 分组/赛区 -->
-        <div id="divisionsSection" class="divisions" style="display: none;">
-            <h3>🏅 比赛分组</h3>
-            <div class="division-list" id="divisionList"></div>
-        </div>
-        
-        <!-- 队伍列表 -->
-        <div id="teamsSection" class="teams-section">
-            <h3>👥 参赛队伍 (<span id="teamCount">0</span>)</h3>
-            <div class="teams-grid" id="teamsGrid">
-                <div class="loading">加载中...</div>
-            </div>
-        </div>
-    </main>
+    <div class="section">
+      <div id="matchesList">
+        <div class="card" style="text-align:center;color:var(--text-gray);"><span class="spinner"></span>加载中</div>
+      </div>
+    </div>
+  </div>
 
-    <script src="/components/nav-loader.js"></script>
-    <script>
-        const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
-        let currentSeason = '';
-        
-        // 加载赛季列表
-        async function loadSeasons() {
-            try {
-                const resp = await fetch(API_BASE + '/seasons');
-                const result = await resp.json();
-                
-                if (!result.ok || !result.data) {
-                    document.getElementById('seasonSelect').innerHTML = '<option value="">加载失败</option>';
-                    return;
-                }
-                
-                const seasons = result.data;
-                const select = document.getElementById('seasonSelect');
-                
-                // 按状态分组
-                const ongoing = seasons.filter(s => s.status === 'ongoing');
-                const finished = seasons.filter(s => s.status !== 'ongoing');
-                
-                let html = '';
-                if (ongoing.length > 0) {
-                    html += '<optgroup label="🏃 进行中">';
-                    ongoing.forEach(s => {
-                        html += `<option value="${s.id}">${s.displayName || s.name}</option>`;
-                    });
-                    html += '</optgroup>';
-                }
-                if (finished.length > 0) {
-                    html += '<optgroup label="✅ 已结束">';
-                    finished.forEach(s => {
-                        html += `<option value="${s.id}">${s.displayName || s.name}</option>`;
-                    });
-                    html += '</optgroup>';
-                }
-                
-                select.innerHTML = html;
-                
-                // 默认选中第一个
-                if (seasons.length > 0) {
-                    currentSeason = seasons[0].id;
-                    loadSeasonData(currentSeason);
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-        
-        // 切换赛季
-        function changeSeason() {
-            currentSeason = document.getElementById('seasonSelect').value;
-            if (currentSeason) {
-                loadSeasonData(currentSeason);
-            }
-        }
-        
-        // 加载赛季数据
-        async function loadSeasonData(seasonId) {
-            const grid = document.getElementById('teamsGrid');
-            grid.innerHTML = '<div class="loading">加载中...</div>';
-            
-            try {
-                const resp = await fetch(API_BASE + '/matches');
-                const result = await resp.json();
-                
-                if (!result.ok) {
-                    grid.innerHTML = '<div class="empty">加载失败</div>';
-                    return;
-                }
-                
-                // 找到对应的赛季
-                const seasonData = (result.data || []).find(s => s.season_id === seasonId);
-                
-                if (!seasonData) {
-                    grid.innerHTML = '<div class="empty">暂无数据</div>';
-                    return;
-                }
-                
-                // 更新赛季信息
-                const seasonInfo = document.getElementById('seasonInfo');
-                const seasonName = document.getElementById('seasonName');
-                const seasonStatus = document.getElementById('seasonStatus');
-                const seasonDates = document.getElementById('seasonDates');
-                
-                seasonName.textContent = seasonData.name || '未知赛季';
-                seasonStatus.textContent = seasonData.status === 'ongoing' ? '进行中' : '已结束';
-                seasonStatus.className = 'season-tag ' + (seasonData.status === 'ongoing' ? 'ongoing' : 'finished');
-                seasonDates.textContent = seasonData.start_date ? `${seasonData.start_date} ~ ${seasonData.end_date || '待定'}` : '-';
-                seasonInfo.style.display = 'block';
-                
-                // 显示分组
-                const divisionsSection = document.getElementById('divisionsSection');
-                const divisionList = document.getElementById('divisionList');
-                const divisions = seasonData.divisions || [];
-                
-                if (divisions.length > 0) {
-                    divisionList.innerHTML = divisions.map(d => 
-                        `<span class="division-item">${d.name || d.division_key}</span>`
-                    ).join('');
-                    divisionsSection.style.display = 'block';
-                } else {
-                    divisionsSection.style.display = 'none';
-                }
-                
-                // 显示队伍
-                const teams = seasonData.teams || [];
-                document.getElementById('teamCount').textContent = teams.length;
-                
-                if (teams.length === 0) {
-                    grid.innerHTML = '<div class="empty">暂无参赛队伍</div>';
-                    return;
-                }
-                
-                grid.innerHTML = teams.map((team, i) => {
-                    const rank = i + 1;
-                    let rankClass = '';
-                    if (rank === 1) rankClass = 'gold';
-                    else if (rank === 2) rankClass = 'silver';
-                    else if (rank === 3) rankClass = 'bronze';
-                    
-                    return `
-                        <div class="team-card">
-                            <div class="team-rank ${rankClass}">#${rank}</div>
-                            <div class="team-info">
-                                <div class="team-name">${team.team_name}</div>
-                                <div class="team-division">${team.division_name || '-'}</div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                
-            } catch (e) {
-                console.error(e);
-                grid.innerHTML = '<div class="empty">加载失败</div>';
-            }
-        }
-        
-        // 初始化
-        loadSeasons();
-    </script>
+  <script>
+    const API = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+
+    async function loadMatches() {
+      try {
+        const res = await fetch(API + '/matches');
+        const result = await res.json();
+        renderMatches(result.data || []);
+      } catch (e) {
+        document.getElementById('matchesList').innerHTML = '<div class="error-state">加载失败</div>';
+      }
+    }
+
+    function renderMatches(seasons) {
+      const list = document.getElementById('matchesList');
+      if (!seasons.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏆</div><div>暂无赛程</div></div>';
+        return;
+      }
+
+      let html = '';
+      seasons.forEach(season => {
+        html += `
+          <div class="card" style="margin-bottom:1.5rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border);">
+              <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;">${season.name || '赛季'}</h3>
+              <span class="tag">${season.status === 'ongoing' ? '进行中' : season.status === 'upcoming' ? '即将开始' : '已结束'}</span>
+            </div>
+            ${season.teams && season.teams.length ? `
+              <div style="font-size:0.9rem;color:var(--text-gray);margin-bottom:1rem;">参赛队伍: ${season.teams.length} 支</div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0.75rem;">
+                ${season.teams.slice(0, 12).map(t => `
+                  <div style="background:var(--bg-light);padding:0.75rem;border-radius:8px;text-align:center;font-size:0.9rem;">
+                    <div style="font-size:1.25rem;">🔥</div>
+                    <div style="font-weight:600;margin-top:0.25rem;">${t.team_name || t.name || ''}</div>
+                  </div>
+                `).join('')}
+              </div>
+              ${season.teams.length > 12 ? `<div style="text-align:center;color:var(--text-gray);margin-top:1rem;font-size:0.85rem;">还有 ${season.teams.length - 12} 支队伍...</div>` : ''}
+            ` : '<div style="color:var(--text-gray);font-size:0.9rem;">暂无参赛队伍</div>'}
+          </div>
+        `;
+      });
+
+      list.innerHTML = html;
+    }
+
+    loadMatches();
+  </script>
 </body>
 </html>

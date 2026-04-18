@@ -1,28 +1,44 @@
-// 动态加载统一导航栏
-async function loadNav() {
-  try {
-    const response = await fetch('/components/nav.html');
-    const navHTML = await response.text();
-    
-    // 找到 body 中的第一个 nav 元素并替换，或者插入到 body 开头
-    const existingNav = document.querySelector('nav');
-    if (existingNav) {
-      existingNav.outerHTML = navHTML;
-    } else {
-      document.body.insertAdjacentHTML('afterbegin', navHTML);
-    }
-    
-    // 添加 body padding 以防止导航栏遮挡内容
-    document.body.style.paddingTop = '64px';
-    
-    // 移动端 padding 调整
-    if (window.innerWidth <= 768) {
-      document.body.style.paddingTop = '56px';
-    }
-  } catch (e) {
-    console.error('加载导航栏失败:', e);
+// 统一导航栏加载器
+(function() {
+  // 检查是否已有 nav，避免重复加载
+  if (document.querySelector('.nav-wrap')) return;
+  
+  var navHTML = `<style>
+.nav-wrap{background:var(--bg-white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:64px}
+.nav-logo{display:flex;align-items:center;gap:0.75rem;font-family:var(--font-display);font-weight:900;font-size:1.2rem;color:var(--text-dark);text-decoration:none}
+.nav-logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem}
+.nav-links{display:flex;gap:0.25rem}
+.nav-link{padding:0.5rem 1rem;border-radius:8px;text-decoration:none;color:var(--text-gray);font-weight:500;font-size:0.95rem;transition:all 0.2s}
+.nav-link:hover{background:var(--bg-light);color:var(--text-dark)}
+.nav-link.active{background:var(--primary);color:white}
+.nav-actions{display:flex;align-items:center;gap:0.75rem}
+.nav-btn{padding:0.5rem 1rem;border-radius:8px;font-weight:600;font-size:0.9rem;cursor:pointer;border:none;transition:all 0.2s}
+.nav-btn-primary{background:var(--primary);color:white}
+.nav-btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-gray)}
+.nav-btn:hover{opacity:0.9;transform:translateY(-1px)}
+.nav-mobile-btn{display:none;background:none;border:none;cursor:pointer;padding:0.5rem}
+.nav-mobile-btn span{display:block;width:22px;height:2px;background:var(--text-dark);margin:5px 0;transition:all 0.3s}
+.nav-mobile-btn.active span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.nav-mobile-btn.active span:nth-child(2){opacity:0}
+.nav-mobile-btn.active span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.nav-mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:var(--bg-white);border-bottom:1px solid var(--border);padding:1rem;z-index:99;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.nav-mobile-menu.active{display:block}
+.nav-mobile-link{display:block;padding:0.75rem 1rem;border-radius:8px;text-decoration:none;color:var(--text-gray);font-weight:500;transition:all 0.2s}
+.nav-mobile-link:hover,.nav-mobile-link.active{background:var(--primary);color:white}
+@media(max-width:768px){.nav-links,.nav-actions{display:none}.nav-mobile-btn{display:block}.nav-inner{height:56px}.nav-mobile-menu{top:56px}}
+</style>
+<div class="nav-wrap"><div class="nav-inner"><a href="/" class="nav-logo"><div class="nav-logo-icon">⚡</div><span>兰星少年</span></a><div class="nav-links"><a href="/" class="nav-link" data-page="home">首页</a><a href="/matches" class="nav-link" data-page="matches">赛程</a><a href="/standings" class="nav-link" data-page="standings">积分榜</a><a href="/teams" class="nav-link" data-page="teams">战队</a><a href="/players" class="nav-link" data-page="players">选手</a><a href="/news" class="nav-link" data-page="news">新闻</a><a href="/gallery" class="nav-link" data-page="gallery">画廊</a><a href="/honor" class="nav-link" data-page="honor">荣誉</a><a href="/join" class="nav-link" data-page="join">加入</a></div><div class="nav-actions"><button class="nav-btn nav-btn-primary" onclick="location.href='/join'">加入我们</button></div><button class="nav-mobile-btn" onclick="toggleMobileMenu()"><span></span><span></span><span></span></button></div><div class="nav-mobile-menu" id="mobileMenu"><a href="/" class="nav-mobile-link" data-page="home">首页</a><a href="/matches" class="nav-mobile-link" data-page="matches">赛程</a><a href="/standings" class="nav-mobile-link" data-page="standings">积分榜</a><a href="/teams" class="nav-mobile-link" data-page="teams">战队</a><a href="/players" class="nav-mobile-link" data-page="players">选手</a><a href="/news" class="nav-mobile-link" data-page="news">新闻</a><a href="/gallery" class="nav-mobile-link" data-page="gallery">画廊</a><a href="/honor" class="nav-mobile-link" data-page="honor">荣誉</a><a href="/join" class="nav-mobile-link" data-page="join">加入</a></div></div>
+<script>function toggleMobileMenu(){document.querySelector(".nav-mobile-btn").classList.toggle("active");document.getElementById("mobileMenu").classList.toggle("active")}(function(){var p=location.pathname;document.querySelectorAll(".nav-link, .nav-mobile-link").forEach(function(l){var m=l.dataset.page;if(m==="home"?p==="/"||p==="/index.html":p.includes("/"+m))l.classList.add("active")})})()</script>`;
+  
+  // 移除已有的 nav
+  var existingNav = document.querySelector('nav, .nav-wrap');
+  if (existingNav) {
+    existingNav.outerHTML = navHTML;
+  } else {
+    document.body.insertAdjacentHTML('afterbegin', navHTML);
   }
-}
-
-// 页面加载后执行
-document.addEventListener('DOMContentLoaded', loadNav);
+  // 移动端 padding
+  if (window.innerWidth <= 768) document.body.style.paddingTop = '56px';
+  else document.body.style.paddingTop = '64px';
+})();

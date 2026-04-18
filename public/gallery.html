@@ -1,189 +1,65 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>相册 - 兰星少年 HADO 俱乐部</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #FF6B35; --secondary: #00B4D8; --bg-light: #F8FAFC; --bg-white: #FFFFFF; --text-dark: #1E293B; --text-gray: #64748B; --border: #E2E8F0; --shadow: 0 4px 20px rgba(0,0,0,0.08); --radius: 16px; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-light); color: var(--text-dark); }
-        nav { background: var(--bg-white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 64px; }
-        .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; text-decoration: none; color: var(--text-dark); }
-        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), #FF8A5C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
-        .nav-links { display: flex; gap: 0.5rem; }
-        .nav-link { padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; color: var(--text-gray); font-weight: 500; transition: all 0.2s; }
-        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
-        
-        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
-        .page-title { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 900; margin-bottom: 1.5rem; }
-        
-        /* 分类筛选 */
-        .category-filter { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-        .cat-btn { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 50px; background: var(--bg-white); color: var(--text-gray); font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .cat-btn:hover { border-color: var(--primary); color: var(--primary); }
-        .cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        
-        /* 统计 */
-        .stats { margin-bottom: 1rem; color: var(--text-gray); font-size: 0.9rem; }
-        
-        /* 照片网格 */
-        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
-        .photo-card { background: var(--bg-white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); cursor: pointer; transition: all 0.2s; }
-        .photo-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
-        .photo-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: var(--bg-light); }
-        .photo-info { padding: 1rem; }
-        .photo-title { font-weight: 600; margin-bottom: 0.5rem; }
-        .photo-meta { font-size: 0.85rem; color: var(--text-gray); display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        .photo-tag { padding: 0.2rem 0.5rem; background: var(--bg-light); border-radius: 4px; font-size: 0.75rem; }
-        
-        .loading { text-align: center; padding: 3rem; color: var(--text-gray); }
-        .empty { text-align: center; padding: 3rem; color: var(--text-gray); }
-        
-        /* 点击查看大图 */
-        .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
-        .lightbox.show { display: flex; }
-        .lightbox-img { max-width: 90%; max-height: 70%; object-fit: contain; }
-        .lightbox-close { position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer; }
-        .lightbox-info { color: white; text-align: center; margin-top: 1rem; }
-        .lightbox-title { font-size: 1.25rem; font-weight: 600; }
-        .lightbox-category { color: #aaa; margin-top: 0.5rem; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>照片画廊 - 兰星少年 HADO 俱乐部</title>
+  <meta name="description" content="兰星少年 HADO 俱乐部照片画廊">
+  <meta name="theme-color" content="#FF6B35">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/components/nav-loader.js"></script>
+  <style>
+    .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .photo-item { aspect-ratio: 1; background: var(--bg-light); border-radius: var(--radius); overflow: hidden; position: relative; }
+    .photo-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .photo-item:hover img { transform: scale(1.05); }
+    .photo-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--text-gray); }
+  </style>
 </head>
 <body>
-    <nav>
-        <div class="nav-container">
-            <a href="/" class="logo">
-                <div class="logo-icon">⚡</div>
-                BLXST
-            </a>
-            <div class="nav-links">
-                <a href="/" class="nav-link">首页</a>
-                <a href="/teams" class="nav-link">战队</a>
-                <a href="/players" class="nav-link">选手</a>
-                <a href="/standings" class="nav-link">积分榜</a>
-                <a href="/matches" class="nav-link">赛程</a>
-                <a href="/gallery" class="nav-link active">相册</a>
-            </div>
-        </div>
-    </nav>
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">📸 照片画廊</h1>
+      <p class="page-subtitle">精彩瞬间，记录成长</p>
+    </div>
 
-    <main class="container">
-        <h1 class="page-title">📷 相册</h1>
-        
-        <!-- 分类筛选 -->
-        <div class="category-filter" id="categoryFilter">
-            <button class="cat-btn active" data-category="全部">全部</button>
-        </div>
-        
-        <div class="stats" id="stats"></div>
-        
-        <div class="photo-grid" id="photoGrid">
-            <div class="loading">加载中...</div>
-        </div>
-    </main>
-    
+    <div class="section">
+      <div class="photo-grid" id="photoGrid">
+        <div class="card" style="text-align:center;color:var(--text-gray);grid-column:1/-1;"><span class="spinner"></span>加载中</div>
+      </div>
+    </div>
+  </div>
 
+  <script>
+    const API = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
 
-    <script src="/components/nav-loader.js"></script>
-    <script>
-        const API_BASE = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
-        let allPhotos = [];
-        let currentCategory = '全部';
-        
-        // 初始化
-        async function init() {
-            try {
-                const resp = await fetch(API_BASE + '/gallery');
-                const result = await resp.json();
-                
-                if (!result.ok) {
-                    document.getElementById('photoGrid').innerHTML = '<div class="empty">加载失败</div>';
-                    return;
-                }
-                
-                // 设置分类按钮
-                const categories = result.categories || [];
-                const filterContainer = document.getElementById('categoryFilter');
-                let filterHtml = '<button class="cat-btn active" data-category="全部">全部</button>';
-                categories.forEach(cat => {
-                    filterHtml += `<button class="cat-btn" data-category="${cat.name}">${cat.name} (${cat.count})</button>`;
-                });
-                filterContainer.innerHTML = filterHtml;
-                
-                // 绑定点击事件
-                document.querySelectorAll('.cat-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        currentCategory = btn.dataset.category;
-                        renderGallery();
-                    });
-                });
-                
-                // 转换数据
-                allPhotos = (result.data || []).map(p => ({
-                    id: p.id,
-                    title: p.title,
-                    cover: p.cover,
-                    full_url: p.full_url,
-                    category: p.category || '未分类'
-                }));
-                
-                renderGallery();
-            } catch (e) {
-                console.error(e);
-                document.getElementById('photoGrid').innerHTML = '<div class="empty">加载失败</div>';
-            }
-        }
-        
-        function renderGallery() {
-            const filtered = currentCategory === '全部' 
-                ? allPhotos 
-                : allPhotos.filter(p => p.category === currentCategory);
-            
-            document.getElementById('stats').textContent = `共 ${filtered.length} 张照片`;
-            
-            if (filtered.length === 0) {
-                document.getElementById('photoGrid').innerHTML = '<div class="empty">暂无照片</div>';
-                return;
-            }
-            
-            document.getElementById('photoGrid').innerHTML = filtered.map(p => `
-                <div class="photo-card" onclick="openLightbox(${p.id})">
-                    <img class="photo-img" src="${p.cover}" alt="${p.title}" loading="lazy"
-                        onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 400 300\\'><rect fill=\\'%23334155\\' width=\\'400\\' height=\\'300\\'/><text x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\' fill=\\'white\\' font-size=\\'24\\'>📷</text></svg>'">
-                    <div class="photo-info">
-                        <div class="photo-title">${p.title}</div>
-                        <div class="photo-meta">
-                            <span class="photo-tag">${p.category}</span>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // 大图查看
-        let currentPhoto = null;
-        
-        function openLightbox(id) {
-            // 跳转到 photo 页面
-            window.location.href = `/photo.html?id=${id}`;
-        }
-        
-        function closeLightbox() {
-            document.getElementById('lightbox').classList.remove('show');
-        }
-        
-        // 点击背景关闭
-        document.getElementById('lightbox').addEventListener('click', (e) => {
-            if (e.target.id === 'lightbox') closeLightbox();
-        });
-        
-        init();
-    </script>
+    async function loadGallery() {
+      try {
+        const res = await fetch(API + '/gallery');
+        const result = await res.json();
+        renderPhotos(result.data || []);
+      } catch (e) {
+        // 如果 gallery API 失败，尝试从 R2 加载
+        document.getElementById('photoGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">📸</div><div>暂无照片</div></div>';
+      }
+    }
+
+    function renderPhotos(photos) {
+      const grid = document.getElementById('photoGrid');
+      if (!photos.length) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">📸</div><div>暂无照片</div></div>';
+        return;
+      }
+      grid.innerHTML = photos.map(p => `
+        <div class="photo-item">
+          ${p.cover ? `<img src="${p.cover}" alt="${p.title || ''}" loading="lazy">` : '<div class="photo-placeholder">🖼️</div>'}
+        </div>
+      `).join('');
+    }
+
+    loadGallery();
+  </script>
 </body>
 </html>
