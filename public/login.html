@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - 兰星少年 HADO 俱乐部</title>
+  <meta name="theme-color" content="#FF6B35">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container" style="max-width:480px;padding-top:3rem;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:2rem;color:white;margin:0 auto 1rem;">⚡</div>
+      <h1 style="font-family:var(--font-display);font-size:1.8rem;font-weight:900;">兰星少年</h1>
+      <p style="color:var(--text-gray);">HADO 俱乐部</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:1.5rem;">
+        <button id="tab-login" onclick="showTab('login')" style="flex:1;padding:0.75rem;background:none;border:none;font-weight:600;color:var(--primary);border-bottom:2px solid var(--primary);cursor:pointer;">登录</button>
+        <button id="tab-register" onclick="showTab('register')" style="flex:1;padding:0.75rem;background:none;border:none;font-weight:600;color:var(--text-gray);border-bottom:2px solid transparent;cursor:pointer;">注册</button>
+      </div>
+
+      <!-- 登录表单 -->
+      <form id="form-login" onsubmit="handleLogin(event)">
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-weight:500;margin-bottom:0.5rem;">邮箱</label>
+          <input type="email" name="email" required style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;" placeholder="your@email.com">
+        </div>
+        <div style="margin-bottom:1.5rem;">
+          <label style="display:block;font-weight:500;margin-bottom:0.5rem;">密码（6位数字）</label>
+          <input type="password" name="password" required pattern="\d{6}" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;" placeholder="123456">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:0.875rem;">登录</button>
+      </form>
+
+      <!-- 注册表单 -->
+      <form id="form-register" style="display:none;" onsubmit="handleRegister(event)">
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-weight:500;margin-bottom:0.5rem;">邮箱 *</label>
+          <input type="email" name="email" required style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;" placeholder="your@email.com">
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-weight:500;margin-bottom:0.5rem;">密码（6位数字） *</label>
+          <input type="password" name="password" required pattern="\d{6}" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;" placeholder="123456">
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-weight:500;margin-bottom:0.5rem;">昵称</label>
+          <input type="text" name="nickname" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;" placeholder="你的昵称">
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-weight:500;margin-bottom:0.5rem;">真实姓名</label>
+          <input type="text" name="real_name" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;" placeholder="真实姓名">
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-weight:500;margin-bottom:0.5rem;">身份</label>
+          <select name="role" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;">
+            <option value="member">俱乐部队员</option>
+            <option value="support">俱乐部后勤保障</option>
+            <option value="sponsor">俱乐部赞助商</option>
+          </select>
+        </div>
+        <div style="margin-bottom:1.5rem;" id="player-level-group" style="display:none;">
+          <label style="display:block;font-weight:500;margin-bottom:0.5rem;">队员等级（仅队员填写）</label>
+          <select name="player_level" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;">
+            <option value="">请选择</option>
+            <option value="T0">T0</option>
+            <option value="elite">精英</option>
+            <option value="rookie">新秀</option>
+            <option value="newbie">新人</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:0.875rem;">注册</button>
+      </form>
+
+      <div id="error-msg" style="display:none;margin-top:1rem;padding:0.75rem;background:#fef2f2;color:#dc2626;border-radius:8px;text-align:center;"></div>
+      <div id="success-msg" style="display:none;margin-top:1rem;padding:0.75rem;background:#f0fdf4;color:#16a34a;border-radius:8px;text-align:center;"></div>
+    </div>
+
+    <p style="text-align:center;margin-top:1.5rem;font-size:0.9rem;color:var(--text-gray);">
+      <a href="/" style="color:var(--primary);">← 返回首页</a>
+    </p>
+  </div>
+
+  <script>
+    const API = 'https://blast-api.kanjiaming2022.workers.dev';
+
+    function showTab(tab) {
+      const loginForm = document.getElementById('form-login');
+      const registerForm = document.getElementById('form-register');
+      const loginTab = document.getElementById('tab-login');
+      const registerTab = document.getElementById('tab-register');
+      
+      if (tab === 'login') {
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        loginTab.style.color = 'var(--primary)';
+        loginTab.style.borderBottomColor = 'var(--primary)';
+        registerTab.style.color = 'var(--text-gray)';
+        registerTab.style.borderBottomColor = 'transparent';
+      } else {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        loginTab.style.color = 'var(--text-gray)';
+        loginTab.style.borderBottomColor = 'transparent';
+        registerTab.style.color = 'var(--primary)';
+        registerTab.style.borderBottomColor = 'var(--primary)';
+      }
+      hideMessages();
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+      document.getElementById('success-msg').style.display = 'none';
+    }
+
+    function showSuccess(msg) {
+      const el = document.getElementById('success-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+      document.getElementById('error-msg').style.display = 'none';
+    }
+
+    function hideMessages() {
+      document.getElementById('error-msg').style.display = 'none';
+      document.getElementById('success-msg').style.display = 'none';
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      hideMessages();
+      const form = e.target;
+      const data = {
+        email: form.email.value,
+        password: form.password.value
+      };
+
+      try {
+        const res = await fetch(API + '/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+
+        if (!result.ok) {
+          showError(result.error || '登录失败');
+          return;
+        }
+
+        // 保存 token
+        localStorage.setItem('blxst_token', result.token);
+        localStorage.setItem('blxst_user', JSON.stringify(result.user));
+        showSuccess('登录成功！');
+        
+        setTimeout(() => {
+          window.location.href = '/profile.html';
+        }, 500);
+      } catch (err) {
+        showError('网络错误，请重试');
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      hideMessages();
+      const form = e.target;
+      const data = {
+        email: form.email.value,
+        password: form.password.value,
+        nickname: form.nickname.value,
+        real_name: form.real_name.value,
+        role: form.role.value,
+        player_level: form.player_level.value || null
+      };
+
+      try {
+        const res = await fetch(API + '/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+
+        if (!result.ok) {
+          showError(result.error || '注册失败');
+          return;
+        }
+
+        // 保存 token
+        localStorage.setItem('blxst_token', result.token);
+        localStorage.setItem('blxst_user', JSON.stringify(result.user));
+        showSuccess('注册成功！');
+        
+        setTimeout(() => {
+          window.location.href = '/profile.html';
+        }, 500);
+      } catch (err) {
+        showError('网络错误，请重试');
+      }
+    }
+
+    // 如果已登录，直接跳转
+    if (localStorage.getItem('blxst_token')) {
+      window.location.href = '/profile.html';
+    }
+  </script>
+</body>
+</html>

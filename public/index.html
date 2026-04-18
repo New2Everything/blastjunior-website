@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="兰星少年 HADO 俱乐部 - 专业HADO运动战队，培训与比赛资讯">
+  <meta name="description" content="兰星少年 HADO 俱乐部 - 专业HADO运动战队">
   <meta name="theme-color" content="#FF6B35">
-  <title>兰星少年 HADO 俱乐部 - 官网</title>
+  <title>兰星少年 HADO 俱乐部</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
@@ -14,7 +14,7 @@
 <body>
   <div class="container">
     <!-- Hero -->
-    <section class="hero" style="background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:3rem 1.5rem;border-radius:var(--radius);margin-bottom:2rem;text-align:center;color:white;">
+    <section style="background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:3rem 1.5rem;border-radius:var(--radius);margin-bottom:2rem;text-align:center;color:white;">
       <h1 style="font-family:var(--font-display);font-size:2.5rem;font-weight:900;margin-bottom:0.5rem;">⚡ 兰星少年 HADO 俱乐部</h1>
       <p style="font-size:1.1rem;opacity:0.9;margin-bottom:1.5rem;">燃烧你的能量，追逐冠军梦想！</p>
       <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
@@ -24,47 +24,29 @@
       </div>
     </section>
 
-    <!-- Stats -->
+    <!-- 快速入口 -->
     <section class="section">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;max-width:600px;margin:0 auto 2rem;" id="statsGrid">
-        <div class="card" style="text-align:center;">
-          <div style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--primary);" id="statTeams">-</div>
-          <div style="font-size:0.85rem;color:var(--text-gray);">战队</div>
-        </div>
-        <div class="card" style="text-align:center;">
-          <div style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--primary);" id="statPlayers">-</div>
-          <div style="font-size:0.85rem;color:var(--text-gray);">选手</div>
-        </div>
-        <div class="card" style="text-align:center;">
-          <div style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--primary);" id="statSeasons">-</div>
-          <div style="font-size:0.85rem;color:var(--text-gray);">赛季</div>
-        </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;">
+        <a href="/teams" class="card" style="display:block;text-decoration:none;color:inherit;text-align:center;padding:1.5rem;">
+          <div style="font-size:2.5rem;margin-bottom:0.5rem;">🔥</div>
+          <div style="font-weight:700;">战队</div>
+        </a>
+        <a href="/members" class="card" style="display:block;text-decoration:none;color:inherit;text-align:center;padding:1.5rem;">
+          <div style="font-size:2.5rem;margin-bottom:0.5rem;">👥</div>
+          <div style="font-weight:700;">成员</div>
+        </a>
+        <a href="/standings" class="card" style="display:block;text-decoration:none;color:inherit;text-align:center;padding:1.5rem;">
+          <div style="font-size:2.5rem;margin-bottom:0.5rem;">📊</div>
+          <div style="font-weight:700;">积分榜</div>
+        </a>
+        <a href="/gallery" class="card" style="display:block;text-decoration:none;color:inherit;text-align:center;padding:1.5rem;">
+          <div style="font-size:2.5rem;margin-bottom:0.5rem;">📸</div>
+          <div style="font-weight:700;">画廊</div>
+        </a>
       </div>
     </section>
 
-    <!-- News -->
-    <section class="section">
-      <div class="section-header">
-        <h2 class="section-title">📰 最新动态</h2>
-        <a href="/news-list" class="section-more">更多 ></a>
-      </div>
-      <div class="cards-grid" id="newsGrid">
-        <div class="card" style="text-align:center;color:var(--text-gray);"><span class="spinner"></span>加载中</div>
-      </div>
-    </section>
-
-    <!-- Matches -->
-    <section class="section">
-      <div class="section-header">
-        <h2 class="section-title">🏆 赛程</h2>
-        <a href="/matches" class="section-more">更多 ></a>
-      </div>
-      <div id="matchesGrid">
-        <div class="card" style="text-align:center;color:var(--text-gray);"><span class="spinner"></span>加载中</div>
-      </div>
-    </section>
-
-    <!-- Teams -->
+    <!-- 战队列表 -->
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">🔥 战队</h2>
@@ -75,77 +57,71 @@
       </div>
     </section>
 
-    <!-- Sponsors -->
+    <!-- 俱乐部成员 -->
     <section class="section">
       <div class="section-header">
-        <h2 class="section-title">🤝 合作伙伴</h2>
+        <h2 class="section-title">👥 俱乐部成员</h2>
+        <a href="/members" class="section-more">更多 ></a>
       </div>
-      <div class="cards-grid" id="sponsorsGrid">
-        <div class="empty-state" style="grid-column:1/-1;">
-          <div class="empty-state-icon">🤝</div>
-          <div>暂无赞助商</div>
-        </div>
+      <div class="cards-grid" id="membersGrid">
+        <div class="card" style="text-align:center;color:var(--text-gray);"><span class="spinner"></span>加载中</div>
+      </div>
+    </section>
+
+    <!-- 积分榜 -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">📊 赛季积分</h2>
+        <a href="/standings" class="section-more">更多 ></a>
+      </div>
+      <div id="scoresWrap">
+        <div class="card" style="text-align:center;color:var(--text-gray);"><span class="spinner"></span>加载中</div>
       </div>
     </section>
   </div>
 
-  <!-- Footer -->
   <footer style="background:var(--bg-white);border-top:1px solid var(--border);padding:2rem;text-align:center;color:var(--text-gray);margin-top:3rem;">
     <p style="font-size:0.9rem;">© 2024 兰星少年 HADO 俱乐部 · <a href="https://blastjunior.com" style="color:var(--primary);">blastjunior.com</a></p>
   </footer>
 
   <script>
-    const API = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    const API = 'https://blast-api.kanjiaming2022.workers.dev';
 
     async function loadHome() {
       try {
-        const [homeRes, newsRes, teamsRes] = await Promise.all([
-          fetch(API + '/'),
-          fetch(API + '/news'),
-          fetch(API + '/teams')
+        const [teamsRes, membersRes, seasonsRes] = await Promise.all([
+          fetch(API + '/teams', { headers: { 'Origin': 'https://blastjunior.com' } }),
+          fetch(API + '/members', { headers: { 'Origin': 'https://blastjunior.com' } }),
+          fetch(API + '/seasons', { headers: { 'Origin': 'https://blastjunior.com' } })
         ]);
-        const home = await homeRes.json();
-        const news = await newsRes.json();
-        const teams = await teamsRes.json();
+        
+        const teamsData = await teamsRes.json();
+        const membersData = await membersRes.json();
+        const seasonsData = await seasonsRes.json();
 
-        // Stats - 来自数据库真实数据
-        if (home.data?.stats) {
-          document.getElementById('statTeams').textContent = home.data.stats.totalTeams || '-';
-          document.getElementById('statPlayers').textContent = home.data.stats.totalPlayers || '-';
-          document.getElementById('statSeasons').textContent = home.data.stats.totalSeasons || '-';
+        renderTeams(teamsData.data || []);
+        renderMembers(membersData.data || []);
+        
+        const seasons = seasonsData.data || [];
+        if (seasons.length > 0) {
+          const ongoing = seasons.find(s => s.status === 'ongoing') || seasons[0];
+          loadScores(ongoing.id);
+        } else {
+          document.getElementById('scoresWrap').innerHTML = '<div class="card"><div class="empty-state"><div class="empty-state-icon">📊</div><div>暂无赛季数据</div></div></div>';
         }
-
-        // News
-        renderNews(news.data || []);
-
-        // Teams
-        renderTeams(teams.data || []);
-
-        // Sponsors
-        renderSponsors(home.data?.sponsors || []);
-
       } catch (e) {
         console.error('加载失败:', e);
-        ['newsGrid', 'teamsGrid', 'sponsorsGrid'].forEach(id => {
-          document.getElementById(id).innerHTML = '<div class="error-state">加载失败</div>';
-        });
       }
     }
 
-    function renderNews(news) {
-      const grid = document.getElementById('newsGrid');
-      if (!news.length) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">📰</div><div>暂无新闻</div></div>';
-        return;
+    async function loadScores(seasonId) {
+      try {
+        const res = await fetch(API + '/seasons/' + seasonId + '/scores', { headers: { 'Origin': 'https://blastjunior.com' } });
+        const data = await res.json();
+        renderScores(data.data || []);
+      } catch (e) {
+        document.getElementById('scoresWrap').innerHTML = '<div class="card"><div class="error-state">加载失败</div></div>';
       }
-      grid.innerHTML = news.slice(0, 6).map(n => `
-        <a href="/news?id=${n.id}" class="card" style="display:block;text-decoration:none;color:inherit;">
-          <span class="tag">${n.category || '动态'}</span>
-          <h3 style="font-weight:600;margin:0.5rem 0;line-height:1.4;">${n.title || ''}</h3>
-          <p style="font-size:0.85rem;color:var(--text-gray);line-height:1.5;">${(n.content || '').substring(0, 80)}...</p>
-          <div style="font-size:0.75rem;color:var(--text-gray);margin-top:0.75rem;">${n.published_at ? new Date(n.published_at).toLocaleDateString('zh-CN') : ''}</div>
-        </a>
-      `).join('');
     }
 
     function renderTeams(teams) {
@@ -154,30 +130,51 @@
         grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">🔥</div><div>暂无战队</div></div>';
         return;
       }
-      grid.innerHTML = teams.slice(0, 6).map(t => `
-        <a href="/team-detail.html?id=${t.id}" class="card" style="display:block;text-decoration:none;color:inherit;text-align:center;padding:1.5rem;">
-          <div style="font-size:2.5rem;margin-bottom:0.75rem;">🔥</div>
-          <h3 style="font-weight:700;font-size:1.1rem;">${t.name || t.canonical_name || ''}</h3>
-          ${t.club_id ? `<p style="font-size:0.8rem;color:var(--text-gray);margin-top:0.25rem;">${t.club_id}</p>` : ''}
+      grid.innerHTML = teams.slice(0, 4).map(t => `
+        <a href="/teams" class="card" style="display:block;text-decoration:none;color:inherit;text-align:center;padding:1.5rem;">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">🔥</div>
+          <h3 style="font-weight:700;font-size:1rem;">${t.name}</h3>
+          <p style="font-size:0.8rem;color:var(--text-gray);margin-top:0.25rem;">队长: ${t.captain_name || '未知'} · ${t.member_count || 0}人</p>
         </a>
       `).join('');
     }
 
-    function renderSponsors(sponsors) {
-      const grid = document.getElementById('sponsorsGrid');
-      if (!sponsors.length) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">🤝</div><div>暂无赞助商</div></div>';
+    function renderMembers(members) {
+      const grid = document.getElementById('membersGrid');
+      if (!members.length) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">👥</div><div>暂无成员</div></div>';
         return;
       }
-      grid.innerHTML = sponsors.map(s => `
-        <div class="card" style="display:flex;align-items:center;gap:1rem;">
-          <div style="width:48px;height:48px;background:var(--bg-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🤝</div>
-          <div>
-            <div style="font-weight:600;">${s.name || ''}</div>
-            ${s.tier ? `<div style="font-size:0.75rem;color:var(--primary);text-transform:uppercase;">${s.tier}</div>` : ''}
+      
+      const roleLabels = {
+        'leader': '🏆',
+        'admin': '⚙️',
+        'member': '👤',
+        'support': '🔧',
+        'sponsor': '💰'
+      };
+
+      grid.innerHTML = members.slice(0, 4).map(m => `
+        <div class="card" style="text-align:center;padding:1.25rem;">
+          <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:50%;margin:0 auto 0.75rem;display:flex;align-items:center;justify-content:center;font-size:1.25rem;color:white;">
+            ${m.avatar ? '<img src="'+m.avatar+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : (roleLabels[m.role] || '👤')}
           </div>
+          <h3 style="font-weight:600;font-size:0.9rem;">${m.nickname || m.real_name || '未知'}</h3>
+          ${m.real_name && m.nickname ? '<p style="font-size:0.75rem;color:var(--text-gray);">'+m.real_name+'</p>' : ''}
         </div>
       `).join('');
+    }
+
+    function renderScores(scores) {
+      const wrap = document.getElementById('scoresWrap');
+      if (!scores.length) {
+        wrap.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-state-icon">📊</div><div>暂无积分数据</div></div></div>';
+        return;
+      }
+      
+      wrap.innerHTML = '<div class="card" style="overflow-x:auto;"><table><thead><tr><th>#</th><th>战队</th><th>胜</th><th>平</th><th>负</th><th>积分</th></tr></thead><tbody>' +
+        scores.slice(0, 5).map((s, i) => '<tr><td><strong>'+(i+1)+'</strong></td><td>'+s.team_name+'</td><td>'+s.wins+'</td><td>'+s.draws+'</td><td>'+s.losses+'</td><td><strong style="color:var(--primary);">'+s.points+'</strong></td></tr>').join('') +
+        '</tbody></table></div>';
     }
 
     loadHome();

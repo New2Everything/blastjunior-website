@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>俱乐部成员 - 兰星少年 HADO 俱乐部</title>
+  <meta name="theme-color" content="#FF6B35">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/components/nav-loader.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">👥 俱乐部成员</h1>
+      <p class="page-subtitle">兰星少年大家庭</p>
+    </div>
+
+    <div class="section">
+      <div class="cards-grid" id="membersGrid">
+        <div class="card" style="text-align:center;color:var(--text-gray);"><span class="spinner"></span>加载中</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://blast-api.kanjiaming2022.workers.dev';
+
+    async function loadMembers() {
+      try {
+        const res = await fetch(API + '/members', {
+          headers: { 'Origin': 'https://blastjunior.com' }
+        });
+        const result = await res.json();
+        renderMembers(result.data || []);
+      } catch (e) {
+        document.getElementById('membersGrid').innerHTML = '<div class="error-state" style="grid-column:1/-1;">加载失败</div>';
+      }
+    }
+
+    function renderMembers(members) {
+      const grid = document.getElementById('membersGrid');
+      
+      if (!members.length) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">👥</div><div>暂无成员</div></div>';
+        return;
+      }
+
+      const roleLabels = {
+        'leader': '🏆 领队',
+        'admin': '⚙️ 管理',
+        'member': '👤 队员',
+        'support': '🔧 后勤',
+        'sponsor': '💰 赞助商'
+      };
+
+      const levelLabels = {
+        'T0': 'T0',
+        'elite': '精英',
+        'rookie': '新秀',
+        'newbie': '新人'
+      };
+
+      // 按角色分组
+      const grouped = {
+        'leader': members.filter(m => m.role === 'leader'),
+        'admin': members.filter(m => m.role === 'admin'),
+        'member': members.filter(m => m.role === 'member'),
+        'support': members.filter(m => m.role === 'support'),
+        'sponsor': members.filter(m => m.role === 'sponsor')
+      };
+
+      let html = '';
+      
+      for (const [role, list] of Object.entries(grouped)) {
+        if (!list.length) continue;
+        
+        html += `<h3 style="grid-column:1/-1;font-family:var(--font-display);font-size:1.2rem;font-weight:700;margin-top:1rem;">${roleLabels[role] || role}</h3>`;
+        
+        list.forEach(m => {
+          html += `
+            <div class="card" style="text-align:center;padding:1.5rem;">
+              <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:1.75rem;color:white;overflow:hidden;">
+                ${m.avatar ? '<img src="' + m.avatar + '" style="width:100%;height:100%;object-fit:cover;">' : '👤'}
+              </div>
+              <h3 style="font-weight:700;font-size:1rem;">${m.nickname || m.real_name || '未知'}</h3>
+              ${m.real_name && m.nickname ? `<p style="font-size:0.8rem;color:var(--text-gray);">${m.real_name}</p>` : ''}
+              ${m.player_level ? `<span class="tag" style="margin-top:0.5rem;">${levelLabels[m.player_level] || m.player_level}</span>` : ''}
+            </div>
+          `;
+        });
+      }
+
+      grid.innerHTML = html;
+    }
+
+    loadMembers();
+  </script>
+</body>
+</html>

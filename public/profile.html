@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人中心 - 兰星少年 HADO 俱乐部</title>
+  <meta name="theme-color" content="#FF6B35">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/components/nav-loader.js"></script>
+</head>
+<body>
+  <div class="container" style="max-width:600px;">
+    <div id="content">
+      <div style="text-align:center;padding:3rem;"><span class="spinner"></span>加载中...</div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://blast-api.kanjiaming2022.workers.dev';
+    let currentUser = null;
+
+    async function loadProfile() {
+      const token = localStorage.getItem('blxst_token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(API + '/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + token, 'Origin': 'https://blastjunior.com' }
+        });
+        const result = await res.json();
+
+        if (!result.ok) {
+          logout();
+          return;
+        }
+
+        currentUser = result.user;
+        renderProfile(result.user);
+      } catch (e) {
+        document.getElementById('content').innerHTML = '<div class="error-state">加载失败</div>';
+      }
+    }
+
+    function renderProfile(user) {
+      const isAdmin = user.role === 'admin' || user.role === 'leader';
+      const isMember = user.role === 'member';
+
+      const roleLabels = {
+        'leader': '🏆 俱乐部领队',
+        'admin': '⚙️ 俱乐部管理',
+        'member': '👤 俱乐部队员',
+        'support': '🔧 俱乐部后勤保障',
+        'sponsor': '💰 俱乐部赞助商'
+      };
+
+      const levelLabels = {
+        'T0': 'T0',
+        'elite': '精英',
+        'rookie': '新秀',
+        'newbie': '新人'
+      };
+
+      const html = `
+        <div class="card" style="margin-bottom:1.5rem;text-align:center;">
+          <div style="width:80px;height:80px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:white;">
+            ${user.avatar ? '<img src="' + user.avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">' : '👤'}
+          </div>
+          <h1 style="font-family:var(--font-display);font-size:1.5rem;font-weight:700;">${user.nickname || '未设置昵称'}</h1>
+          <p style="color:var(--text-gray);margin-top:0.25rem;">${roleLabels[user.role] || user.role}</p>
+          ${isMember && user.player_level ? '<span class="tag" style="margin-top:0.5rem;">' + (levelLabels[user.player_level] || user.player_level) + '</span>' : ''}
+        </div>
+
+        <div class="card" style="margin-bottom:1.5rem;">
+          <h2 style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;margin-bottom:1rem;">基本信息</h2>
+          <form id="profile-form" onsubmit="handleUpdate(event)">
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;font-weight:500;margin-bottom:0.5rem;">邮箱</label>
+              <input type="email" value="${user.email}" disabled style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;background:var(--bg-light);">
+            </div>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;font-weight:500;margin-bottom:0.5rem;">昵称</label>
+              <input type="text" name="nickname" value="${user.nickname || ''}" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;">
+            </div>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;font-weight:500;margin-bottom:0.5rem;">真实姓名</label>
+              <input type="text" name="real_name" value="${user.real_name || ''}" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;">
+            </div>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;font-weight:500;margin-bottom:0.5rem;">头像 URL</label>
+              <input type="url" name="avatar" value="${user.avatar || ''}" placeholder="https://..." style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;">
+            </div>
+            ${isAdmin ? `
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;font-weight:500;margin-bottom:0.5rem;">身份</label>
+              <select name="role" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;">
+                <option value="leader" ${user.role === 'leader' ? 'selected' : ''}>俱乐部领队</option>
+                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>俱乐部管理</option>
+                <option value="member" ${user.role === 'member' ? 'selected' : ''}>俱乐部队员</option>
+                <option value="support" ${user.role === 'support' ? 'selected' : ''}>俱乐部后勤保障</option>
+                <option value="sponsor" ${user.role === 'sponsor' ? 'selected' : ''}>俱乐部赞助商</option>
+              </select>
+            </div>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;font-weight:500;margin-bottom:0.5rem;">队员等级</label>
+              <select name="player_level" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;">
+                <option value="">无</option>
+                <option value="T0" ${user.player_level === 'T0' ? 'selected' : ''}>T0</option>
+                <option value="elite" ${user.player_level === 'elite' ? 'selected' : ''}>精英</option>
+                <option value="rookie" ${user.player_level === 'rookie' ? 'selected' : ''}>新秀</option>
+                <option value="newbie" ${user.player_level === 'newbie' ? 'selected' : ''}>新人</option>
+              </select>
+            </div>
+            ` : ''}
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:0.875rem;">保存修改</button>
+          </form>
+          <div id="msg" style="display:none;margin-top:1rem;padding:0.75rem;border-radius:8px;text-align:center;"></div>
+        </div>
+
+        <div class="card">
+          <button onclick="logout()" class="btn btn-outline" style="width:100%;padding:0.875rem;color:#dc2626;border-color:#dc2626;">退出登录</button>
+        </div>
+      `;
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    async function handleUpdate(e) {
+      e.preventDefault();
+      const form = e.target;
+      const msg = document.getElementById('msg');
+      
+      const data = {
+        nickname: form.nickname.value,
+        real_name: form.real_name.value,
+        avatar: form.avatar.value
+      };
+
+      // 管理员可以修改角色
+      if (currentUser.role === 'admin' || currentUser.role === 'leader') {
+        data.role = form.role.value;
+        data.player_level = form.player_level.value || null;
+      }
+
+      try {
+        const res = await fetch(API + '/auth/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Origin': 'https://blastjunior.com' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+
+        if (!result.ok) {
+          msg.textContent = result.error || '更新失败';
+          msg.style.background = '#fef2f2';
+          msg.style.color = '#dc2626';
+          msg.style.display = 'block';
+          return;
+        }
+
+        msg.textContent = '更新成功！';
+        msg.style.background = '#f0fdf4';
+        msg.style.color = '#16a34a';
+        msg.style.display = 'block';
+
+        // 刷新页面
+        setTimeout(() => loadProfile(), 500);
+      } catch (err) {
+        msg.textContent = '网络错误';
+        msg.style.background = '#fef2f2';
+        msg.style.color = '#dc2626';
+        msg.style.display = 'block';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('blxst_token');
+      localStorage.removeItem('blxst_user');
+      window.location.href = '/';
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

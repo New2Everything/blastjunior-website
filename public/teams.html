@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>战队列表 - 兰星少年 HADO 俱乐部</title>
-  <meta name="description" content="兰星少年 HADO 俱乐部战队列表">
   <meta name="theme-color" content="#FF6B35">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
@@ -14,8 +13,12 @@
 <body>
   <div class="container">
     <div class="page-header">
-      <h1 class="page-title">🏆 战队列表</h1>
-      <p class="page-subtitle">HADO 俱乐部旗下所有战队</p>
+      <h1 class="page-title">🔥 战队列表</h1>
+      <p class="page-subtitle">兰星少年 HADO 俱乐部旗下战队</p>
+    </div>
+
+    <div style="margin-bottom:1.5rem;">
+      <button id="btn-create-team" onclick="showCreateModal()" style="display:none;" class="btn btn-primary">➕ 创建战队</button>
     </div>
 
     <div class="section">
@@ -25,12 +28,54 @@
     </div>
   </div>
 
+  <!-- 创建战队弹窗 -->
+  <div id="create-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-white);border-radius:var(--radius);padding:1.5rem;width:90%;max-width:400px;">
+      <h2 style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:1rem;">创建战队</h2>
+      <form onsubmit="handleCreateTeam(event)">
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-weight:500;margin-bottom:0.5rem;">战队名称 *</label>
+          <input type="text" name="name" required style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;" placeholder="给战队起个名字">
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-weight:500;margin-bottom:0.5rem;">简介</label>
+          <textarea name="description" rows="3" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;resize:none;" placeholder="战队简介（可选）"></textarea>
+        </div>
+        <div style="display:flex;gap:0.75rem;">
+          <button type="button" onclick="hideCreateModal()" class="btn btn-outline" style="flex:1;">取消</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;">创建</button>
+        </div>
+      </form>
+      <div id="create-msg" style="display:none;margin-top:1rem;padding:0.75rem;border-radius:8px;text-align:center;"></div>
+    </div>
+  </div>
+
   <script>
-    const API = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    const API = 'https://blast-api.kanjiaming2022.workers.dev';
+    let currentUser = null;
+
+    async function init() {
+      const token = localStorage.getItem('blxst_token');
+      if (token) {
+        try {
+          const res = await fetch(API + '/auth/me', {
+            headers: { 'Authorization': 'Bearer ' + token, 'Origin': 'https://blastjunior.com' }
+          });
+          const result = await res.json();
+          if (result.ok) {
+            currentUser = result.user;
+            document.getElementById('btn-create-team').style.display = 'inline-flex';
+          }
+        } catch (e) {}
+      }
+      loadTeams();
+    }
 
     async function loadTeams() {
       try {
-        const res = await fetch(API + '/teams');
+        const res = await fetch(API + '/teams', {
+          headers: { 'Origin': 'https://blastjunior.com' }
+        });
         const result = await res.json();
         renderTeams(result.data || []);
       } catch (e) {
@@ -41,25 +86,103 @@
     function renderTeams(teams) {
       const grid = document.getElementById('teamsGrid');
       if (!teams.length) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">🔥</div><div>暂无战队</div></div>';
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">🔥</div><div>暂无战队</div><div style="font-size:0.85rem;margin-top:0.5rem;">成为第一个创建战队的人！</div></div>';
         return;
       }
       grid.innerHTML = teams.map(t => `
-        <a href="/team-detail.html?id=${t.id}" class="card" style="display:block;text-decoration:none;color:inherit;">
+        <div class="card" style="padding:1.5rem;">
           <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
             <div style="width:56px;height:56px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.75rem;">🔥</div>
             <div>
-              <h3 style="font-weight:700;font-size:1.1rem;">${t.name || t.canonical_name || ''}</h3>
-              ${t.team_code ? `<span style="font-size:0.8rem;color:var(--text-gray);">${t.team_code}</span>` : ''}
+              <h3 style="font-weight:700;font-size:1.1rem;">${t.name}</h3>
+              <p style="font-size:0.8rem;color:var(--text-gray);">队长: ${t.captain_name || '未知'}</p>
             </div>
           </div>
-          ${t.club_id ? `<div style="font-size:0.85rem;color:var(--text-gray);">俱乐部: ${t.club_id}</div>` : ''}
-          <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);font-size:0.85rem;color:var(--text-gray);">点击查看详情 →</div>
-        </a>
+          ${t.description ? `<p style="font-size:0.85rem;color:var(--text-gray);margin-bottom:1rem;">${t.description}</p>` : ''}
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:0.75rem;border-top:1px solid var(--border);">
+            <span style="font-size:0.85rem;color:var(--text-gray);">成员: ${t.member_count || 0}</span>
+            <button onclick="joinTeam('${t.id}', '${t.name}')" class="btn btn-outline" style="padding:0.4rem 0.75rem;font-size:0.85rem;">申请加入</button>
+          </div>
+        </div>
       `).join('');
     }
 
-    loadTeams();
+    async function joinTeam(teamId, teamName) {
+      const token = localStorage.getItem('blxst_token');
+      if (!token) {
+        alert('请先登录');
+        window.location.href = '/login.html';
+        return;
+      }
+
+      if (!confirm('申请加入 ' + teamName + '？')) return;
+
+      try {
+        const res = await fetch(API + '/teams/' + teamId + '/join', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' }
+        });
+        const result = await res.json();
+        alert(result.ok ? result.message : result.error);
+        if (result.ok) loadTeams();
+      } catch (e) {
+        alert('申请失败，请重试');
+      }
+    }
+
+    function showCreateModal() {
+      document.getElementById('create-modal').style.display = 'flex';
+    }
+
+    function hideCreateModal() {
+      document.getElementById('create-modal').style.display = 'none';
+      document.getElementById('create-msg').style.display = 'none';
+    }
+
+    async function handleCreateTeam(e) {
+      e.preventDefault();
+      const form = e.target;
+      const msg = document.getElementById('create-msg');
+      
+      const data = {
+        name: form.name.value,
+        description: form.description.value
+      };
+
+      try {
+        const res = await fetch(API + '/teams', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+
+        if (!result.ok) {
+          msg.textContent = result.error;
+          msg.style.background = '#fef2f2';
+          msg.style.color = '#dc2626';
+          msg.style.display = 'block';
+          return;
+        }
+
+        msg.textContent = '战队创建成功！';
+        msg.style.background = '#f0fdf4';
+        msg.style.color = '#16a34a';
+        msg.style.display = 'block';
+        
+        setTimeout(() => {
+          hideCreateModal();
+          loadTeams();
+        }, 1000);
+      } catch (e) {
+        msg.textContent = '创建失败，请重试';
+        msg.style.background = '#fef2f2';
+        msg.style.color = '#dc2626';
+        msg.style.display = 'block';
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
