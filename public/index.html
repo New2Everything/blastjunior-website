@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <script src="/components/nav-loader.js"></script>
+  <script src="/components/ai-residents.js"></script>
   <style>
     .chat-section { background: var(--bg-white); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); }
     .chat-title { font-family: var(--font-display); font-weight: 700; font-size: 1rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
@@ -91,6 +92,13 @@
         <!-- 聊天室 -->
         <div class="chat-section" id="chatSection">
           <div class="chat-title">💬 俱乐部聊天室 <span id="chatStatus"></span></div>
+          <div id="aiModeToggle" style="margin-bottom:0.5rem;display:flex;align-items:center;gap:0.5rem;">
+            <select id="aiResidentSelect" onchange="switchAIRresident(this.value)" style="flex:1;padding:0.3rem;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;">
+              <option value="">🔵 以游客身份</option>
+              ${AIResidents.getAll().map(r => `<option value="${r.id}">${r.emoji} ${r.name}</option>`).join('')}
+            </select>
+            <span id="aiResidentBadge" style="display:none;background:#6366f1;color:white;padding:0.2rem 0.5rem;border-radius:1rem;font-size:0.7rem;">🔵 AI模式</span>
+          </div>
           <div class="chat-messages" id="chatMessages"></div>
           <div class="chat-input-area" id="chatInputArea">
             <input type="text" class="chat-input" id="chatInput" placeholder="说点什么..." onkeypress="if(event.key==='Enter')sendMessage()">
@@ -108,6 +116,7 @@
   <script>
     const API = 'https://blast-api.kanjiaming2022.workers.dev';
     let currentUser = null;
+    let currentAIRresident = null;
 
     async function init() {
       const token = localStorage.getItem('blxst_token');
@@ -191,6 +200,40 @@
     }
 
     async function sendMessage() {
+      // AI居民模式
+      if (currentAIRresident) {
+        const input = document.getElementById('chatInput');
+        const content = input.value.trim();
+        if (!content) return;
+        
+        const el = document.getElementById('chatMessages');
+        const aiResponse = AIResidents.generateMessage(currentAIRresident, content);
+        
+        // 显示用户消息
+        el.innerHTML += `<div class="chat-msg own">
+          <div class="chat-avatar" style="background:linear-gradient(135deg,var(--primary),var(--primary-light));">我</div>
+          <div class="chat-content">
+            <div class="chat-name">我</div>
+            <div class="chat-text">${escapeHtml(content)}</div>
+          </div>
+        </div>`;
+        
+        // 模拟AI回复
+        setTimeout(() => {
+          el.innerHTML += `<div class="chat-msg">
+            <div class="chat-avatar" style="background:linear-gradient(135deg,${currentAIRresident.color},${currentAIRresident.color}88);">${currentAIRresident.emoji}</div>
+            <div class="chat-content">
+              <div class="chat-name">${currentAIRresident.name} <span style="background:#6366f1;color:white;padding:0.1rem 0.3rem;border-radius:1rem;font-size:0.65rem;margin-left:0.3rem;">🔵 AI居民</span></div>
+              <div class="chat-text">${escapeHtml(aiResponse)}</div>
+            </div>
+          </div>`;
+          el.scrollTop = el.scrollHeight;
+        }, 500);
+        
+        input.value = '';
+        return;
+      }
+      
       if (!currentUser || currentUser.status !== 'approved') {
         alert('请先登录并等待账号审核通过');
         return;
@@ -247,15 +290,51 @@
         '</tbody></table></div>';
     }
 
+    function switchAIRresident(id) {
+      if (!id) {
+        currentAIRresident = null;
+        document.getElementById('aiResidentBadge').style.display = 'none';
+        document.getElementById('chatInput').placeholder = '说点什么...';
+        updateChatStatus();
+        return;
+      }
+      currentAIRresident = AIResidents.getAll().find(r => r.id === id);
+      if (currentAIRresident) {
+        AIResidents.setCurrent(id);
+        document.getElementById('aiResidentBadge').style.display = 'inline-block';
+        document.getElementById('aiResidentBadge').textContent = `🔵 ${currentAIRresident.emoji} ${currentAIRresident.name}在线`;
+        document.getElementById('chatInput').placeholder = currentAIRresident.tagline;
+      }
+    }
+
     function renderChat(messages) {
       const el = document.getElementById('chatMessages');
-      if (!messages.length) {
+      if (!messages.length && !currentAIRresident) {
         el.innerHTML = '<div style="text-align:center;color:var(--text-gray);padding:1rem;">暂无消息，快来发言吧！</div>';
         return;
       }
       
-      const token = localStorage.getItem('blxst_token');
-      el.innerHTML = messages.map(m => {
+      let html = '';
+      
+      // 如果有AI居民在聊天，显示一些AI消息
+      if (currentAIRresident) {
+        const aiGreetings = [
+          `大家好！我是${currentAIRresident.name}！${currentAIRresident.tagline}`,
+          `${currentAIRresident.emoji} 哟，我来啦~`,
+          `${currentAIRresident.name}报道！有什么有趣的话题吗？`
+        ];
+        const randomGreeting = aiGreetings[Math.floor(Math.random() * aiGreetings.length)];
+        html += `<div class="chat-msg">
+          <div class="chat-avatar" style="background:linear-gradient(135deg,${currentAIRresident.color},${currentAIRresident.color}88);">${currentAIRresident.emoji}</div>
+          <div class="chat-content">
+            <div class="chat-name">${currentAIRresident.name} <span style="background:#6366f1;color:white;padding:0.1rem 0.3rem;border-radius:1rem;font-size:0.65rem;margin-left:0.3rem;">🔵 AI居民</span></div>
+            <div class="chat-text">${escapeHtml(randomGreeting)}</div>
+          </div>
+        </div>`;
+      }
+      
+      // 真实消息
+      html += messages.map(m => {
         const isOwn = currentUser && m.user_id === currentUser.id;
         return `<div class="chat-msg ${isOwn ? 'own' : ''}">
           <div class="chat-avatar">${(m.nickname || '?').charAt(0).toUpperCase()}</div>
@@ -266,6 +345,7 @@
         </div>`;
       }).join('');
       
+      el.innerHTML = html;
       el.scrollTop = el.scrollHeight;
     }
 
