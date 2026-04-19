@@ -50,13 +50,16 @@
   </div>
 
   <script>
-    const API = 'https://blast-api.kanjiaming2022.workers.dev';
+    // 图库数据来自 blast-homepage-api (blast-photo-db)
+    const GALLERY_API = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    // 上传功能使用 blast-api
+    const UPLOAD_API = 'https://blast-api.kanjiaming2022.workers.dev';
 
     async function init() {
       const token = localStorage.getItem('blxst_token');
       if (token) {
         try {
-          const res = await fetch(API + '/auth/me', { headers: { 'Authorization': 'Bearer ' + token, 'Origin': 'https://blastjunior.com' } });
+          const res = await fetch(UPLOAD_API + '/auth/me', { headers: { 'Authorization': 'Bearer ' + token, 'Origin': 'https://blastjunior.com' } });
           const result = await res.json();
           if (result.ok) {
             document.getElementById('uploadSection').style.display = 'block';
@@ -68,11 +71,11 @@
 
     async function loadGallery() {
       try {
-        const res = await fetch(API + '/gallery', { headers: { 'Origin': 'https://blastjunior.com' } });
+        const res = await fetch(GALLERY_API + '/gallery', { headers: { 'Origin': 'https://blastjunior.com' } });
         const data = await res.json();
         renderGallery(data.data || []);
       } catch (e) {
-        document.getElementById('galleryGrid').innerHTML = '<div class="card" style="grid-column:1/-1;text-align:center;color:var(--text-gray);">加载失败</div>';
+        document.getElementById('galleryGrid').innerHTML = '<div class="card empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">📸</div><div>加载失败</div></div>';
       }
     }
 
@@ -83,11 +86,11 @@
         return;
       }
       grid.innerHTML = items.map(item => `
-        <div class="gallery-item" onclick="showModal('${item.image_url}')">
-          <img src="${item.image_url}" alt="${item.title || ''}" loading="lazy">
+        <div class="gallery-item" onclick="showModal('${item.full_url}')">
+          <img src="${item.cover}" alt="${item.title || ''}" loading="lazy">
           <div class="gallery-item-info">
             <div class="gallery-item-title">${item.title || '无标题'}</div>
-            <div class="gallery-item-meta">${item.uploader_name || '匿名'} · ${formatDate(item.created_at)}</div>
+            <div class="gallery-item-meta">${item.category || '未分类'} · ${formatDate(item.created_at)}</div>
           </div>
         </div>
       `).join('');
@@ -119,7 +122,7 @@
         const title = prompt('请输入图片标题（可选）:', '');
         
         try {
-          const res = await fetch(API + '/gallery', {
+          const res = await fetch(UPLOAD_API + '/gallery', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
             body: JSON.stringify({ title, image_url: imageUrl })
