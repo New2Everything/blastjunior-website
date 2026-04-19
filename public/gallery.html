@@ -13,16 +13,57 @@
     .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
     .gallery-item { position: relative; border-radius: var(--radius); overflow: hidden; background: var(--bg-white); box-shadow: var(--shadow); cursor: pointer; transition: transform 0.2s; }
     .gallery-item:hover { transform: translateY(-4px); }
+    .gallery-item:hover .gallery-item-actions { opacity: 1; }
     .gallery-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
     .gallery-item-info { padding: 1rem; }
     .gallery-item-title { font-weight: 600; margin-bottom: 0.25rem; }
     .gallery-item-meta { font-size: 0.8rem; color: var(--text-gray); }
-    .upload-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 3rem; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+    .gallery-item-actions { position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 0.5rem; opacity: 0; transition: opacity 0.2s; }
+    .gallery-item-action { background: rgba(255,255,255,0.9); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+    .gallery-item-action:hover { transform: scale(1.1); }
+    .gallery-item-action.active { background: var(--primary); color: white; }
+    .upload-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 3rem; text-align: center; cursor: pointer; transition: border-color 0.2s; margin-bottom: 2rem; }
     .upload-area:hover { border-color: var(--primary); }
     .upload-area-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
-    .modal img { max-width: 90vw; max-height: 80vh; border-radius: var(--radius); }
-    .modal-close { position: absolute; top: 1rem; right: 1rem; background: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; }
+    
+    /* 筛选器样式 */
+    .gallery-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-white); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .filter-btn { padding: 0.5rem 1rem; border: 1px solid var(--border); background: white; border-radius: 2rem; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+    .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .filter-btn .count { background: rgba(0,0,0,0.1); padding: 0.1rem 0.4rem; border-radius: 1rem; font-size: 0.75rem; margin-left: 0.3rem; }
+    .filter-btn.active .count { background: rgba(255,255,255,0.3); }
+    
+    /* 搜索框 */
+    .gallery-search { flex: 1; min-width: 200px; }
+    .gallery-search input { width: 100%; padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 2rem; font-size: 0.9rem; }
+    .gallery-search input:focus { outline: none; border-color: var(--primary); }
+    
+    /* Modal 增强 */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+    .modal.active { display: flex; }
+    .modal-content { max-width: 90vw; max-height: 85vh; position: relative; }
+    .modal img { max-width: 100%; max-height: 70vh; border-radius: var(--radius); object-fit: contain; }
+    .modal-info { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: var(--radius); padding: 1rem; margin-top: 1rem; color: white; }
+    .modal-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .modal-meta { font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem; }
+    .modal-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+    .modal-tag { background: rgba(255,255,255,0.2); padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.8rem; cursor: pointer; transition: background 0.2s; }
+    .modal-tag:hover { background: rgba(255,255,255,0.3); }
+    .modal-tag-input { background: transparent; border: 1px dashed rgba(255,255,255,0.5); padding: 0.3rem 0.8rem; border-radius: 2rem; font-size: 0.8rem; color: white; width: 100px; }
+    .modal-tag-input::placeholder { color: rgba(255,255,255,0.5); }
+    .modal-actions { display: flex; gap: 1rem; margin-top: 1rem; }
+    .modal-btn { padding: 0.6rem 1.2rem; border: none; border-radius: 2rem; cursor: pointer; font-size: 0.9rem; transition: transform 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+    .modal-btn:hover { transform: scale(1.05); }
+    .modal-btn.favorite { background: var(--primary); color: white; }
+    .modal-btn.favorite.active { background: #e74c3c; }
+    .modal-close { position: absolute; top: -3rem; right: 0; background: rgba(255,255,255,0.2); border: none; width: 40px; height: 40px; border-radius: 50%; color: white; font-size: 1.5rem; cursor: pointer; transition: background 0.2s; }
+    .modal-close:hover { background: rgba(255,255,255,0.3); }
+    
+    /* 标签样式 */
+    .tag { display: inline-block; background: var(--bg-light); padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; margin-right: 0.3rem; margin-bottom: 0.3rem; }
+    .tag./removable { cursor: pointer; }
+    .tag:hover { background: var(--border); }
   </style>
 </head>
 <body>
@@ -32,11 +73,17 @@
       <p class="page-subtitle">俱乐部精彩瞬间</p>
     </div>
 
-    <div id="uploadSection" style="display:none;margin-bottom:2rem;" class="upload-area" onclick="document.getElementById('uploadInput').click()">
+    <div id="uploadSection" style="display:none;" class="upload-area" onclick="document.getElementById('uploadInput').click()">
       <div class="upload-area-icon">📤</div>
       <div style="font-weight:600;">点击上传图片</div>
       <div style="font-size:0.85rem;color:var(--text-gray);margin-top:0.5rem;">支持 JPG、PNG、GIF，最大 10MB</div>
       <input type="file" id="uploadInput" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
+    </div>
+
+    <div id="galleryFilters" class="gallery-filters">
+      <div class="gallery-search">
+        <input type="text" id="searchInput" placeholder="🔍 搜索图片标题..." oninput="applyFilters()">
+      </div>
     </div>
 
     <div id="galleryGrid" class="gallery-grid">
@@ -44,16 +91,82 @@
     </div>
   </div>
 
-  <div id="imgModal" class="modal" style="display:none;" onclick="document.getElementById('imgModal').style.display='none'">
-    <button class="modal-close">×</button>
-    <img id="modalImg" src="" alt="">
+  <div id="imgModal" class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-content">
+      <img id="modalImg" src="" alt="">
+      <div class="modal-info">
+        <div id="modalTitle" class="modal-title"></div>
+        <div id="modalMeta" class="modal-meta"></div>
+        <div id="modalTags" class="modal-tags"></div>
+        <div class="modal-actions">
+          <button id="modalFavorite" class="modal-btn favorite" onclick="toggleFavorite()">♡ 收藏</button>
+          <button class="modal-btn" style="background:rgba(255,255,255,0.2);color:white;" onclick="downloadImage()">⬇️ 下载</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    // 图库数据来自 blast-homepage-api (blast-photo-db)
     const GALLERY_API = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
-    // 上传功能使用 blast-api
     const UPLOAD_API = 'https://blast-api.kanjiaming2022.workers.dev';
+    
+    let allPhotos = [];
+    let currentFilter = 'all';
+    let currentSearch = '';
+    let currentPhoto = null;
+
+    // 本地标签存储
+    const LOCAL_TAGS_KEY = 'blxst_gallery_tags';
+    const FAVORITES_KEY = 'blxst_gallery_favorites';
+    
+    function getLocalTags() {
+      return JSON.parse(localStorage.getItem(LOCAL_TAGS_KEY) || '{}');
+    }
+    
+    function saveLocalTags(tags) {
+      localStorage.setItem(LOCAL_TAGS_KEY, JSON.stringify(tags));
+    }
+    
+    function getLocalTag(photoId) {
+      const tags = getLocalTags();
+      return tags[photoId] || [];
+    }
+    
+    function addLocalTag(photoId, tag) {
+      const tags = getLocalTags();
+      if (!tags[photoId]) tags[photoId] = [];
+      if (!tags[photoId].includes(tag)) {
+        tags[photoId].push(tag);
+        saveLocalTags(tags);
+      }
+    }
+    
+    function removeLocalTag(photoId, tag) {
+      const tags = getLocalTags();
+      if (tags[photoId]) {
+        tags[photoId] = tags[photoId].filter(t => t !== tag);
+        saveLocalTags(tags);
+      }
+    }
+    
+    function getFavorites() {
+      return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+    }
+    
+    function isFavorite(photoId) {
+      return getFavorites().includes(photoId);
+    }
+    
+    function toggleFavoriteById(photoId) {
+      let favs = getFavorites();
+      if (favs.includes(photoId)) {
+        favs = favs.filter(id => id !== photoId);
+      } else {
+        favs.push(photoId);
+      }
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
+    }
 
     async function init() {
       const token = localStorage.getItem('blxst_token');
@@ -66,17 +179,77 @@
           }
         } catch (e) {}
       }
-      loadGallery();
+      await loadGallery();
     }
 
     async function loadGallery() {
       try {
         const res = await fetch(GALLERY_API + '/gallery', { headers: { 'Origin': 'https://blastjunior.com' } });
         const data = await res.json();
-        renderGallery(data.data || []);
+        allPhotos = data.data || [];
+        buildCategoryFilters();
+        applyFilters();
       } catch (e) {
-        document.getElementById('galleryGrid').innerHTML = '<div class="card empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">📸</div><div>加载失败</div></div>';
+        document.getElementById('galleryGrid').innerHTML = '<div class="card empty-state" style="grid-column:1/-1;"><div class="empty-state-icon\">📸</div><div>加载失败</div></div>';
       }
+    }
+
+    function buildCategoryFilters() {
+      const categories = {};
+      allPhotos.forEach(p => {
+        const cat = p.category || '未分类';
+        categories[cat] = (categories[cat] || 0) + 1;
+      });
+      
+      const favCount = getFavorites().length;
+      
+      let html = `
+        <button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">
+          全部 <span class="count">${allPhotos.length}</span>
+        </button>
+        <button class="filter-btn ${currentFilter === 'favorites' ? 'active' : ''}" onclick="setFilter('favorites')">
+          ❤️ 收藏 <span class="count">${favCount}</span>
+        </button>
+      `;
+      
+      Object.keys(categories).sort().forEach(cat => {
+        html += `
+          <button class="filter-btn ${currentFilter === cat ? 'active' : ''}" onclick="setFilter('${cat}')">
+            ${cat} <span class="count">${categories[cat]}</span>
+          </button>
+        `;
+      });
+      
+      document.getElementById('galleryFilters').innerHTML = html + document.getElementById('galleryFilters').innerHTML;
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      buildCategoryFilters();
+      applyFilters();
+    }
+
+    function applyFilters() {
+      currentSearch = document.getElementById('searchInput').value.toLowerCase();
+      
+      let filtered = allPhotos;
+      
+      if (currentFilter === 'favorites') {
+        const favs = getFavorites();
+        filtered = filtered.filter(p => favs.includes(p.id));
+      } else if (currentFilter !== 'all') {
+        filtered = filtered.filter(p => (p.category || '未分类') === currentFilter);
+      }
+      
+      if (currentSearch) {
+        filtered = filtered.filter(p => 
+          (p.title || '').toLowerCase().includes(currentSearch) ||
+          (p.category || '').toLowerCase().includes(currentSearch) ||
+          getLocalTag(p.id).some(t => t.toLowerCase().includes(currentSearch))
+        );
+      }
+      
+      renderGallery(filtered);
     }
 
     function renderGallery(items) {
@@ -85,20 +258,102 @@
         grid.innerHTML = '<div class="card empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">📸</div><div>暂无图片</div></div>';
         return;
       }
-      grid.innerHTML = items.map(item => `
-        <div class="gallery-item" onclick="showModal('${item.full_url}')">
-          <img src="${item.cover}" alt="${item.title || ''}" loading="lazy">
-          <div class="gallery-item-info">
-            <div class="gallery-item-title">${item.title || '无标题'}</div>
-            <div class="gallery-item-meta">${item.category || '未分类'} · ${formatDate(item.created_at)}</div>
+      grid.innerHTML = items.map(item => {
+        const tags = getLocalTag(item.id);
+        const favActive = isFavorite(item.id) ? 'active' : '';
+        return `
+          <div class="gallery-item" onclick="openModal(${item.id})">
+            <img src="${item.cover}" alt="${item.title || ''}" loading="lazy">
+            <div class="gallery-item-actions">
+              <button class="gallery-item-action ${favActive}" onclick="event.stopPropagation();toggleFavoriteItem(${item.id})">${isFavorite(item.id) ? '❤️' : '🤍'}</button>
+            </div>
+            <div class="gallery-item-info">
+              <div class="gallery-item-title">${item.title || '无标题'}</div>
+              <div class="gallery-item-meta">${item.category || '未分类'}</div>
+              ${tags.length ? `<div style="margin-top:0.5rem;">${tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
+            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
-    function showModal(url) {
-      document.getElementById('modalImg').src = url;
-      document.getElementById('imgModal').style.display = 'flex';
+    function openModal(photoId) {
+      currentPhoto = allPhotos.find(p => p.id === photoId);
+      if (!currentPhoto) return;
+      
+      document.getElementById('modalImg').src = currentPhoto.full_url;
+      document.getElementById('modalTitle').textContent = currentPhoto.title || '无标题';
+      document.getElementById('modalMeta').textContent = `${currentPhoto.category || '未分类'} · ${formatDate(currentPhoto.created_at)}`;
+      
+      const tags = getLocalTag(currentPhoto.id);
+      const favActive = isFavorite(currentPhoto.id) ? 'active' : '';
+      document.getElementById('modalFavorite').className = `modal-btn favorite ${favActive}`;
+      document.getElementById('modalFavorite').innerHTML = isFavorite(currentPhoto.id) ? '❤️ 已收藏' : '🤍 收藏';
+      
+      renderModalTags();
+      
+      document.getElementById('imgModal').classList.add('active');
+    }
+
+    function renderModalTags() {
+      const tags = getLocalTag(currentPhoto.id);
+      const localTags = getLocalTags();
+      
+      // 获取所有用过的标签
+      const allTags = new Set();
+      Object.values(localTags).forEach(arr => arr.forEach(t => allTags.add(t)));
+      
+      let html = tags.map(t => `<span class="modal-tag" onclick="removeTag('${t}')">× ${t}</span>`).join('');
+      html += `<input type="text" class="modal-tag-input" placeholder="+ 添加标签" onkeypress="handleTagInput(event)">`;
+      
+      document.getElementById('modalTags').innerHTML = html;
+    }
+
+    function handleTagInput(e) {
+      if (e.key === 'Enter' && e.target.value.trim()) {
+        addLocalTag(currentPhoto.id, e.target.value.trim());
+        e.target.value = '';
+        renderModalTags();
+        applyFilters();
+      }
+    }
+
+    function removeTag(tag) {
+      removeLocalTag(currentPhoto.id, tag);
+      renderModalTags();
+      applyFilters();
+    }
+
+    function toggleFavorite() {
+      if (!currentPhoto) return;
+      toggleFavoriteById(currentPhoto.id);
+      const favActive = isFavorite(currentPhoto.id) ? 'active' : '';
+      document.getElementById('modalFavorite').className = `modal-btn favorite ${favActive}`;
+      document.getElementById('modalFavorite').innerHTML = isFavorite(currentPhoto.id) ? '❤️ 已收藏' : '🤍 收藏';
+      applyFilters();
+      buildCategoryFilters();
+    }
+
+    function toggleFavoriteItem(photoId) {
+      toggleFavoriteById(photoId);
+      applyFilters();
+      buildCategoryFilters();
+      if (currentPhoto && currentPhoto.id === photoId) {
+        openModal(photoId);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('imgModal').classList.remove('active');
+      currentPhoto = null;
+    }
+
+    function downloadImage() {
+      if (!currentPhoto) return;
+      const a = document.createElement('a');
+      a.href = currentPhoto.full_url;
+      a.download = (currentPhoto.title || 'photo') + '.jpg';
+      a.click();
     }
 
     function formatDate(str) {
@@ -118,7 +373,6 @@
       const reader = new FileReader();
       reader.onload = async function() {
         const imageUrl = reader.result;
-        
         const title = prompt('请输入图片标题（可选）:', '');
         
         try {
@@ -143,6 +397,11 @@
       };
       reader.readAsDataURL(file);
     }
+
+    // ESC 关闭 modal
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
 
     init();
   </script>
