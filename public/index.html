@@ -106,15 +106,14 @@
   </footer>
 
   <script>
-    const DATA_API = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
-    const AUTH_API = 'https://blast-api.kanjiaming2022.workers.dev';
+    const API = 'https://blast-api.kanjiaming2022.workers.dev';
     let currentUser = null;
 
     async function init() {
       const token = localStorage.getItem('blxst_token');
       if (token) {
         try {
-          const res = await fetch(AUTH_API + '/auth/me', {
+          const res = await fetch(API + '/auth/me', {
             headers: { 'Authorization': 'Bearer ' + token, 'Origin': 'https://blastjunior.com' }
           });
           const result = await res.json();
@@ -150,8 +149,8 @@
     async function loadHome() {
       try {
         const [teamsRes, seasonsRes] = await Promise.all([
-          fetch(DATA_API + '/teams', { headers: { 'Origin': 'https://blastjunior.com' } }),
-          fetch(DATA_API + '/seasons', { headers: { 'Origin': 'https://blastjunior.com' } })
+          fetch(API + '/teams', { headers: { 'Origin': 'https://blastjunior.com' } }),
+          fetch(API + '/seasons', { headers: { 'Origin': 'https://blastjunior.com' } })
         ]);
         
         const teamsData = await teamsRes.json();
@@ -173,7 +172,7 @@
 
     async function loadScores(seasonId) {
       try {
-        const res = await fetch(DATA_API + '/seasons/' + seasonId + '/scores', { headers: { 'Origin': 'https://blastjunior.com' } });
+        const res = await fetch(API + '/seasons/' + seasonId + '/scores', { headers: { 'Origin': 'https://blastjunior.com' } });
         const data = await res.json();
         renderScores(data.data || []);
       } catch (e) {
@@ -183,7 +182,7 @@
 
     async function loadChat() {
       try {
-        const res = await fetch(AUTH_API + '/chat', { headers: { 'Origin': 'https://blastjunior.com' } });
+        const res = await fetch(API + '/chat', { headers: { 'Origin': 'https://blastjunior.com' } });
         const data = await res.json();
         renderChat(data.data || []);
       } catch (e) {
@@ -202,7 +201,7 @@
       if (!content) return;
 
       try {
-        const res = await fetch(AUTH_API + '/chat', {
+        const res = await fetch(API + '/chat', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
           body: JSON.stringify({ content })

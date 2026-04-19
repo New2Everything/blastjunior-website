@@ -51,16 +51,14 @@
   </div>
 
   <script>
-    // 数据读取用 blast-homepage-api，写入用 blast-api
-    const DATA_API = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
-    const AUTH_API = 'https://blast-api.kanjiaming2022.workers.dev';
+    const API = 'https://blast-api.kanjiaming2022.workers.dev';
     let currentUser = null;
 
     async function init() {
       const token = localStorage.getItem('blxst_token');
       if (token) {
         try {
-          const res = await fetch(AUTH_API + '/auth/me', {
+          const res = await fetch(API + '/auth/me', {
             headers: { 'Authorization': 'Bearer ' + token, 'Origin': 'https://blastjunior.com' }
           });
           const result = await res.json();
@@ -75,7 +73,7 @@
 
     async function loadTeams() {
       try {
-        const res = await fetch(DATA_API + '/teams', {
+        const res = await fetch(API + '/teams', {
           headers: { 'Origin': 'https://blastjunior.com' }
         });
         const result = await res.json();
@@ -120,7 +118,7 @@
       if (!confirm('申请加入 ' + teamName + '？')) return;
 
       try {
-        const res = await fetch(AUTH_API + '/teams/' + teamId + '/join', {
+        const res = await fetch(API + '/teams/' + teamId + '/join', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' }
         });
@@ -152,7 +150,7 @@
       };
 
       try {
-        const res = await fetch(AUTH_API + '/teams', {
+        const res = await fetch(API + '/teams', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
           body: JSON.stringify(data)

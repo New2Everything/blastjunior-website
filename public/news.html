@@ -65,14 +65,13 @@
   </div>
 
   <script>
-    const DATA_API = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
-    const AUTH_API = 'https://blast-api.kanjiaming2022.workers.dev';
+    const API = 'https://blast-api.kanjiaming2022.workers.dev';
 
     async function init() {
       const token = localStorage.getItem('blxst_token');
       if (token) {
         try {
-          const res = await fetch(AUTH_API + '/auth/me', { headers: { 'Authorization': 'Bearer ' + token, 'Origin': 'https://blastjunior.com' } });
+          const res = await fetch(API + '/auth/me', { headers: { 'Authorization': 'Bearer ' + token, 'Origin': 'https://blastjunior.com' } });
           const result = await res.json();
           if (result.ok && result.user.status === 'approved') {
             document.getElementById('publishSection').style.display = 'block';
@@ -84,7 +83,7 @@
 
     async function loadNews() {
       try {
-        const res = await fetch(DATA_API + '/news', { headers: { 'Origin': 'https://blastjunior.com' } });
+        const res = await fetch(API + '/news', { headers: { 'Origin': 'https://blastjunior.com' } });
         const data = await res.json();
         renderNews(data.data || []);
       } catch (e) {
@@ -132,7 +131,7 @@
       const form = e.target;
       
       try {
-        const res = await fetch(AUTH_API + '/news', {
+        const res = await fetch(API + '/news', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
           body: JSON.stringify({ title: form.title.value, content: form.content.value })

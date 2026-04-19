@@ -26,35 +26,23 @@
   </div>
 
   <script>
-    const DATA_API = 'https://blast-homepage-api.kanjiaming2022.workers.dev';
+    const API = 'https://blast-api.kanjiaming2022.workers.dev';
     let seasons = [];
-    let currentSeasonId = null;
-    let allStandings = {};
+    let currentSeason = null;
 
-    async function loadData() {
+    async function loadSeasons() {
       try {
-        // 获取赛季列表
-        const seasonsRes = await fetch(DATA_API + '/seasons', {
+        const res = await fetch(API + '/seasons', {
           headers: { 'Origin': 'https://blastjunior.com' }
         });
-        const seasonsData = await seasonsRes.json();
-        seasons = seasonsData.data || [];
-        
-        // 获取所有 standings-v2 数据
-        const standingsRes = await fetch(DATA_API + '/standings-v2', {
-          headers: { 'Origin': 'https://blastjunior.com' }
-        });
-        const standingsData = await standingsRes.json();
-        
-        if (standingsData.ok && standingsData.data) {
-          // 按赛季分组
-          const seasonId = standingsData.meta?.seasonId || 'current';
-          allStandings[seasonId] = standingsData.data;
-          currentSeasonId = seasonId;
-        }
-        
+        const result = await res.json();
+        seasons = result.data || [];
         renderSeasonTabs();
-        renderStandings();
+        if (seasons.length > 0) {
+          selectSeason(seasons.find(s => s.status === 'ongoing') || seasons[0]);
+        } else {
+          document.getElementById('scoresWrap').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div>暂无赛季</div></div>';
+        }
       } catch (e) {
         document.getElementById('scoresWrap').innerHTML = '<div class="error-state">加载失败</div>';
       }
@@ -62,35 +50,33 @@
 
     function renderSeasonTabs() {
       const el = document.getElementById('seasonsList');
-      if (!seasons.length) {
-        // 没有赛季数据时显示默认
-        el.innerHTML = '<button style="padding:0.5rem 1rem;border:1px solid var(--primary);border-radius:20px;background:var(--primary);color:white;cursor:default;">当前赛季</button>';
-        return;
-      }
-      
       el.innerHTML = seasons.map(s => {
         const label = s.status === 'ongoing' ? '进行中' : s.status === 'upcoming' ? '即将开始' : '已结束';
-        const isActive = s.id === currentSeasonId || (!currentSeasonId && s.status === 'ongoing');
-        const style = isActive 
-          ? 'border-color:var(--primary);background:var(--primary);color:white;' 
-          : 'border-color:var(--border);background:none;';
-        return `<button onclick="selectSeason('${s.id}')" style="padding:0.5rem 1rem;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-weight:500;${style}">${s.name} <span style="font-size:0.75rem;">(${label})</span></button>`;
+        const color = s.status === 'ongoing' ? 'var(--primary)' : 'var(--text-gray)';
+        return `<button onclick="selectSeason(${JSON.stringify(s).replace(/"/g, '&quot;')})" style="padding:0.5rem 1rem;border:1px solid var(--border);border-radius:20px;background:none;cursor:pointer;font-weight:500;color:${color};border-color:${color};">${s.name} <span style="font-size:0.75rem;">(${label})</span></button>`;
       }).join('');
     }
 
-    function selectSeason(seasonId) {
-      currentSeasonId = seasonId;
+    async function selectSeason(season) {
+      currentSeason = season;
       renderSeasonTabs();
-      renderStandings();
+      
+      try {
+        const res = await fetch(API + '/seasons/' + season.id + '/scores', {
+          headers: { 'Origin': 'https://blastjunior.com' }
+        });
+        const result = await res.json();
+        renderScores(result.data || [], season);
+      } catch (e) {
+        document.getElementById('scoresWrap').innerHTML = '<div class="error-state">加载失败</div>';
+      }
     }
 
-    function renderStandings() {
+    function renderScores(scores, season) {
       const wrap = document.getElementById('scoresWrap');
-      const scores = allStandings[currentSeasonId] || allStandings['current'] || [];
-      const season = seasons.find(s => s.id === currentSeasonId);
       
       if (!scores.length) {
-        wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📊</div><div>暂无 ${season?.name || ''} 积分数据</div></div>`;
+        wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📊</div><div>暂无 ${season.name} 积分数据</div></div>`;
         return;
       }
 
@@ -101,9 +87,11 @@
               <tr>
                 <th style="width:50px;">排名</th>
                 <th>战队</th>
-                <th>联赛</th>
-                <th>杯赛</th>
-                <th>出场</th>
+                <th>胜</th>
+                <th>平</th>
+                <th>负</th>
+                <th>进球</th>
+                <th>失球</th>
                 <th style="width:80px;">积分</th>
               </tr>
             </thead>
@@ -111,10 +99,12 @@
               ${scores.map((s, i) => `
                 <tr>
                   <td><strong style="color:${i < 3 ? 'var(--primary)' : 'inherit'};">${s.rank || i + 1}</strong></td>
-                  <td><a href="/team-detail.html?id=${s.team_id}" style="color:var(--primary);font-weight:600;">${s.team || '未知'}</a></td>
-                  <td>${s.isLeague ? '🏆' : '-'}</td>
-                  <td>${s.isCup ? '🏅' : '-'}</td>
-                  <td>${s.rounds || 0}</td>
+                  <td><a href="/team-detail.html?id=${s.team_id}" style="color:var(--primary);font-weight:600;">${s.team_name || '未知'}</a></td>
+                  <td>${s.wins || 0}</td>
+                  <td>${s.draws || 0}</td>
+                  <td>${s.losses || 0}</td>
+                  <td>${s.goals_for || 0}</td>
+                  <td>${s.goals_against || 0}</td>
                   <td><strong style="color:var(--primary);">${s.points || 0}</strong></td>
                 </tr>
               `).join('')}
@@ -126,7 +116,7 @@
       wrap.innerHTML = html;
     }
 
-    loadData();
+    loadSeasons();
   </script>
 </body>
 </html>
