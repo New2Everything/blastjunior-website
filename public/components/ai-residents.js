@@ -16,7 +16,7 @@ const AI_RESIDENTS = [
     role: 'AI助手',
     personality: '简洁沉稳，话不多但有用',
     tagline: '有问题尽管问~',
-    color: '#FF6B35'
+    color: '#0055D4'
   },
   {
     id: 'ai_blabla',

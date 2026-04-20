@@ -31,7 +31,7 @@
         background: var(--bg-white) !important;
     }
     .hero {
-        background: linear-gradient(135deg, #c2410c, #ea580c) !important;
+        background: linear-gradient(135deg, #0055D4, #0066E0) !important;
     }
 }
 
@@ -72,7 +72,7 @@
     color: var(--text-dark) !important;
 }
 :root.dark .hero {
-    background: linear-gradient(135deg, #c2410c, #ea580c) !important;
+    background: linear-gradient(135deg, #0055D4, #0066E0) !important;
 }
 :root.dark a {
     color: #38bdf8;

@@ -1,8 +1,8 @@
 /* 统一导航栏样式 */
 :root {
-  --nav-primary: #FF6B35;
-  --nav-primary-light: #FF8A5C;
-  --nav-secondary: #00B4D8;
+  --nav-primary: #0055D4;
+  --nav-primary-light: #1E6FD9;
+  --nav-secondary: #D4A500;
   --nav-bg: #FFFFFF;
   --nav-bg-light: #F8FAFC;
   --nav-text: #1E293B;
@@ -207,7 +207,7 @@
     position: absolute;
     top: -40px;
     left: 0;
-    background: var(--primary, #FF6B35);
+    background: var(--primary, #0055D4);
     color: white;
     padding: 8px 16px;
     z-index: 10000;
