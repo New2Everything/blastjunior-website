@@ -90,7 +90,9 @@
       try {
         const res = await fetch(API + '/news', { headers: { 'Origin': 'https://blastjunior.com' } });
         const data = await res.json();
-        renderNews(data.data || []);
+        // 兼容两种格式：{ok:true, data:[...]} 或 {success:true, data:{data:[...]}}
+        const items = data.data?.data || data.data || [];
+        renderNews(items);
       } catch (e) {
         document.getElementById('newsList').innerHTML = '<div class="card" style="text-align:center;color:var(--text-gray);">加载失败</div>';
       }
