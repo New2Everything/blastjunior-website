@@ -1,7 +1,0 @@
-# Cloudflare Pages Redirect Rules
-# 确保 .html 文件正确服务
-
-# 重定向规则：如果请求的文件不存在，返回原始请求（让 Cloudflare Pages 处理）
-# 这允许 news.html 被正确服务
-
-/news /news 200
