@@ -50,6 +50,10 @@
           <label style="display:block;font-weight:500;margin-bottom:0.5rem;">内容</label>
           <textarea name="content" rows="6" required style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;resize:vertical;"></textarea>
         </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-weight:500;margin-bottom:0.5rem;">配图URL（可选）</label>
+          <input type="url" name="image_url" placeholder="https://..." style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;">
+        </div>
         <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
           <button type="button" onclick="document.getElementById('publishModal').style.display='none'" class="btn btn-outline">取消</button>
           <button type="submit" class="btn btn-primary">发布</button>
@@ -100,17 +104,20 @@
       }
       list.innerHTML = items.map(item => `
         <div class="card news-item" onclick="showDetail(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+          ${item.image_url ? `<img src="${item.image_url}" style="width:120px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;" onerror="this.style.display='none'">` : ''}
           <div style="flex:1;">
             <div class="news-date">${formatDate(item.published_at || item.created_at)}</div>
             <div class="news-title">${item.is_ai_generated ? '<span class="news-tag ai">AI</span>' : '<span class="news-tag member">成员</span>'}${item.title}</div>
-            <div class="news-excerpt">${item.content.substring(0, 100)}...</div>
+            <div class="news-excerpt">${item.content.substring(0, 80)}...</div>
           </div>
         </div>
       `).join('');
     }
 
     function showDetail(item) {
+      const imgHtml = item.image_url ? `<img src="${item.image_url}" style="width:100%;max-height:400px;object-fit:cover;border-radius:12px;margin-bottom:1.5rem;" onerror="this.style.display='none'">` : '';
       document.getElementById('detailContent').innerHTML = `
+        ${imgHtml}
         <div style="font-size:0.85rem;color:var(--text-gray);margin-bottom:0.5rem;">${formatDate(item.published_at || item.created_at)} · ${item.author_name || '未知'}</div>
         <h1 style="font-family:var(--font-display);font-size:2rem;font-weight:900;margin-bottom:1.5rem;">${item.title}</h1>
         <div style="line-height:1.8;font-size:1.05rem;white-space:pre-wrap;">${item.content}</div>
@@ -135,7 +142,11 @@
         const res = await fetch(API + '/news', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + localStorage.getItem('blxst_token'), 'Content-Type': 'application/json', 'Origin': 'https://blastjunior.com' },
-          body: JSON.stringify({ title: form.title.value, content: form.content.value })
+          body: JSON.stringify({ 
+            title: form.title.value, 
+            content: form.content.value,
+            image_url: form.image_url.value || null
+          })
         });
         const result = await res.json();
         
