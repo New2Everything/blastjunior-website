@@ -1,0 +1,16 @@
+{
+  "state_id": "learning-v2-push-approval-state-v0",
+  "token_revoked_or_rotated": false,
+  "public_changes_approved": false,
+  "cloudflare_deploy_behavior_decided": false,
+  "cloudflare_deploy_mode": "unknown",
+  "remaining_dirty_reviewed": false,
+  "push_approved": false,
+  "deploy_approved": false,
+  "deploy_intentionally_blocked": false,
+  "notes": [
+    "Initial state. Push is not approved.",
+    "Do not push.",
+    "Do not deploy."
+  ]
+}

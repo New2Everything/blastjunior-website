@@ -38,6 +38,7 @@ def main():
     learning_v2_config_candidates = [
         "learning-v2/CONSTITUTION.md",
         "learning-v2/deployment-policy.json",
+        "learning-v2/push-approval-state.json",
     ]
 
     learning_v2_data_hold = [

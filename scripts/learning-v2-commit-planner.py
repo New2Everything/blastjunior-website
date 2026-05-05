@@ -123,6 +123,13 @@ def main():
     if runbook.exists():
         doc_candidates.append("learning-v2/RUNBOOK.md")
 
+    config_candidates = []
+    for rel in [
+        "learning-v2/push-approval-state.json",
+    ]:
+        if (WORKSPACE / rel).exists():
+            config_candidates.append(rel)
+
     runtime_candidates = []
     for rel in [
         "learning-v2/state.json",
@@ -144,6 +151,8 @@ def main():
         candidates.append(candidate_info(path, "learning_v2_script"))
     for path in doc_candidates:
         candidates.append(candidate_info(path, "learning_v2_doc"))
+    for path in config_candidates:
+        candidates.append(candidate_info(path, "learning_v2_config"))
     for path in runtime_candidates:
         candidates.append(candidate_info(path, "runtime_excluded"))
     for path in review_only_candidates:
