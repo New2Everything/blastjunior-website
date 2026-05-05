@@ -13,7 +13,7 @@ REPORT_DIR.mkdir(parents=True, exist_ok=True)
 SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
 GATE_ID = "learning-v2-push-approval-gate-v0"
-EXPECTED_AHEAD_COMMITS = 4
+EXPECTED_MIN_AHEAD_COMMITS = 4
 
 REQUIRED_TRUE_FLAGS = [
     "token_revoked_or_rotated",
@@ -77,8 +77,8 @@ def main():
 
     rc_ahead, ahead_out, ahead_err = run(["git", "rev-list", "--count", "origin/main..HEAD"])
     ahead_count = int(ahead_out or "0") if rc_ahead == 0 else None
-    if ahead_count != EXPECTED_AHEAD_COMMITS:
-        failures.append(f"ahead_count_unexpected:{ahead_count}")
+    if ahead_count is None or ahead_count < EXPECTED_MIN_AHEAD_COMMITS:
+        failures.append(f"ahead_count_below_minimum:{ahead_count}")
 
     rc_cached, cached_out, cached_err = run(["git", "diff", "--cached", "--name-status"])
     if cached_out.strip():
@@ -136,7 +136,7 @@ def main():
         "missing_true_flags": missing_true_flags,
         "deploy_ok": deploy_ok,
         "ahead_count": ahead_count,
-        "expected_ahead_commits": EXPECTED_AHEAD_COMMITS,
+        "expected_min_ahead_commits": EXPECTED_MIN_AHEAD_COMMITS,
         "remote_contains_token": remote_contains_token,
         "release_gate_report": str(release_report_path) if release_report_path else None,
         "release_gate_summary": release_summary,

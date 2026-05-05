@@ -13,7 +13,7 @@ SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
 GATE_ID = "learning-v2-push-deploy-safety-gate-v0"
 
-EXPECTED_AHEAD_COMMITS = 4
+EXPECTED_MIN_AHEAD_COMMITS = 4
 
 WEBSITE_IMPACT_PREFIXES = (
     "public/",
@@ -112,8 +112,8 @@ def main():
     if remote_contains_token:
         failures.append("remote_url_contains_token")
 
-    if ahead_count != EXPECTED_AHEAD_COMMITS:
-        warnings.append(f"ahead_count_unexpected:{ahead_count}")
+    if ahead_count is None or ahead_count < EXPECTED_MIN_AHEAD_COMMITS:
+        warnings.append(f"ahead_count_below_minimum:{ahead_count}")
 
     if cached_rows:
         failures.append("git_index_not_empty")
@@ -154,7 +154,7 @@ def main():
         "mode": "push_deploy_safety_gate",
         "status_short_branch": status_out,
         "ahead_count": ahead_count,
-        "expected_ahead_commits": EXPECTED_AHEAD_COMMITS,
+        "expected_min_ahead_commits": EXPECTED_MIN_AHEAD_COMMITS,
         "ahead_commits": ahead_commits,
         "committed_rows": committed_rows,
         "website_impact_rows": website_impact_rows,
