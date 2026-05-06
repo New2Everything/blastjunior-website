@@ -19,7 +19,13 @@
     "Do not push.",
     "Do not deploy.",
     "Pre-patch Cloudflare config verified against live Pages project before any PATCH.",
-    "Human approved Option B: temporarily disable Cloudflare Pages production_deployments_enabled."
+    "Human approved Option B: temporarily disable Cloudflare Pages production_deployments_enabled.",
+    "Option B applied: Cloudflare Pages production_deployments_enabled verified false after PATCH."
   ],
-  "human_approval_recorded_at": "2026-05-06T14:59:17.259396+00:00"
+  "human_approval_recorded_at": "2026-05-06T14:59:17.259396+00:00",
+  "option_b_applied": true,
+  "post_patch_verified": true,
+  "production_deployments_enabled_after_patch": false,
+  "option_b_applied_at": "2026-05-06T16:11:23.363202+00:00",
+  "post_patch_verification_snapshot": "learning-v2/snapshots/learning-v2-cloudflare-option-b-postpatch-verified-20260507-000151.md"
 }
