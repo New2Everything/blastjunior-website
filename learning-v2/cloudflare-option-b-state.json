@@ -10,13 +10,14 @@
   "rollback_value": true,
   "cloudflare_patch_approved": false,
   "rollback_plan_exists": true,
-  "pre_patch_config_verified": false,
+  "pre_patch_config_verified": true,
   "post_patch_verification_required": true,
   "human_approved": false,
   "notes": [
     "Initial Option B state.",
     "Do not PATCH Cloudflare.",
     "Do not push.",
-    "Do not deploy."
+    "Do not deploy.",
+    "Pre-patch Cloudflare config verified against live Pages project before any PATCH."
   ]
 }
