@@ -1,0 +1,22 @@
+{
+  "state_id": "learning-v2-cloudflare-option-b-state-v0",
+  "option": "B",
+  "intent": "temporarily disable Cloudflare Pages production auto-deploy before pushing main",
+  "project": "blastjunior-website",
+  "account_id": "6a6fe3b0b250e0c6a09af24d01e0f9b6",
+  "target_setting": "production_deployments_enabled",
+  "current_expected_value": true,
+  "desired_temporary_value": false,
+  "rollback_value": true,
+  "cloudflare_patch_approved": false,
+  "rollback_plan_exists": true,
+  "pre_patch_config_verified": false,
+  "post_patch_verification_required": true,
+  "human_approved": false,
+  "notes": [
+    "Initial Option B state.",
+    "Do not PATCH Cloudflare.",
+    "Do not push.",
+    "Do not deploy."
+  ]
+}

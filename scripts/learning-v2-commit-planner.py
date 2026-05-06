@@ -126,6 +126,7 @@ def main():
     config_candidates = []
     for rel in [
         "learning-v2/push-approval-state.json",
+        "learning-v2/cloudflare-option-b-state.json",
     ]:
         if (WORKSPACE / rel).exists():
             config_candidates.append(rel)

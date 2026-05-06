@@ -39,6 +39,7 @@ def main():
         "learning-v2/CONSTITUTION.md",
         "learning-v2/deployment-policy.json",
         "learning-v2/push-approval-state.json",
+        "learning-v2/cloudflare-option-b-state.json",
     ]
 
     learning_v2_data_hold = [
