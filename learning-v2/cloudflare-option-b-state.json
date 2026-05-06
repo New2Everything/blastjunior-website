@@ -8,16 +8,18 @@
   "current_expected_value": true,
   "desired_temporary_value": false,
   "rollback_value": true,
-  "cloudflare_patch_approved": false,
+  "cloudflare_patch_approved": true,
   "rollback_plan_exists": true,
   "pre_patch_config_verified": true,
   "post_patch_verification_required": true,
-  "human_approved": false,
+  "human_approved": true,
   "notes": [
     "Initial Option B state.",
     "Do not PATCH Cloudflare.",
     "Do not push.",
     "Do not deploy.",
-    "Pre-patch Cloudflare config verified against live Pages project before any PATCH."
-  ]
+    "Pre-patch Cloudflare config verified against live Pages project before any PATCH.",
+    "Human approved Option B: temporarily disable Cloudflare Pages production_deployments_enabled."
+  ],
+  "human_approval_recorded_at": "2026-05-06T14:59:17.259396+00:00"
 }
