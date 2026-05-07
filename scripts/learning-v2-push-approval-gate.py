@@ -16,7 +16,6 @@ GATE_ID = "learning-v2-push-approval-gate-v0"
 EXPECTED_MIN_AHEAD_COMMITS = 4
 
 REQUIRED_TRUE_FLAGS = [
-    "token_revoked_or_rotated",
     "public_changes_approved",
     "cloudflare_deploy_behavior_decided",
     "remaining_dirty_reviewed",
@@ -60,10 +59,21 @@ def main():
     else:
         state = json.loads(STATE.read_text(encoding="utf-8"))
 
-    missing_true_flags = [
-        key for key in REQUIRED_TRUE_FLAGS
-        if state.get(key) is not True
-    ]
+    missing_true_flags = []
+
+    token_resolved = state.get("token_revoked_or_rotated") is True
+    token_risk_accepted = (
+        state.get("token_risk_accepted") is True
+        and state.get("token_handling_policy") == "accepted_risk_deferred_rotation"
+    )
+
+    if not (token_resolved or token_risk_accepted):
+        missing_true_flags.append("token_revoked_or_rotated_or_token_risk_accepted")
+        failures.append("token_blocker_not_resolved_or_accepted")
+
+    for key in REQUIRED_TRUE_FLAGS:
+        if state.get(key) is not True:
+            missing_true_flags.append(key)
 
     deploy_ok = (
         state.get("deploy_approved") is True
