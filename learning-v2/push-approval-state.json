@@ -2,15 +2,18 @@
   "state_id": "learning-v2-push-approval-state-v0",
   "token_revoked_or_rotated": false,
   "public_changes_approved": false,
-  "cloudflare_deploy_behavior_decided": false,
-  "cloudflare_deploy_mode": "unknown",
+  "cloudflare_deploy_behavior_decided": true,
+  "cloudflare_deploy_mode": "option_b_production_auto_deploy_disabled",
   "remaining_dirty_reviewed": false,
   "push_approved": false,
   "deploy_approved": false,
-  "deploy_intentionally_blocked": false,
+  "deploy_intentionally_blocked": true,
   "notes": [
     "Initial state. Push is not approved.",
     "Do not push.",
-    "Do not deploy."
-  ]
+    "Do not deploy.",
+    "Cloudflare deploy behavior decided: Option B applied; production auto-deploy is temporarily disabled and deploy is intentionally blocked."
+  ],
+  "cloudflare_deploy_decision_recorded_at": "2026-05-07T03:27:32.593330+00:00",
+  "cloudflare_option_b_applied_snapshot": "learning-v2/snapshots/learning-v2-cloudflare-option-b-applied-complete-20260507-003424.md"
 }
