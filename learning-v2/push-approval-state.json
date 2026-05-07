@@ -4,7 +4,7 @@
   "public_changes_approved": false,
   "cloudflare_deploy_behavior_decided": true,
   "cloudflare_deploy_mode": "option_b_production_auto_deploy_disabled",
-  "remaining_dirty_reviewed": false,
+  "remaining_dirty_reviewed": true,
   "push_approved": false,
   "deploy_approved": false,
   "deploy_intentionally_blocked": true,
@@ -12,8 +12,11 @@
     "Initial state. Push is not approved.",
     "Do not push.",
     "Do not deploy.",
-    "Cloudflare deploy behavior decided: Option B applied; production auto-deploy is temporarily disabled and deploy is intentionally blocked."
+    "Cloudflare deploy behavior decided: Option B applied; production auto-deploy is temporarily disabled and deploy is intentionally blocked.",
+    "Remaining dirty worktree reviewed and understood; dirty files are not approved for staging or commit as part of current push approval."
   ],
   "cloudflare_deploy_decision_recorded_at": "2026-05-07T03:27:32.593330+00:00",
-  "cloudflare_option_b_applied_snapshot": "learning-v2/snapshots/learning-v2-cloudflare-option-b-applied-complete-20260507-003424.md"
+  "cloudflare_option_b_applied_snapshot": "learning-v2/snapshots/learning-v2-cloudflare-option-b-applied-complete-20260507-003424.md",
+  "remaining_dirty_reviewed_at": "2026-05-07T03:57:26.223086+00:00",
+  "remaining_dirty_review_snapshot": "learning-v2/snapshots/learning-v2-remaining-dirty-reviewed-20260507-115506.md"
 }
