@@ -15,7 +15,7 @@ PATTERNS = BASE / "patterns.jsonl"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
-DISCOVERER_ID = "learning-v2-design-opportunity-discoverer-v0.2"
+DISCOVERER_ID = "learning-v2-design-opportunity-discoverer-v0.3"
 
 PUBLIC_FILES = [
     "public/index.html",
@@ -151,6 +151,18 @@ def is_external_or_nonlocal_ref(ref):
         "data:",
     ))
 
+def is_dynamic_template_ref(ref):
+    if not ref:
+        return False
+    markers = [
+        "${",
+        "{{",
+        "}}",
+        "<%",
+        "%>",
+    ]
+    return any(marker in ref for marker in markers)
+
 def extract_internal_links(text):
     # Only anchor href values are page navigation links.
     # Asset href values such as stylesheet links are scanned separately.
@@ -164,6 +176,9 @@ def extract_internal_links(text):
 
 def normalize_local_asset_ref(ref, source_file):
     if is_external_or_nonlocal_ref(ref):
+        return None
+
+    if is_dynamic_template_ref(ref):
         return None
 
     clean = ref.split("#", 1)[0].split("?", 1)[0].strip()
@@ -260,8 +275,14 @@ def scan_quality_bugs(site_texts):
 
     # 2) Missing local asset references.
     missing_assets = []
+    ignored_dynamic_asset_refs = []
+
     for rel, text in site_texts.items():
         for asset in extract_asset_refs(rel, text):
+            if is_dynamic_template_ref(asset.get("ref")):
+                ignored_dynamic_asset_refs.append(asset)
+                continue
+
             target = asset.get("normalized_target")
             if target and not (WORKSPACE / target).exists():
                 missing_assets.append(asset)
@@ -276,7 +297,12 @@ def scan_quality_bugs(site_texts):
             "why_this_matters": "Missing CSS, JS, or image assets can break page styling, behavior, or visual meaning.",
             "expected_user_value": "Users see correctly styled and functional pages.",
             "suggested_scope": "asset references / affected source files",
-            "evidence": {"missing_assets": missing_assets[:20], "missing_asset_count": len(missing_assets)},
+            "evidence": {
+                "missing_assets": missing_assets[:20],
+                "missing_asset_count": len(missing_assets),
+                "ignored_dynamic_asset_refs": ignored_dynamic_asset_refs[:20],
+                "ignored_dynamic_asset_ref_count": len(ignored_dynamic_asset_refs),
+            },
             "score": 118,
         })
 
