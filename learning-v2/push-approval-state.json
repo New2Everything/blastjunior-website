@@ -5,7 +5,7 @@
   "cloudflare_deploy_behavior_decided": true,
   "cloudflare_deploy_mode": "option_b_production_auto_deploy_disabled",
   "remaining_dirty_reviewed": true,
-  "push_approved": false,
+  "push_approved": true,
   "deploy_approved": false,
   "deploy_intentionally_blocked": true,
   "notes": [
@@ -15,7 +15,8 @@
     "Cloudflare deploy behavior decided: Option B applied; production auto-deploy is temporarily disabled and deploy is intentionally blocked.",
     "Remaining dirty worktree reviewed and understood; dirty files are not approved for staging or commit as part of current push approval.",
     "Human approved public website changes from origin/main..HEAD for push approval.",
-    "Token risk accepted by human decision; token_revoked_or_rotated remains false."
+    "Token risk accepted by human decision; token_revoked_or_rotated remains false.",
+    "Human approved push. push_approved set true after final-ready checkpoint."
   ],
   "cloudflare_deploy_decision_recorded_at": "2026-05-07T03:27:32.593330+00:00",
   "cloudflare_option_b_applied_snapshot": "learning-v2/snapshots/learning-v2-cloudflare-option-b-applied-complete-20260507-003424.md",
@@ -26,5 +27,7 @@
   "token_risk_accepted": true,
   "token_handling_policy": "accepted_risk_deferred_rotation",
   "token_risk_accepted_at": "2026-05-07T23:47:35.387844+00:00",
-  "token_deferral_policy_snapshot": "learning-v2/snapshots/learning-v2-token-deferral-policy-20260508-073738.md"
+  "token_deferral_policy_snapshot": "learning-v2/snapshots/learning-v2-token-deferral-policy-20260508-073738.md",
+  "push_approved_at": "2026-05-08T00:13:02.007931+00:00",
+  "push_approval_final_ready_snapshot": "learning-v2/snapshots/learning-v2-push-approval-final-ready-20260508-081007.md"
 }
