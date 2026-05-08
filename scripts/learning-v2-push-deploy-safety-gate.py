@@ -103,11 +103,19 @@ def main():
     pre_push = WORKSPACE / ".git" / "hooks" / "pre-push"
     pre_push_exists = pre_push.exists()
     pre_push_text = pre_push.read_text(encoding="utf-8", errors="ignore") if pre_push_exists else ""
-    pre_push_blocks = (
+    pre_push_legacy_blocks = (
         "git push blocked" in pre_push_text
         and "ok_for_deploy" in pre_push_text
         and "Cloudflare Pages" in pre_push_text
     )
+    pre_push_approval_gated = (
+        "scripts/learning-v2-push-approval-gate.py" in pre_push_text
+        and "push allowed by push approval gate" in pre_push_text
+        and "remote_contains_token" in pre_push_text
+        and "system_integrity_result" in pre_push_text
+        and "business_source_dirty_count" in pre_push_text
+    )
+    pre_push_blocks = pre_push_legacy_blocks or pre_push_approval_gated
 
     if remote_contains_token:
         failures.append("remote_url_contains_token")
@@ -169,6 +177,8 @@ def main():
         "system_integrity_result": integrity_result,
         "pre_push_exists": pre_push_exists,
         "pre_push_blocks": pre_push_blocks,
+        "pre_push_legacy_blocks": pre_push_legacy_blocks,
+        "pre_push_approval_gated": pre_push_approval_gated,
         "failures": failures,
         "warnings": warnings,
         "policy": {
@@ -199,6 +209,8 @@ def main():
     lines.append(f"- push_should_block: `{str(push_should_block).lower()}`")
     lines.append(f"- remote_contains_token: `{str(remote_contains_token).lower()}`")
     lines.append(f"- pre_push_blocks: `{str(pre_push_blocks).lower()}`")
+    lines.append(f"- pre_push_legacy_blocks: `{str(pre_push_legacy_blocks).lower()}`")
+    lines.append(f"- pre_push_approval_gated: `{str(pre_push_approval_gated).lower()}`")
     lines.append("- git_push: `false`")
     lines.append("- deploy: `false`")
     lines.append("")
@@ -239,6 +251,8 @@ def main():
     print("push_should_block =", str(push_should_block).lower())
     print("remote_contains_token =", str(remote_contains_token).lower())
     print("pre_push_blocks =", str(pre_push_blocks).lower())
+    print("pre_push_legacy_blocks =", str(pre_push_legacy_blocks).lower())
+    print("pre_push_approval_gated =", str(pre_push_approval_gated).lower())
     print("git_push = false")
     print("deploy = false")
     print("recommended_next_step =", payload["recommended_next_step"])

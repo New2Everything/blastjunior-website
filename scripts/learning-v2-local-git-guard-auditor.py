@@ -29,11 +29,11 @@ REQUIRED_HOOKS = {
     "pre-push": {
         "must_contain": [
             MARKER,
-            "scripts/learning-v2-release-gate.py",
-            "ok_for_commit",
-            "ok_for_deploy",
-            "git push blocked",
-            "Cloudflare Pages",
+            "scripts/learning-v2-push-approval-gate.py",
+            "push allowed by push approval gate",
+            "remote_contains_token",
+            "system_integrity_result",
+            "business_source_dirty_count",
         ],
     },
 }
@@ -111,7 +111,7 @@ def main():
             "pre_commit_required": True,
             "pre_push_required": True,
             "commit_expected_now": "normal blocked; local commit allowed only when system-only or business-only dedicated gate passes",
-            "push_expected_now": "blocked",
+            "push_expected_now": "push-approval-gated",
             "mode": "learning_observe_only",
         },
     }
