@@ -1,0 +1,6 @@
+/* learning-v2 repair: missing asset reference
+   Purpose: satisfy /assets/css/site.css?v=20260110 for Cloudflare Pages public root.
+   This file intentionally imports the existing site stylesheet instead of redesigning pages.
+*/
+
+@import url("/styles.css");
