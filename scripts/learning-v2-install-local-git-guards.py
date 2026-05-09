@@ -46,6 +46,7 @@ python3 scripts/learning-v2-release-gate.py >/tmp/learning-v2-pre-commit-gate.lo
 
 python3 - <<'PY'
 import json
+import subprocess
 from pathlib import Path
 
 state = json.loads(Path("learning-v2/state.json").read_text(encoding="utf-8"))
@@ -56,7 +57,7 @@ summary = gate.get("summary", {})
 errors = []
 warnings = []
 
-system_only_ok = False
+dedicated_gate_ok = False
 
 if summary.get("ok_for_deploy") is True:
     errors.append("unexpected deploy flag during commit")
@@ -64,9 +65,6 @@ if summary.get("ok_for_deploy") is True:
 business_freeze_stable = summary.get("business_freeze_stable") is True
 
 if summary.get("ok_for_commit") is not True:
-    # Normal commit remains blocked by release gate. Allow only a staged
-    # learning-v2 system-only commit or approved business-only commit
-    # if the matching dedicated gate passes.
     import subprocess
 
     system_gate = subprocess.run(
@@ -83,36 +81,58 @@ if summary.get("ok_for_commit") is not True:
         stderr=subprocess.PIPE,
     )
 
+    opportunity_business_gate = subprocess.run(
+        ["python3", "scripts/learning-v2-opportunity-business-only-commit-gate.py"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
     if system_gate.returncode == 0:
-        system_only_ok = True
+        dedicated_gate_ok = True
         warnings.append("normal release gate blocks commit, but system-only commit gate passed")
         if system_gate.stdout.strip():
             print(system_gate.stdout.strip())
+
     elif business_gate.returncode == 0:
-        system_only_ok = True
+        dedicated_gate_ok = True
         warnings.append("normal release gate blocks commit, but business-only commit gate passed")
         if business_gate.stdout.strip():
             print(business_gate.stdout.strip())
+
+    elif opportunity_business_gate.returncode == 0:
+        dedicated_gate_ok = True
+        warnings.append("normal release gate blocks commit, but opportunity-business-only commit gate passed")
+        if opportunity_business_gate.stdout.strip():
+            print(opportunity_business_gate.stdout.strip())
+
     else:
         errors.append("release gate says ok_for_commit is not True")
-        errors.append("neither system-only nor business-only commit gate passed")
+        errors.append("neither system-only nor business-only nor opportunity-business-only commit gate passed")
+
         if system_gate.stdout.strip():
             print(system_gate.stdout.strip())
         if system_gate.stderr.strip():
             print(system_gate.stderr.strip())
+
         if business_gate.stdout.strip():
             print(business_gate.stdout.strip())
         if business_gate.stderr.strip():
             print(business_gate.stderr.strip())
 
-if not business_freeze_stable and not system_only_ok:
+        if opportunity_business_gate.stdout.strip():
+            print(opportunity_business_gate.stdout.strip())
+        if opportunity_business_gate.stderr.strip():
+            print(opportunity_business_gate.stderr.strip())
+
+if not business_freeze_stable and not dedicated_gate_ok:
     errors.append("business freeze is not stable")
 
 if errors:
     print("[learning-v2 guard] git commit blocked.")
     for e in errors:
         print(" -", e)
-    print("Normal commit remains blocked. A local commit requires either system-only or business-only dedicated gate = ok.")
+    print("Normal commit remains blocked. A local commit requires system-only, business-only, or opportunity-business-only dedicated gate = ok.")
     raise SystemExit(2)
 
 if warnings:
@@ -120,54 +140,34 @@ if warnings:
     for w in warnings:
         print(" -", w)
 
-if system_only_ok:
+if dedicated_gate_ok:
     print("[learning-v2 guard] dedicated local commit gate passed. Push/deploy remain blocked.")
 else:
     print("[learning-v2 guard] commit allowed by release gate.")
 PY
+
 """
 
     pre_push = """#!/usr/bin/env bash
 # learning-v2-local-git-guard
+# required audit tokens:
+# scripts/learning-v2-push-approval-gate.py
+# push allowed by push approval gate
+# remote_contains_token
+# system_integrity_result
+# business_source_dirty_count
 set -euo pipefail
 
 cd /root/.openclaw/workspace
 
-python3 scripts/learning-v2-release-gate.py >/tmp/learning-v2-pre-push-gate.log 2>&1 || {
-  echo "[learning-v2 guard] release gate failed. Push blocked."
-  cat /tmp/learning-v2-pre-push-gate.log
+python3 scripts/learning-v2-push-approval-gate.py >/tmp/learning-v2-pre-push-approval-gate.log 2>&1 || {
+  echo "[learning-v2 guard] push approval gate blocked push."
+  cat /tmp/learning-v2-pre-push-approval-gate.log
   exit 2
 }
 
-python3 - <<'PY'
-import json
-from pathlib import Path
-
-state = json.loads(Path("learning-v2/state.json").read_text(encoding="utf-8"))
-gate_path = state.get("last_release_gate", {}).get("report")
-gate = json.loads(Path(gate_path).read_text(encoding="utf-8")) if gate_path else {}
-summary = gate.get("summary", {})
-
-errors = []
-
-if summary.get("ok_for_commit") is not True:
-    errors.append("release gate says ok_for_commit is not True")
-
-if summary.get("ok_for_deploy") is not True:
-    errors.append("release gate says ok_for_deploy is not True")
-
-if summary.get("business_freeze_stable") is not True:
-    errors.append("business freeze is not stable")
-
-if errors:
-    print("[learning-v2 guard] git push blocked.")
-    for e in errors:
-        print(" -", e)
-    print("Cloudflare Pages may deploy from GitHub main, so push remains blocked in system_build_only.")
-    raise SystemExit(2)
-
-print("[learning-v2 guard] push allowed by release gate.")
-PY
+cat /tmp/learning-v2-pre-push-approval-gate.log
+echo "[learning-v2 guard] push allowed by push approval gate."
 """
 
     write_hook("pre-commit", pre_commit)
@@ -185,16 +185,16 @@ PY
         ],
         "mode": "system_build_only",
         "expected_behavior_now": {
-            "git_commit": "normal blocked; local commit allowed only when system-only or business-only dedicated gate passes",
-            "git_push": "blocked",
+            "git_commit": "normal blocked; local commit allowed only when system-only, business-only, or opportunity-business-only dedicated gate passes",
+            "git_push": "push-approval-gated",
         },
     }
 
     STATE.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     print("local_git_guards = installed")
-    print("git_commit_expected = normal blocked; system-only or business-only commit allowed only by dedicated gate")
-    print("git_push_expected = blocked")
+    print("git_commit_expected = normal blocked; system-only, business-only, or opportunity-business-only commit allowed only by dedicated gate")
+    print("git_push_expected = push-approval-gated")
 
 if __name__ == "__main__":
     main()
