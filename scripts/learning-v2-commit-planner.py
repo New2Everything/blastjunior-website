@@ -123,6 +123,10 @@ def main():
     if runbook.exists():
         doc_candidates.append("learning-v2/RUNBOOK.md")
 
+    constitution = WORKSPACE / "learning-v2" / "CONSTITUTION.md"
+    if constitution.exists():
+        doc_candidates.append("learning-v2/CONSTITUTION.md")
+
     config_candidates = []
     for rel in [
         "learning-v2/push-approval-state.json",

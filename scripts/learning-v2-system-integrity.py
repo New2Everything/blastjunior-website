@@ -53,6 +53,7 @@ def main():
         ("mode_policy_audit", ["python3", "scripts/learning-v2-mode-policy-auditor.py"]),
         ("mode_transition_check", ["python3", "scripts/learning-v2-mode-transition-checker.py", "--inside-integrity"]),
         ("system_drift_audit", ["python3", "scripts/learning-v2-system-drift-auditor.py"]),
+        ("tamper_guard", ["python3", "scripts/learning-v2-tamper-guard.py"]),
         ("control_status", ["python3", "scripts/learning-v2-control.py", "status"]),
     ]
 
@@ -69,6 +70,11 @@ def main():
     mode_policy = state.get("last_mode_policy_audit") or {}
     mode_transition = state.get("last_mode_transition_check") or {}
     drift = state.get("last_system_drift_audit") or {}
+    tamper_step = next((s for s in steps if s["name"] == "tamper_guard"), {})
+    tamper_guard_result = None
+    for line in (tamper_step.get("stdout") or "").splitlines():
+        if line.startswith("learning_v2_tamper_guard"):
+            tamper_guard_result = line.split("=", 1)[1].strip()
 
     gate_summary = preflight.get("gate_summary", {})
     commit_summary = preflight.get("commit_plan_audit_summary", {})
@@ -95,6 +101,9 @@ def main():
 
     if drift.get("drift_count") != 0:
         hard_failures.append("system_drift_detected")
+
+    if tamper_guard_result != "ok":
+        hard_failures.append("tamper_guard_not_ok")
 
     if gate_summary.get("ok_for_system_build") is not True:
         hard_failures.append("ok_for_system_build_not_true")
@@ -127,6 +136,8 @@ def main():
         "latest_mode_policy_audit": mode_policy,
         "latest_mode_transition_check": mode_transition,
         "latest_system_drift_audit": drift,
+        "latest_tamper_guard_step": tamper_step,
+        "tamper_guard_result": tamper_guard_result,
         "policy": {
             "no_website_source_changes": True,
             "no_git_add": True,
@@ -151,6 +162,7 @@ def main():
         "mode_transition_check_result": mode_transition.get("result"),
         "drift_audit_result": drift.get("result"),
         "drift_count": drift.get("drift_count"),
+        "tamper_guard_result": tamper_guard_result,
         "gate_summary": gate_summary,
         "commit_plan_audit_summary": commit_summary,
     }
@@ -166,6 +178,7 @@ def main():
     print("mode_transition_check_result =", mode_transition.get("result"))
     print("drift_audit_result =", drift.get("result"))
     print("drift_count =", drift.get("drift_count"))
+    print("tamper_guard_result =", tamper_guard_result)
     print("ok_for_system_build =", gate_summary.get("ok_for_system_build"))
     print("ok_for_commit =", gate_summary.get("ok_for_commit"))
     print("ok_for_deploy =", gate_summary.get("ok_for_deploy"))
