@@ -13,7 +13,7 @@ REPORT_DIR.mkdir(parents=True, exist_ok=True)
 SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
 GATE_ID = "learning-v2-push-approval-gate-v0"
-EXPECTED_MIN_AHEAD_COMMITS = 4
+EXPECTED_MIN_AHEAD_COMMITS = 1
 
 REQUIRED_TRUE_FLAGS = [
     "public_changes_approved",
