@@ -63,6 +63,55 @@ def path_forbidden(path):
 def path_allowed_for_create(path):
     return any(path.startswith(prefix) for prefix in ALLOWED_CREATE_FILE_PREFIXES)
 
+
+def validate_event_storytelling_proposal(proposal):
+    failures = []
+    warnings = []
+
+    proposal_id = proposal.get("proposal_id")
+    preferred_option = proposal.get("preferred_option")
+    files_to_change = proposal.get("files_to_change") or []
+    story_elements = proposal.get("proposed_story_elements") or []
+    future_surfaces = proposal.get("candidate_future_surfaces") or []
+    validation_plan = proposal.get("validation_plan") or []
+
+    if proposal_id != "proposal-event-storytelling-path-v0":
+        warnings.append(f"unexpected_proposal_id:{proposal_id}")
+
+    if preferred_option != "proposal_only_storytelling_path_design":
+        failures.append(f"unsupported_preferred_option:{preferred_option}")
+
+    if files_to_change:
+        failures.append(f"proposal_only_files_to_change_must_be_empty:{files_to_change}")
+
+    required_story_elements = [
+        "event context",
+        "turning point",
+        "competitive spirit",
+        "community proof",
+    ]
+    for item in required_story_elements:
+        if item not in story_elements:
+            failures.append(f"missing_story_element:{item}")
+
+    if not future_surfaces:
+        failures.append("candidate_future_surfaces_empty")
+
+    required_validation_notes = [
+        "proposal-only",
+        "does not change website files",
+        "no commit, push, or deploy",
+        "controlled-change-plan before any website source edit",
+    ]
+
+    joined_plan = " | ".join(validation_plan)
+    for note in required_validation_notes:
+        if note not in joined_plan:
+            failures.append(f"validation_plan_missing_note:{note}")
+
+    return failures, warnings
+
+
 def main():
     proposal_path = latest_proposal_report()
     if not proposal_path:
@@ -80,37 +129,43 @@ def main():
     failures = []
     warnings = []
 
-    if target_family != "quality.missing_asset_reference":
+    if target_family == "event.storytelling_path":
+        event_failures, event_warnings = validate_event_storytelling_proposal(proposal)
+        failures.extend(event_failures)
+        warnings.extend(event_warnings)
+
+    elif target_family == "quality.missing_asset_reference":
+        if proposal_id != "proposal-repair-missing-asset-reference-v0":
+            warnings.append(f"unexpected_proposal_id:{proposal_id}")
+
+        if preferred_option != "create_missing_asset_at_referenced_path":
+            failures.append(f"unsupported_preferred_option:{preferred_option}")
+
+        if not files_to_change:
+            failures.append("files_to_change_empty")
+
+        if len(files_to_change) > 3:
+            failures.append(f"too_many_files_to_change:{len(files_to_change)}")
+
+        for path in files_to_change:
+            if path_forbidden(path):
+                failures.append(f"forbidden_path:{path}")
+            if not path_allowed_for_create(path):
+                failures.append(f"path_not_allowed_for_create:{path}")
+
+            full = WORKSPACE / path
+            if full.exists():
+                warnings.append(f"target_file_already_exists:{path}")
+
+        if "public/assets/css/site.css" not in files_to_change:
+            warnings.append("expected_target_public_assets_css_site_css_not_selected")
+
+        option_ids = [x.get("option_id") for x in options]
+        if "create_missing_asset_at_referenced_path" not in option_ids:
+            failures.append("required_option_missing:create_missing_asset_at_referenced_path")
+
+    else:
         failures.append(f"unsupported_target_family:{target_family}")
-
-    if proposal_id != "proposal-repair-missing-asset-reference-v0":
-        warnings.append(f"unexpected_proposal_id:{proposal_id}")
-
-    if preferred_option != "create_missing_asset_at_referenced_path":
-        failures.append(f"unsupported_preferred_option:{preferred_option}")
-
-    if not files_to_change:
-        failures.append("files_to_change_empty")
-
-    if len(files_to_change) > 3:
-        failures.append(f"too_many_files_to_change:{len(files_to_change)}")
-
-    for path in files_to_change:
-        if path_forbidden(path):
-            failures.append(f"forbidden_path:{path}")
-        if not path_allowed_for_create(path):
-            failures.append(f"path_not_allowed_for_create:{path}")
-
-        full = WORKSPACE / path
-        if full.exists():
-            warnings.append(f"target_file_already_exists:{path}")
-
-    if "public/assets/css/site.css" not in files_to_change:
-        warnings.append("expected_target_public_assets_css_site_css_not_selected")
-
-    option_ids = [x.get("option_id") for x in options]
-    if "create_missing_asset_at_referenced_path" not in option_ids:
-        failures.append("required_option_missing:create_missing_asset_at_referenced_path")
 
     result = "ok" if not failures else "blocked"
     recommended_next_stage = "controlled_change_plan" if result == "ok" else "proposal_revision"

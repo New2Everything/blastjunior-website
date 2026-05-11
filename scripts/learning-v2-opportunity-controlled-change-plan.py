@@ -54,44 +54,102 @@ def main():
     failures = []
     warnings = []
 
+    target_family = gate.get("target_family")
+    files_to_change = gate.get("files_to_change") or []
+
     if gate.get("result") != "ok":
         failures.append(f"validation_gate_not_ok:{gate.get('result')}")
 
-    files_to_change = gate.get("files_to_change") or []
-    if files_to_change != ["public/assets/css/site.css"]:
-        failures.append(f"unexpected_files_to_change:{files_to_change}")
+    if target_family == "event.storytelling_path":
+        if files_to_change:
+            failures.append(f"event_storytelling_proposal_only_requires_no_files:{files_to_change}")
 
-    target = WORKSPACE / "public/assets/css/site.css"
-    if target.exists():
-        warnings.append("target_file_already_exists")
+        result = "ok" if not failures else "blocked"
 
-    source_styles = WORKSPACE / "public/styles.css"
-    if not source_styles.exists():
-        failures.append("source_styles_css_missing:public/styles.css")
+        plan = {
+            "plan_id": "controlled-change-plan-event-storytelling-path-proposal-only-v0",
+            "change_type": "proposal_only_no_source_change",
+            "target_file": None,
+            "planned_content": "",
+            "reason": "Support event.storytelling_path as a design capability lifecycle target without editing website files yet.",
+            "source_reference": gate.get("source_proposal_report"),
+            "strategy": "Record a proposal-only controlled plan. Do not choose final page placement, do not apply, and do not edit public/components/worker/sql files.",
+            "expected_validation": [
+                "validation gate result is ok",
+                "files_to_change remains empty",
+                "website_files_changed remains false",
+                "system_integrity remains ok",
+                "later implementation requires a separate controlled source-change plan"
+            ],
+            "non_goals": [
+                "do not edit public files",
+                "do not edit components",
+                "do not generate final marketing copy",
+                "do not apply website changes",
+                "do not push",
+                "do not deploy"
+            ],
+        }
 
-    result = "ok" if not failures else "blocked"
+        recommended_next_stage = "design_review_or_implementation_readiness" if result == "ok" else "plan_revision"
 
-    plan = {
-        "plan_id": "controlled-change-plan-create-public-assets-css-site-css-v0",
-        "change_type": "create_file",
-        "target_file": "public/assets/css/site.css",
-        "planned_content": PLANNED_CSS,
-        "reason": "Repair missing stylesheet asset referenced by public/about.html.",
-        "source_reference": "public/about.html href=/assets/css/site.css?v=20260110",
-        "strategy": "Create a small bridge stylesheet that imports existing /styles.css; do not redesign the page.",
-        "expected_validation": [
-            "public/assets/css/site.css exists after apply",
-            "design-opportunity-discoverer no longer reports this missing asset",
-            "system_integrity remains ok",
-        ],
-        "non_goals": [
-            "do not redesign public/about.html",
-            "do not edit public/about.html",
-            "do not edit gallery.html or news.html",
-            "do not push",
-            "do not deploy",
-        ],
-    }
+    elif target_family == "quality.missing_asset_reference":
+        if files_to_change != ["public/assets/css/site.css"]:
+            failures.append(f"unexpected_files_to_change:{files_to_change}")
+
+        target = WORKSPACE / "public/assets/css/site.css"
+        if target.exists():
+            warnings.append("target_file_already_exists")
+
+        source_styles = WORKSPACE / "public/styles.css"
+        if not source_styles.exists():
+            failures.append("source_styles_css_missing:public/styles.css")
+
+        result = "ok" if not failures else "blocked"
+
+        plan = {
+            "plan_id": "controlled-change-plan-create-public-assets-css-site-css-v0",
+            "change_type": "create_file",
+            "target_file": "public/assets/css/site.css",
+            "planned_content": PLANNED_CSS,
+            "reason": "Repair missing stylesheet asset referenced by public/about.html.",
+            "source_reference": "public/about.html href=/assets/css/site.css?v=20260110",
+            "strategy": "Create a small bridge stylesheet that imports existing /styles.css; do not redesign the page.",
+            "expected_validation": [
+                "public/assets/css/site.css exists after apply",
+                "design-opportunity-discoverer no longer reports this missing asset",
+                "system_integrity remains ok",
+            ],
+            "non_goals": [
+                "do not redesign public/about.html",
+                "do not edit public/about.html",
+                "do not edit gallery.html or news.html",
+                "do not push",
+                "do not deploy",
+            ],
+        }
+
+        recommended_next_stage = "controlled_apply" if result == "ok" else "plan_revision"
+
+    else:
+        failures.append(f"unsupported_target_family:{target_family}")
+        result = "blocked"
+        plan = {
+            "plan_id": f"controlled-change-plan-unsupported-{target_family}-v0",
+            "change_type": "unsupported",
+            "target_file": None,
+            "planned_content": "",
+            "reason": "Target family is not supported by this planner yet.",
+            "source_reference": gate.get("source_proposal_report"),
+            "strategy": "Add target-specific controlled-change-plan support before proceeding.",
+            "expected_validation": [],
+            "non_goals": [
+                "do not apply",
+                "do not push",
+                "do not deploy",
+            ],
+        }
+        recommended_next_stage = "plan_revision"
 
     payload = {
         "generated_at": now_iso(),
@@ -112,7 +170,7 @@ def main():
             "deploy": False,
             "restore_cloudflare_auto_deploy": False,
         },
-        "recommended_next_stage": "controlled_apply" if result == "ok" else "plan_revision",
+        "recommended_next_stage": recommended_next_stage,
     }
 
     out_json = REPORT_DIR / f"opportunity-controlled-change-plan-{stamp()}.json"
@@ -140,7 +198,7 @@ def main():
         "## Planned Content",
         "",
         "```css",
-        PLANNED_CSS.rstrip(),
+        (plan.get("planned_content") or "").rstrip(),
         "```",
         "",
         "## Expected Validation",

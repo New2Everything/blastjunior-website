@@ -176,6 +176,53 @@ def build_missing_asset_proposal(evidence_payload):
 
     return proposal
 
+
+def build_event_storytelling_proposal(evidence_payload):
+    hypothesis = evidence_payload.get("hypothesis") or {}
+    return {
+        "proposal_id": "proposal-event-storytelling-path-v0",
+        "target_family": "event.storytelling_path",
+        "lane": evidence_payload.get("lane"),
+        "opportunity_type": evidence_payload.get("opportunity_type"),
+        "criticality": evidence_payload.get("criticality"),
+        "hypothesis_id": hypothesis.get("hypothesis_id"),
+        "proposal_type": "design_capability_proposal",
+        "preferred_option": "proposal_only_storytelling_path_design",
+        "files_to_change": [],
+        "capability_intent": "Create a future event storytelling path that turns competitions into emotional proof of club value.",
+        "target_user_value": "Visitors should feel competitive spirit, community identity, and why events matter.",
+        "proposed_story_elements": [
+            "event context",
+            "team or player challenge",
+            "turning point",
+            "competitive spirit",
+            "community proof",
+            "next action after reading"
+        ],
+        "candidate_future_surfaces": [
+            "public/news.html",
+            "a future dedicated event story section",
+            "a future story card component"
+        ],
+        "validation_plan": [
+            "Validate that this is proposal-only and does not change website files.",
+            "Validate that files_to_change is empty at this stage.",
+            "Validate that candidate_future_surfaces are suggestions, not approved edits.",
+            "Validate that no commit, push, or deploy is requested.",
+            "Require a later controlled-change-plan before any website source edit."
+        ],
+        "risk_classification": "medium_design_scope",
+        "non_goals": [
+            "do not edit public files in proposal stage",
+            "do not choose final placement yet",
+            "do not generate final marketing copy yet",
+            "do not push",
+            "do not deploy",
+            "do not restore Cloudflare production auto-deploy"
+        ],
+    }
+
+
 def main():
     evidence_path = latest_evidence_report()
     if not evidence_path:
@@ -186,6 +233,8 @@ def main():
 
     if target_family == "quality.missing_asset_reference":
         proposal = build_missing_asset_proposal(evidence_payload)
+    elif target_family == "event.storytelling_path":
+        proposal = build_event_storytelling_proposal(evidence_payload)
     else:
         proposal = {
             "proposal_id": f"proposal-{target_family}-v0",
