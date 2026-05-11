@@ -118,6 +118,7 @@ def main():
     protected_roles = {
         "learning_v2_script",
         "constitution",
+        "target_family_registry",
         "runbook",
         "mode_policy",
         "local_git_guard",

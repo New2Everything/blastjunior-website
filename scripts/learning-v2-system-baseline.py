@@ -115,6 +115,7 @@ def main():
     for path, role in [
         ("learning-v2/RUNBOOK.md", "runbook"),
         ("learning-v2/CONSTITUTION.md", "constitution"),
+        ("learning-v2/target-family-registry.json", "target_family_registry"),
         ("learning-v2/mode-policy.json", "mode_policy"),
         (".git/hooks/pre-commit", "local_git_guard"),
         (".git/hooks/pre-push", "local_git_guard"),

@@ -1,0 +1,54 @@
+{
+  "registry_id": "learning-v2-target-family-registry-v0",
+  "purpose": "Central registry for learning-v2 target families so future lifecycle support is less hardcoded.",
+  "policy": {
+    "dry_run_only": true,
+    "website_files_changed": false,
+    "git_commit": false,
+    "git_push": false,
+    "deploy": false,
+    "restore_cloudflare_auto_deploy": false
+  },
+  "families": {
+    "quality.missing_asset_reference": {
+      "type": "quality_repair",
+      "lane": "quality_bug_scan",
+      "current_support": "full_controlled_loop",
+      "proposal_mode": "repair",
+      "validation_mode": "source_change_validation",
+      "plan_mode": "controlled_source_change",
+      "apply_allowed_by_default": false,
+      "source_change_allowed_by_default": false,
+      "status": "supported"
+    },
+    "event.storytelling_path": {
+      "type": "design_capability",
+      "lane": "design_capability_scan",
+      "current_support": "proposal_only_lifecycle",
+      "proposal_mode": "design_capability_proposal",
+      "validation_mode": "proposal_only_validation",
+      "plan_mode": "proposal_only_no_source_change",
+      "apply_allowed_by_default": false,
+      "source_change_allowed_by_default": false,
+      "status": "supported"
+    },
+    "beginner.hado_explanation": {
+      "type": "design_capability",
+      "lane": "design_capability_scan",
+      "current_support": "candidate_only",
+      "status": "candidate"
+    },
+    "parent.trust_path": {
+      "type": "design_capability",
+      "lane": "design_capability_scan",
+      "current_support": "candidate_only",
+      "status": "candidate"
+    },
+    "conversion.inquiry_path": {
+      "type": "experience_friction",
+      "lane": "design_capability_scan",
+      "current_support": "candidate_only",
+      "status": "candidate"
+    }
+  }
+}

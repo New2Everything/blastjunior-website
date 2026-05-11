@@ -127,6 +127,10 @@ def main():
     if constitution.exists():
         doc_candidates.append("learning-v2/CONSTITUTION.md")
 
+    target_family_registry = WORKSPACE / "learning-v2" / "target-family-registry.json"
+    if target_family_registry.exists():
+        doc_candidates.append("learning-v2/target-family-registry.json")
+
     config_candidates = []
     for rel in [
         "learning-v2/push-approval-state.json",
