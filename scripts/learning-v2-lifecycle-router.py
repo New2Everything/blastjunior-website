@@ -10,7 +10,8 @@ SNAPSHOT_DIR = BASE / "snapshots"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
-ROUTER_ID = "learning-v2-lifecycle-router-v0"
+ROUTER_ID = "learning-v2-lifecycle-router-v0.1"
+REGISTRY_PATH = BASE / "target-family-registry.json"
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
@@ -29,6 +30,13 @@ def latest(pattern):
     if not files:
         return None, {}
     return files[0], load_json(files[0])
+
+
+def load_target_family_registry():
+    registry = load_json(REGISTRY_PATH)
+    families = registry.get("families") or {}
+    return registry, families
+
 
 def discovery_target(data):
     if data.get("recommended_target_family"):
@@ -54,8 +62,14 @@ def main():
         or discovery_target(discovery)
     )
 
+    registry, registry_families = load_target_family_registry()
+    registry_family = registry_families.get(target_family) or {}
+
     warnings = []
     failures = []
+
+    if target_family and not registry_family:
+        warnings.append(f"target_family_not_in_registry:{target_family}")
 
     report_targets = {
         "discovery": discovery_target(discovery),
@@ -134,6 +148,11 @@ def main():
         "router_id": ROUTER_ID,
         "result": "ok" if not failures else "blocked",
         "target_family": target_family,
+        "registry_family_status": registry_family.get("status"),
+        "registry_current_support": registry_family.get("current_support"),
+        "registry_type": registry_family.get("type"),
+        "registry_lane": registry_family.get("lane"),
+        "registry_path": str(REGISTRY_PATH),
         "lifecycle_stage": lifecycle_stage,
         "next_allowed_stage": next_allowed_stage,
         "apply_allowed": apply_allowed,
@@ -176,6 +195,9 @@ def main():
         f"- generated_at: `{payload['generated_at']}`",
         f"- result: `{payload['result']}`",
         f"- target_family: `{target_family}`",
+        f"- registry_family_status: `{registry_family.get('status')}`",
+        f"- registry_current_support: `{registry_family.get('current_support')}`",
+        f"- registry_type: `{registry_family.get('type')}`",
         f"- lifecycle_stage: `{lifecycle_stage}`",
         f"- next_allowed_stage: `{next_allowed_stage}`",
         f"- apply_allowed: `{str(apply_allowed).lower()}`",
@@ -204,6 +226,9 @@ def main():
 
     print("lifecycle_router =", payload["result"])
     print("target_family =", target_family)
+    print("registry_family_status =", registry_family.get("status"))
+    print("registry_current_support =", registry_family.get("current_support"))
+    print("registry_type =", registry_family.get("type"))
     print("lifecycle_stage =", lifecycle_stage)
     print("next_allowed_stage =", next_allowed_stage)
     print("apply_allowed =", str(apply_allowed).lower())
