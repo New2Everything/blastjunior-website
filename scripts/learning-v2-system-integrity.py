@@ -54,6 +54,7 @@ def main():
         ("mode_transition_check", ["python3", "scripts/learning-v2-mode-transition-checker.py", "--inside-integrity"]),
         ("system_drift_audit", ["python3", "scripts/learning-v2-system-drift-auditor.py"]),
         ("tamper_guard", ["python3", "scripts/learning-v2-tamper-guard.py"]),
+        ("target_family_registry_auditor", ["python3", "scripts/learning-v2-target-family-registry-auditor.py"]),
         ("control_status", ["python3", "scripts/learning-v2-control.py", "status"]),
     ]
 
