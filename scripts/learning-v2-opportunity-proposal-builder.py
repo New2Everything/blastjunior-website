@@ -11,7 +11,8 @@ SNAPSHOT_DIR = BASE / "snapshots"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
-BUILDER_ID = "learning-v2-opportunity-proposal-builder-v0"
+BUILDER_ID = "learning-v2-opportunity-proposal-builder-v0.1"
+REGISTRY_PATH = BASE / "target-family-registry.json"
 
 CSS_CANDIDATES = [
     "public/assets/css/site.css",
@@ -35,6 +36,13 @@ def load_json(path, default=None):
         return json.loads(p.read_text(encoding="utf-8"))
     except Exception:
         return default
+
+
+def load_target_family_registry():
+    registry = load_json(REGISTRY_PATH, default={}) or {}
+    families = registry.get("families") or {}
+    return registry, families
+
 
 def latest_evidence_report():
     files = sorted(
@@ -231,6 +239,16 @@ def main():
     evidence_payload = load_json(evidence_path, default={}) or {}
     target_family = evidence_payload.get("target_family")
 
+    registry, registry_families = load_target_family_registry()
+    registry_family = registry_families.get(target_family) or {}
+    registry_warnings = []
+
+    if target_family and not registry_family:
+        registry_warnings.append(f"target_family_not_in_registry:{target_family}")
+
+    if registry_family and registry_family.get("status") not in ["supported", "candidate"]:
+        registry_warnings.append(f"unexpected_registry_family_status:{registry_family.get('status')}")
+
     if target_family == "quality.missing_asset_reference":
         proposal = build_missing_asset_proposal(evidence_payload)
     elif target_family == "event.storytelling_path":
@@ -251,12 +269,23 @@ def main():
             ],
         }
 
+    proposal["registry_family_status"] = registry_family.get("status")
+    proposal["registry_current_support"] = registry_family.get("current_support")
+    proposal["registry_type"] = registry_family.get("type")
+    proposal["registry_lane"] = registry_family.get("lane")
+
     payload = {
         "generated_at": now_iso(),
         "builder_id": BUILDER_ID,
         "result": "built",
         "source_evidence_report": str(evidence_path),
         "target_family": target_family,
+        "registry_family_status": registry_family.get("status"),
+        "registry_current_support": registry_family.get("current_support"),
+        "registry_type": registry_family.get("type"),
+        "registry_lane": registry_family.get("lane"),
+        "registry_path": str(REGISTRY_PATH),
+        "registry_warnings": registry_warnings,
         "proposal": proposal,
         "policy": {
             "dry_run_only": True,
@@ -282,6 +311,10 @@ def main():
         f"- result: `{payload['result']}`",
         f"- source_evidence_report: `{payload['source_evidence_report']}`",
         f"- target_family: `{target_family}`",
+        f"- registry_family_status: `{registry_family.get('status')}`",
+        f"- registry_current_support: `{registry_family.get('current_support')}`",
+        f"- registry_type: `{registry_family.get('type')}`",
+        f"- registry_lane: `{registry_family.get('lane')}`",
         f"- proposal_id: `{proposal.get('proposal_id')}`",
         f"- proposal_type: `{proposal.get('proposal_type')}`",
         f"- preferred_option: `{proposal.get('preferred_option')}`",
@@ -353,6 +386,10 @@ def main():
 
     print("opportunity_proposal =", payload["result"])
     print("target_family =", target_family)
+    print("registry_family_status =", registry_family.get("status"))
+    print("registry_current_support =", registry_family.get("current_support"))
+    print("registry_type =", registry_family.get("type"))
+    print("registry_lane =", registry_family.get("lane"))
     print("proposal_id =", proposal.get("proposal_id"))
     print("preferred_option =", proposal.get("preferred_option"))
     print("files_to_change =", json.dumps(proposal.get("files_to_change"), ensure_ascii=False))
