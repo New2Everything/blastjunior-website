@@ -11,7 +11,8 @@ SNAPSHOT_DIR = BASE / "snapshots"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
-PLANNER_ID = "learning-v2-opportunity-controlled-change-plan-v0"
+PLANNER_ID = "learning-v2-opportunity-controlled-change-plan-v0.1"
+REGISTRY_PATH = BASE / "target-family-registry.json"
 
 PLANNED_CSS = '''/* learning-v2 repair: missing asset reference
    Purpose: satisfy /assets/css/site.css?v=20260110 for Cloudflare Pages public root.
@@ -36,6 +37,13 @@ def load_json(path, default=None):
     except Exception:
         return default
 
+
+def load_target_family_registry():
+    registry = load_json(REGISTRY_PATH, default={}) or {}
+    families = registry.get("families") or {}
+    return registry, families
+
+
 def latest_validation_gate():
     files = sorted(
         REPORT_DIR.glob("opportunity-validation-gate-*.json"),
@@ -56,6 +64,21 @@ def main():
 
     target_family = gate.get("target_family")
     files_to_change = gate.get("files_to_change") or []
+
+    registry, registry_families = load_target_family_registry()
+    registry_family = registry_families.get(target_family) or {}
+    registry_warnings = []
+
+    if target_family and not registry_family:
+        registry_warnings.append(f"target_family_not_in_registry:{target_family}")
+
+    if registry_family and registry_family.get("status") != "supported":
+        registry_warnings.append(f"registry_family_not_supported:{target_family}:{registry_family.get('status')}")
+
+    if registry_family and registry_family.get("plan_mode") is None:
+        registry_warnings.append(f"registry_plan_mode_missing:{target_family}")
+
+    warnings.extend(registry_warnings)
 
     if gate.get("result") != "ok":
         failures.append(f"validation_gate_not_ok:{gate.get('result')}")
@@ -157,6 +180,13 @@ def main():
         "result": result,
         "source_validation_gate": str(gate_path),
         "target_family": gate.get("target_family"),
+        "registry_family_status": registry_family.get("status"),
+        "registry_current_support": registry_family.get("current_support"),
+        "registry_type": registry_family.get("type"),
+        "registry_lane": registry_family.get("lane"),
+        "registry_plan_mode": registry_family.get("plan_mode"),
+        "registry_path": str(REGISTRY_PATH),
+        "registry_warnings": registry_warnings,
         "proposal_id": gate.get("proposal_id"),
         "files_to_change": files_to_change,
         "plan": plan,
@@ -186,6 +216,11 @@ def main():
         f"- result: `{result}`",
         f"- source_validation_gate: `{payload['source_validation_gate']}`",
         f"- target_family: `{payload['target_family']}`",
+        f"- registry_family_status: `{registry_family.get('status')}`",
+        f"- registry_current_support: `{registry_family.get('current_support')}`",
+        f"- registry_type: `{registry_family.get('type')}`",
+        f"- registry_lane: `{registry_family.get('lane')}`",
+        f"- registry_plan_mode: `{registry_family.get('plan_mode')}`",
         f"- proposal_id: `{payload['proposal_id']}`",
         f"- recommended_next_stage: `{payload['recommended_next_stage']}`",
         "",
@@ -237,6 +272,12 @@ def main():
     out_md.write_text("\n".join(lines), encoding="utf-8")
 
     print("opportunity_controlled_change_plan =", result)
+    print("target_family =", target_family)
+    print("registry_family_status =", registry_family.get("status"))
+    print("registry_current_support =", registry_family.get("current_support"))
+    print("registry_type =", registry_family.get("type"))
+    print("registry_lane =", registry_family.get("lane"))
+    print("registry_plan_mode =", registry_family.get("plan_mode"))
     print("target_file =", plan["target_file"])
     print("change_type =", plan["change_type"])
     print("recommended_next_stage =", payload["recommended_next_stage"])
