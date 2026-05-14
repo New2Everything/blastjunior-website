@@ -11,7 +11,8 @@ SNAPSHOT_DIR = BASE / "snapshots"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
-GATE_ID = "learning-v2-opportunity-validation-gate-v0"
+GATE_ID = "learning-v2-opportunity-validation-gate-v0.1"
+REGISTRY_PATH = BASE / "target-family-registry.json"
 
 ALLOWED_CREATE_FILE_PREFIXES = [
     "public/assets/",
@@ -46,6 +47,13 @@ def load_json(path, default=None):
         return json.loads(p.read_text(encoding="utf-8"))
     except Exception:
         return default
+
+
+def load_target_family_registry():
+    registry = load_json(REGISTRY_PATH, default={}) or {}
+    families = registry.get("families") or {}
+    return registry, families
+
 
 def latest_proposal_report():
     files = sorted(
@@ -129,6 +137,21 @@ def main():
     failures = []
     warnings = []
 
+    registry, registry_families = load_target_family_registry()
+    registry_family = registry_families.get(target_family) or {}
+    registry_warnings = []
+
+    if target_family and not registry_family:
+        registry_warnings.append(f"target_family_not_in_registry:{target_family}")
+
+    if registry_family and registry_family.get("status") != "supported":
+        registry_warnings.append(f"registry_family_not_supported:{target_family}:{registry_family.get('status')}")
+
+    if registry_family and registry_family.get("validation_mode") is None:
+        registry_warnings.append(f"registry_validation_mode_missing:{target_family}")
+
+    warnings.extend(registry_warnings)
+
     if target_family == "event.storytelling_path":
         event_failures, event_warnings = validate_event_storytelling_proposal(proposal)
         failures.extend(event_failures)
@@ -176,6 +199,13 @@ def main():
         "result": result,
         "source_proposal_report": str(proposal_path),
         "target_family": target_family,
+        "registry_family_status": registry_family.get("status"),
+        "registry_current_support": registry_family.get("current_support"),
+        "registry_type": registry_family.get("type"),
+        "registry_lane": registry_family.get("lane"),
+        "registry_validation_mode": registry_family.get("validation_mode"),
+        "registry_path": str(REGISTRY_PATH),
+        "registry_warnings": registry_warnings,
         "proposal_id": proposal_id,
         "preferred_option": preferred_option,
         "files_to_change": files_to_change,
@@ -205,6 +235,11 @@ def main():
         f"- result: `{result}`",
         f"- source_proposal_report: `{out['source_proposal_report']}`",
         f"- target_family: `{target_family}`",
+        f"- registry_family_status: `{registry_family.get('status')}`",
+        f"- registry_current_support: `{registry_family.get('current_support')}`",
+        f"- registry_type: `{registry_family.get('type')}`",
+        f"- registry_lane: `{registry_family.get('lane')}`",
+        f"- registry_validation_mode: `{registry_family.get('validation_mode')}`",
         f"- proposal_id: `{proposal_id}`",
         f"- preferred_option: `{preferred_option}`",
         f"- recommended_next_stage: `{recommended_next_stage}`",
@@ -241,6 +276,11 @@ def main():
 
     print("opportunity_validation_gate =", result)
     print("target_family =", target_family)
+    print("registry_family_status =", registry_family.get("status"))
+    print("registry_current_support =", registry_family.get("current_support"))
+    print("registry_type =", registry_family.get("type"))
+    print("registry_lane =", registry_family.get("lane"))
+    print("registry_validation_mode =", registry_family.get("validation_mode"))
     print("proposal_id =", proposal_id)
     print("preferred_option =", preferred_option)
     print("files_to_change =", json.dumps(files_to_change, ensure_ascii=False))
