@@ -45,6 +45,7 @@ def main():
     warnings = []
 
     outcome_path, outcome = latest_json("learning-v2-review-outcome-*.json")
+    aggregator_path, aggregator = latest_json("learning-v2-review-outcome-aggregator-*.json")
     packet_path, packet = latest_json("learning-v2-human-design-review-packet-*.json")
     readiness_path, readiness = latest_json("learning-v2-design-review-implementation-readiness-*.json")
 
@@ -54,6 +55,13 @@ def main():
         failures.append(f"review_outcome_load_error:{outcome.get('__load_error__')}")
     if outcome.get("result") != "ok":
         failures.append(f"review_outcome_result_not_ok:{outcome.get('result')}")
+
+    if not aggregator_path:
+        warnings.append("missing_review_outcome_aggregator_falling_back_to_raw_outcome")
+    elif aggregator.get("__load_error__"):
+        failures.append(f"review_outcome_aggregator_load_error:{aggregator.get('__load_error__')}")
+    elif aggregator.get("result") != "ok":
+        failures.append(f"review_outcome_aggregator_result_not_ok:{aggregator.get('result')}")
 
     if not packet_path:
         failures.append("missing_human_design_review_packet")
@@ -69,11 +77,15 @@ def main():
     if readiness.get("result") != "ok":
         failures.append(f"readiness_result_not_ok:{readiness.get('result')}")
 
-    for name, payload in [
+    policy_payloads = [
         ("outcome", outcome),
         ("packet", packet),
         ("readiness", readiness),
-    ]:
+    ]
+    if aggregator_path:
+        policy_payloads.append(("aggregator", aggregator))
+
+    for name, payload in policy_payloads:
         policy = payload.get("policy") or {}
         for key in [
             "website_files_changed",
@@ -86,8 +98,15 @@ def main():
             if policy.get(key) is not False:
                 failures.append(f"{name}_policy_{key}_not_false:{policy.get(key)}")
 
-    decision = outcome.get("decision")
-    source = outcome.get("source")
+    stable_outcome = aggregator.get("stable_outcome") if aggregator.get("result") == "ok" else None
+    aggregator_confidence = aggregator.get("confidence") if aggregator.get("result") == "ok" else None
+
+    if stable_outcome:
+        decision = stable_outcome
+        source = "aggregator"
+    else:
+        decision = outcome.get("decision")
+        source = outcome.get("source")
 
     if decision == "accept":
         readiness_decision = "implementation_planning_ready_source_change_closed"
@@ -116,6 +135,8 @@ def main():
         "proposal_id": outcome.get("proposal_id"),
         "preferred_option": outcome.get("preferred_option"),
         "review_outcome_report": str(outcome_path) if outcome_path else None,
+        "review_outcome_aggregator_report": str(aggregator_path) if aggregator_path else None,
+        "aggregator_confidence": aggregator_confidence,
         "packet_report": str(packet_path) if packet_path else None,
         "readiness_report": str(readiness_path) if readiness_path else None,
         "source": source,
@@ -169,6 +190,7 @@ def main():
     print("proposal_id =", payload["proposal_id"])
     print("source =", source)
     print("decision =", decision)
+    print("aggregator_confidence =", aggregator_confidence)
     print("readiness_decision =", readiness_decision)
     print("next_safe_action =", next_safe_action)
     print("implementation_gate_opened = false")
