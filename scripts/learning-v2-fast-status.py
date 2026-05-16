@@ -100,6 +100,7 @@ def main():
     source_path, source_gate = latest_json("learning-v2-source-change-gate-*.json")
     packet_path, review_packet = latest_json("learning-v2-source-change-review-packet-*.json")
     auditor_path, review_packet_auditor = latest_json("learning-v2-source-change-review-packet-auditor-*.json")
+    chain_path, guard_chain_auditor = latest_json("learning-v2-source-change-guard-chain-auditor-*.json")
     integrity_path, integrity = latest_json("system-integrity-*.json")
     agent_path, agent = latest_json("learning-v2-agent-status-*.json")
 
@@ -110,6 +111,7 @@ def main():
         ("source_change_gate", source_gate),
         ("source_change_review_packet", review_packet),
         ("source_change_review_packet_auditor", review_packet_auditor),
+        ("source_change_guard_chain_auditor", guard_chain_auditor),
         ("system_integrity", integrity),
         ("learning_v2_agent_status", agent),
     ]
@@ -121,7 +123,7 @@ def main():
             failures.append(f"{name}_load_error:{data.get('__load_error__')}")
 
     deploy_values = []
-    for data in [agg, ready, planner, source_gate, review_packet, review_packet_auditor, integrity, agent]:
+    for data in [agg, ready, planner, source_gate, review_packet, review_packet_auditor, guard_chain_auditor, integrity, agent]:
         policy = data.get("policy") or {}
         if "deploy" in policy:
             deploy_values.append(policy.get("deploy"))
@@ -150,6 +152,11 @@ def main():
     auditor_status = review_packet_auditor.get("audit_status")
     auditor_source_change_gate_opened = (review_packet_auditor.get("policy") or {}).get("source_change_gate_opened")
 
+    chain_result = guard_chain_auditor.get("result")
+    chain_status = guard_chain_auditor.get("chain_status")
+    chain_fast_status_deploy = guard_chain_auditor.get("fast_status_deploy")
+    chain_source_change_gate_opened = (guard_chain_auditor.get("policy") or {}).get("source_change_gate_opened")
+
     if agent_value != "ok":
         failures.append(f"agent_status_not_ok:{agent_value}")
     if source_gate_result != "ok":
@@ -166,6 +173,15 @@ def main():
         failures.append(f"source_change_review_packet_audit_status_invalid:{auditor_status}")
     if auditor_source_change_gate_opened is not False:
         failures.append(f"source_change_review_packet_auditor_gate_opened_not_false:{auditor_source_change_gate_opened}")
+
+    if chain_result != "ok":
+        failures.append(f"source_change_guard_chain_auditor_not_ok:{chain_result}")
+    if chain_status not in {"consistent_pending_block", "consistent_review_ready_gate_closed", "consistent_accept_but_gate_not_ready"}:
+        failures.append(f"source_change_guard_chain_status_invalid:{chain_status}")
+    if str(chain_fast_status_deploy).lower() != "false":
+        failures.append(f"source_change_guard_chain_fast_status_deploy_not_false:{chain_fast_status_deploy}")
+    if chain_source_change_gate_opened is not False:
+        failures.append(f"source_change_guard_chain_gate_opened_not_false:{chain_source_change_gate_opened}")
 
     result = "ok" if not failures else "blocked"
 
@@ -193,6 +209,10 @@ def main():
     print("source_change_review_packet_auditor =", auditor_result)
     print("source_change_audit_status =", auditor_status)
     print("source_change_auditor_gate_opened =", str(auditor_source_change_gate_opened).lower())
+    print("source_change_guard_chain_auditor =", chain_result)
+    print("source_change_chain_status =", chain_status)
+    print("source_change_chain_fast_status_deploy =", str(chain_fast_status_deploy).lower())
+    print("source_change_chain_gate_opened =", str(chain_source_change_gate_opened).lower())
     print("system_integrity =", integrity_value)
     print("agent_status =", agent_value)
     print("deploy = false" if deploy_ok else f"deploy_values = {deploy_values}")
