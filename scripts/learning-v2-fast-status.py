@@ -89,6 +89,7 @@ def main():
     agg_path, agg = latest_json("learning-v2-review-outcome-aggregator-*.json")
     ready_path, ready = latest_json("learning-v2-implementation-readiness-gate-*.json")
     planner_path, planner = latest_json("learning-v2-controlled-implementation-planner-*.json")
+    source_path, source_gate = latest_json("learning-v2-source-change-gate-*.json")
     integrity_path, integrity = latest_json("system-integrity-*.json")
     agent_path, agent = latest_json("learning-v2-agent-status-*.json")
 
@@ -96,6 +97,7 @@ def main():
         ("review_outcome_aggregator", agg),
         ("implementation_readiness_gate", ready),
         ("controlled_implementation_planner", planner),
+        ("source_change_gate", source_gate),
         ("system_integrity", integrity),
         ("learning_v2_agent_status", agent),
     ]
@@ -107,7 +109,7 @@ def main():
             failures.append(f"{name}_load_error:{data.get('__load_error__')}")
 
     deploy_values = []
-    for data in [agg, ready, planner, integrity, agent]:
+    for data in [agg, ready, planner, source_gate, integrity, agent]:
         policy = data.get("policy") or {}
         if "deploy" in policy:
             deploy_values.append(policy.get("deploy"))
@@ -123,8 +125,16 @@ def main():
         failures.append(f"deploy_not_false:{deploy_values}")
     if integrity_value != "ok":
         failures.append(f"system_integrity_not_ok:{integrity_value}")
+    source_gate_result = source_gate.get("result")
+    source_change_decision = source_gate.get("source_change_decision")
+    source_change_gate_opened = (source_gate.get("policy") or {}).get("source_change_gate_opened")
+
     if agent_value != "ok":
         failures.append(f"agent_status_not_ok:{agent_value}")
+    if source_gate_result != "ok":
+        failures.append(f"source_change_gate_not_ok:{source_gate_result}")
+    if source_change_gate_opened is not False:
+        failures.append(f"source_change_gate_opened_not_false:{source_change_gate_opened}")
 
     result = "ok" if not failures else "blocked"
 
@@ -142,6 +152,9 @@ def main():
     print("planner_result =", planner.get("result"))
     print("planning_status =", planner.get("planning_status"))
     print("plan_item_count =", len(planner.get("plan_items") or []))
+    print("source_change_gate =", source_gate_result)
+    print("source_change_decision =", source_change_decision)
+    print("source_change_gate_opened =", str(source_change_gate_opened).lower())
     print("system_integrity =", integrity_value)
     print("agent_status =", agent_value)
     print("deploy = false" if deploy_ok else f"deploy_values = {deploy_values}")
