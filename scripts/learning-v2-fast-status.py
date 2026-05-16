@@ -90,6 +90,7 @@ def main():
     ready_path, ready = latest_json("learning-v2-implementation-readiness-gate-*.json")
     planner_path, planner = latest_json("learning-v2-controlled-implementation-planner-*.json")
     source_path, source_gate = latest_json("learning-v2-source-change-gate-*.json")
+    packet_path, review_packet = latest_json("learning-v2-source-change-review-packet-*.json")
     integrity_path, integrity = latest_json("system-integrity-*.json")
     agent_path, agent = latest_json("learning-v2-agent-status-*.json")
 
@@ -98,6 +99,7 @@ def main():
         ("implementation_readiness_gate", ready),
         ("controlled_implementation_planner", planner),
         ("source_change_gate", source_gate),
+        ("source_change_review_packet", review_packet),
         ("system_integrity", integrity),
         ("learning_v2_agent_status", agent),
     ]
@@ -109,7 +111,7 @@ def main():
             failures.append(f"{name}_load_error:{data.get('__load_error__')}")
 
     deploy_values = []
-    for data in [agg, ready, planner, source_gate, integrity, agent]:
+    for data in [agg, ready, planner, source_gate, review_packet, integrity, agent]:
         policy = data.get("policy") or {}
         if "deploy" in policy:
             deploy_values.append(policy.get("deploy"))
@@ -129,12 +131,21 @@ def main():
     source_change_decision = source_gate.get("source_change_decision")
     source_change_gate_opened = (source_gate.get("policy") or {}).get("source_change_gate_opened")
 
+    review_packet_result = review_packet.get("result")
+    packet_status = review_packet.get("packet_status")
+    packet_next_safe_action = review_packet.get("next_safe_action")
+    packet_source_change_gate_opened = (review_packet.get("policy") or {}).get("source_change_gate_opened")
+
     if agent_value != "ok":
         failures.append(f"agent_status_not_ok:{agent_value}")
     if source_gate_result != "ok":
         failures.append(f"source_change_gate_not_ok:{source_gate_result}")
     if source_change_gate_opened is not False:
         failures.append(f"source_change_gate_opened_not_false:{source_change_gate_opened}")
+    if review_packet_result != "ok":
+        failures.append(f"source_change_review_packet_not_ok:{review_packet_result}")
+    if packet_source_change_gate_opened is not False:
+        failures.append(f"source_change_review_packet_gate_opened_not_false:{packet_source_change_gate_opened}")
 
     result = "ok" if not failures else "blocked"
 
@@ -155,6 +166,10 @@ def main():
     print("source_change_gate =", source_gate_result)
     print("source_change_decision =", source_change_decision)
     print("source_change_gate_opened =", str(source_change_gate_opened).lower())
+    print("source_change_review_packet =", review_packet_result)
+    print("source_change_packet_status =", packet_status)
+    print("source_change_packet_next_safe_action =", packet_next_safe_action)
+    print("source_change_packet_gate_opened =", str(packet_source_change_gate_opened).lower())
     print("system_integrity =", integrity_value)
     print("agent_status =", agent_value)
     print("deploy = false" if deploy_ok else f"deploy_values = {deploy_values}")
