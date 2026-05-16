@@ -10,8 +10,16 @@ STATUS_ID = "learning-v2-fast-status-v0"
 
 def latest_json(pattern):
     files = sorted(REPORT_DIR.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True)
+
+    if pattern == "learning-v2-source-change-review-packet-*.json":
+        files = [
+            p for p in files
+            if not p.name.startswith("learning-v2-source-change-review-packet-auditor-")
+        ]
+
     if not files:
         return None, {}
+
     p = files[0]
     try:
         return p, json.loads(p.read_text(encoding="utf-8"))
