@@ -101,6 +101,7 @@ def main():
     packet_path, review_packet = latest_json("learning-v2-source-change-review-packet-*.json")
     auditor_path, review_packet_auditor = latest_json("learning-v2-source-change-review-packet-auditor-*.json")
     chain_path, guard_chain_auditor = latest_json("learning-v2-source-change-guard-chain-auditor-*.json")
+    accept_path, accept_simulator = latest_json("learning-v2-accept-transition-simulator-*.json")
     integrity_path, integrity = latest_json("system-integrity-*.json")
     agent_path, agent = latest_json("learning-v2-agent-status-*.json")
 
@@ -112,6 +113,7 @@ def main():
         ("source_change_review_packet", review_packet),
         ("source_change_review_packet_auditor", review_packet_auditor),
         ("source_change_guard_chain_auditor", guard_chain_auditor),
+        ("accept_transition_simulator", accept_simulator),
         ("system_integrity", integrity),
         ("learning_v2_agent_status", agent),
     ]
@@ -123,7 +125,7 @@ def main():
             failures.append(f"{name}_load_error:{data.get('__load_error__')}")
 
     deploy_values = []
-    for data in [agg, ready, planner, source_gate, review_packet, review_packet_auditor, guard_chain_auditor, integrity, agent]:
+    for data in [agg, ready, planner, source_gate, review_packet, review_packet_auditor, guard_chain_auditor, accept_simulator, integrity, agent]:
         policy = data.get("policy") or {}
         if "deploy" in policy:
             deploy_values.append(policy.get("deploy"))
@@ -157,6 +159,12 @@ def main():
     chain_fast_status_deploy = guard_chain_auditor.get("fast_status_deploy")
     chain_source_change_gate_opened = (guard_chain_auditor.get("policy") or {}).get("source_change_gate_opened")
 
+    accept_result = accept_simulator.get("result")
+    accept_status = accept_simulator.get("simulator_status")
+    accept_simulated = accept_simulator.get("simulated_accept") or {}
+    accept_simulated_source_change_gate_opened = accept_simulated.get("simulated_source_change_gate_opened")
+    accept_simulated_deploy = accept_simulated.get("simulated_deploy")
+
     if agent_value != "ok":
         failures.append(f"agent_status_not_ok:{agent_value}")
     if source_gate_result != "ok":
@@ -182,6 +190,15 @@ def main():
         failures.append(f"source_change_guard_chain_fast_status_deploy_not_false:{chain_fast_status_deploy}")
     if chain_source_change_gate_opened is not False:
         failures.append(f"source_change_guard_chain_gate_opened_not_false:{chain_source_change_gate_opened}")
+
+    if accept_result != "ok":
+        failures.append(f"accept_transition_simulator_not_ok:{accept_result}")
+    if accept_status != "accept_transition_contract_ready":
+        failures.append(f"accept_transition_simulator_status_invalid:{accept_status}")
+    if accept_simulated_source_change_gate_opened is not False:
+        failures.append(f"accept_transition_simulated_source_change_gate_opened_not_false:{accept_simulated_source_change_gate_opened}")
+    if accept_simulated_deploy is not False:
+        failures.append(f"accept_transition_simulated_deploy_not_false:{accept_simulated_deploy}")
 
     result = "ok" if not failures else "blocked"
 
@@ -213,6 +230,10 @@ def main():
     print("source_change_chain_status =", chain_status)
     print("source_change_chain_fast_status_deploy =", str(chain_fast_status_deploy).lower())
     print("source_change_chain_gate_opened =", str(chain_source_change_gate_opened).lower())
+    print("accept_transition_simulator =", accept_result)
+    print("accept_transition_simulator_status =", accept_status)
+    print("accept_simulated_source_change_gate_opened =", str(accept_simulated_source_change_gate_opened).lower())
+    print("accept_simulated_deploy =", str(accept_simulated_deploy).lower())
     print("system_integrity =", integrity_value)
     print("agent_status =", agent_value)
     print("deploy = false" if deploy_ok else f"deploy_values = {deploy_values}")
