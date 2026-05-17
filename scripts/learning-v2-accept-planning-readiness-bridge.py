@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import os
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -145,16 +146,29 @@ def main():
     accept_contract_status = accept_contract.get("audit_status")
     chain_status = chain.get("chain_status")
 
-    fast = run_fast_status()
-    fast_kv = fast["kv"]
+    fast_status_dependency_mode = os.environ.get("LEARNING_V2_BRIDGE_FAST_STATUS_MODE", "skip").strip().lower()
 
-    if fast["returncode"] != 0:
-        failures.append(f"fast_status_returncode_not_zero:{fast['returncode']}")
+    if fast_status_dependency_mode == "call":
+        fast = run_fast_status()
+        fast_kv = fast["kv"]
 
-    if fast_kv.get("learning_v2_fast_status") != "ok":
-        failures.append(f"fast_status_not_ok:{fast_kv.get('learning_v2_fast_status')}")
-    if fast_kv.get("deploy") != "false":
-        failures.append(f"fast_status_deploy_not_false:{fast_kv.get('deploy')}")
+        if fast["returncode"] != 0:
+            failures.append(f"fast_status_returncode_not_zero:{fast['returncode']}")
+
+        if fast_kv.get("learning_v2_fast_status") != "ok":
+            failures.append(f"fast_status_not_ok:{fast_kv.get('learning_v2_fast_status')}")
+        if fast_kv.get("deploy") != "false":
+            failures.append(f"fast_status_deploy_not_false:{fast_kv.get('deploy')}")
+    else:
+        # Default is deliberately decoupled.
+        # This prevents a report cycle:
+        # fast-status -> bridge report -> bridge -> fast-status.
+        fast = {"returncode": None, "stdout": "", "stderr": "", "kv": {}}
+        fast_kv = {
+            "learning_v2_fast_status": "not_called_by_bridge",
+            "deploy": "not_called_by_bridge",
+        }
+        fast_status_dependency_mode = "skip"
 
     transition_contract = {
         "accept_may_open_planning_readiness": True,
@@ -225,6 +239,7 @@ def main():
         "next_safe_action": next_safe_action,
         "accept_contract_status": accept_contract_status,
         "chain_status": chain_status,
+        "fast_status_dependency_mode": fast_status_dependency_mode,
         "fast_status_result": fast_kv.get("learning_v2_fast_status"),
         "fast_status_deploy": fast_kv.get("deploy"),
         "transition_contract": transition_contract,
@@ -275,6 +290,7 @@ def main():
         f"- next_safe_action: `{next_safe_action}`",
         f"- accept_contract_status: `{accept_contract_status}`",
         f"- chain_status: `{chain_status}`",
+        f"- fast_status_dependency_mode: `{fast_status_dependency_mode}`",
         f"- fast_status_result: `{fast_kv.get('learning_v2_fast_status')}`",
         f"- fast_status_deploy: `{fast_kv.get('deploy')}`",
         "",
@@ -302,6 +318,7 @@ def main():
     print("next_safe_action =", next_safe_action)
     print("accept_contract_status =", accept_contract_status)
     print("chain_status =", chain_status)
+    print("fast_status_dependency_mode =", fast_status_dependency_mode)
     print("fast_status_result =", fast_kv.get("learning_v2_fast_status"))
     print("fast_status_deploy =", fast_kv.get("deploy"))
     print("failure_count =", len(failures))
