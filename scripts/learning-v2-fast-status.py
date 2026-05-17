@@ -102,6 +102,7 @@ def main():
     auditor_path, review_packet_auditor = latest_json("learning-v2-source-change-review-packet-auditor-*.json")
     chain_path, guard_chain_auditor = latest_json("learning-v2-source-change-guard-chain-auditor-*.json")
     accept_path, accept_simulator = latest_json("learning-v2-accept-transition-simulator-*.json")
+    accept_contract_path, accept_contract_auditor = latest_json("learning-v2-accept-transition-contract-auditor-*.json")
     integrity_path, integrity = latest_json("system-integrity-*.json")
     agent_path, agent = latest_json("learning-v2-agent-status-*.json")
 
@@ -114,6 +115,7 @@ def main():
         ("source_change_review_packet_auditor", review_packet_auditor),
         ("source_change_guard_chain_auditor", guard_chain_auditor),
         ("accept_transition_simulator", accept_simulator),
+        ("accept_transition_contract_auditor", accept_contract_auditor),
         ("system_integrity", integrity),
         ("learning_v2_agent_status", agent),
     ]
@@ -125,7 +127,7 @@ def main():
             failures.append(f"{name}_load_error:{data.get('__load_error__')}")
 
     deploy_values = []
-    for data in [agg, ready, planner, source_gate, review_packet, review_packet_auditor, guard_chain_auditor, accept_simulator, integrity, agent]:
+    for data in [agg, ready, planner, source_gate, review_packet, review_packet_auditor, guard_chain_auditor, accept_simulator, accept_contract_auditor, integrity, agent]:
         policy = data.get("policy") or {}
         if "deploy" in policy:
             deploy_values.append(policy.get("deploy"))
@@ -165,6 +167,11 @@ def main():
     accept_simulated_source_change_gate_opened = accept_simulated.get("simulated_source_change_gate_opened")
     accept_simulated_deploy = accept_simulated.get("simulated_deploy")
 
+    accept_contract_result = accept_contract_auditor.get("result")
+    accept_contract_audit_status = accept_contract_auditor.get("audit_status")
+    accept_contract_fast_status_deploy = accept_contract_auditor.get("fast_status_deploy")
+    accept_contract_source_change_gate_opened = (accept_contract_auditor.get("policy") or {}).get("source_change_gate_opened")
+
     if agent_value != "ok":
         failures.append(f"agent_status_not_ok:{agent_value}")
     if source_gate_result != "ok":
@@ -200,6 +207,15 @@ def main():
     if accept_simulated_deploy is not False:
         failures.append(f"accept_transition_simulated_deploy_not_false:{accept_simulated_deploy}")
 
+    if accept_contract_result != "ok":
+        failures.append(f"accept_transition_contract_auditor_not_ok:{accept_contract_result}")
+    if accept_contract_audit_status != "accept_transition_contract_consistent":
+        failures.append(f"accept_transition_contract_audit_status_invalid:{accept_contract_audit_status}")
+    if str(accept_contract_fast_status_deploy).lower() != "false":
+        failures.append(f"accept_transition_contract_fast_status_deploy_not_false:{accept_contract_fast_status_deploy}")
+    if accept_contract_source_change_gate_opened is not False:
+        failures.append(f"accept_transition_contract_source_change_gate_opened_not_false:{accept_contract_source_change_gate_opened}")
+
     result = "ok" if not failures else "blocked"
 
     print("learning_v2_fast_status =", result)
@@ -234,6 +250,10 @@ def main():
     print("accept_transition_simulator_status =", accept_status)
     print("accept_simulated_source_change_gate_opened =", str(accept_simulated_source_change_gate_opened).lower())
     print("accept_simulated_deploy =", str(accept_simulated_deploy).lower())
+    print("accept_transition_contract_auditor =", accept_contract_result)
+    print("accept_transition_contract_audit_status =", accept_contract_audit_status)
+    print("accept_transition_contract_fast_status_deploy =", str(accept_contract_fast_status_deploy).lower())
+    print("accept_transition_contract_gate_opened =", str(accept_contract_source_change_gate_opened).lower())
     print("system_integrity =", integrity_value)
     print("agent_status =", agent_value)
     print("deploy = false" if deploy_ok else f"deploy_values = {deploy_values}")
