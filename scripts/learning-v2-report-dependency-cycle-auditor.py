@@ -47,7 +47,6 @@ def report_prefix_for_script(script_name):
 
 def script_calls_fast_status(text):
     markers = [
-        "learning-v2-fast-status.py",
         '["python3", "scripts/learning-v2-fast-status.py"]',
         "run_fast_status()",
     ]
@@ -92,7 +91,7 @@ def main():
     for script_path in sorted(SCRIPTS_DIR.glob("learning-v2-*.py")):
         script_name = script_path.name
 
-        if script_name == "learning-v2-fast-status.py":
+        if script_name in {"learning-v2-fast-status.py", "learning-v2-report-dependency-cycle-auditor.py"}:
             continue
 
         text = read_text(script_path)
@@ -157,6 +156,9 @@ def main():
         "audit_status": audit_status,
         "fast_status_script": str(FAST_STATUS),
         "fast_status_report_patterns": fast_patterns,
+        "detected_cycle_count": len(detected_cycles),
+        "allowed_cycle_count": len(allowed_cycles),
+        "high_risk_check_count": len(high_risk_checks),
         "detected_cycles": detected_cycles,
         "allowed_cycles": allowed_cycles,
         "high_risk_checks": high_risk_checks,

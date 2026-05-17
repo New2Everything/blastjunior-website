@@ -103,6 +103,7 @@ def main():
     chain_path, guard_chain_auditor = latest_json("learning-v2-source-change-guard-chain-auditor-*.json")
     accept_path, accept_simulator = latest_json("learning-v2-accept-transition-simulator-*.json")
     accept_contract_path, accept_contract_auditor = latest_json("learning-v2-accept-transition-contract-auditor-*.json")
+    report_cycle_path, report_cycle_auditor = latest_json("learning-v2-report-dependency-cycle-auditor-*.json")
     integrity_path, integrity = latest_json("system-integrity-*.json")
     agent_path, agent = latest_json("learning-v2-agent-status-*.json")
 
@@ -116,6 +117,7 @@ def main():
         ("source_change_guard_chain_auditor", guard_chain_auditor),
         ("accept_transition_simulator", accept_simulator),
         ("accept_transition_contract_auditor", accept_contract_auditor),
+        ("report_dependency_cycle_auditor", report_cycle_auditor),
         ("system_integrity", integrity),
         ("learning_v2_agent_status", agent),
     ]
@@ -127,7 +129,7 @@ def main():
             failures.append(f"{name}_load_error:{data.get('__load_error__')}")
 
     deploy_values = []
-    for data in [agg, ready, planner, source_gate, review_packet, review_packet_auditor, guard_chain_auditor, accept_simulator, accept_contract_auditor, integrity, agent]:
+    for data in [agg, ready, planner, source_gate, review_packet, review_packet_auditor, guard_chain_auditor, accept_simulator, accept_contract_auditor, report_cycle_auditor, integrity, agent]:
         policy = data.get("policy") or {}
         if "deploy" in policy:
             deploy_values.append(policy.get("deploy"))
@@ -171,6 +173,19 @@ def main():
     accept_contract_audit_status = accept_contract_auditor.get("audit_status")
     accept_contract_fast_status_deploy = accept_contract_auditor.get("fast_status_deploy")
     accept_contract_source_change_gate_opened = (accept_contract_auditor.get("policy") or {}).get("source_change_gate_opened")
+
+    report_cycle_result = report_cycle_auditor.get("result")
+    report_cycle_audit_status = report_cycle_auditor.get("audit_status")
+    report_cycle_detected_cycle_count = report_cycle_auditor.get("detected_cycle_count")
+    if report_cycle_detected_cycle_count is None:
+        report_cycle_detected_cycle_count = len(report_cycle_auditor.get("detected_cycles") or [])
+    report_cycle_allowed_cycle_count = report_cycle_auditor.get("allowed_cycle_count")
+    if report_cycle_allowed_cycle_count is None:
+        report_cycle_allowed_cycle_count = len(report_cycle_auditor.get("allowed_cycles") or [])
+    report_cycle_high_risk_check_count = report_cycle_auditor.get("high_risk_check_count")
+    if report_cycle_high_risk_check_count is None:
+        report_cycle_high_risk_check_count = len(report_cycle_auditor.get("high_risk_checks") or [])
+    report_cycle_deploy = (report_cycle_auditor.get("policy") or {}).get("deploy")
 
     if agent_value != "ok":
         failures.append(f"agent_status_not_ok:{agent_value}")
@@ -216,6 +231,15 @@ def main():
     if accept_contract_source_change_gate_opened is not False:
         failures.append(f"accept_transition_contract_source_change_gate_opened_not_false:{accept_contract_source_change_gate_opened}")
 
+    if report_cycle_result != "ok":
+        failures.append(f"report_dependency_cycle_auditor_not_ok:{report_cycle_result}")
+    if report_cycle_audit_status not in {"no_unapproved_report_cycles", "only_known_allowed_cycles_detected"}:
+        failures.append(f"report_dependency_cycle_audit_status_invalid:{report_cycle_audit_status}")
+    if report_cycle_detected_cycle_count != 0:
+        failures.append(f"report_dependency_cycle_detected_cycle_count_not_zero:{report_cycle_detected_cycle_count}")
+    if report_cycle_deploy is not False:
+        failures.append(f"report_dependency_cycle_deploy_not_false:{report_cycle_deploy}")
+
     result = "ok" if not failures else "blocked"
 
     print("learning_v2_fast_status =", result)
@@ -254,6 +278,12 @@ def main():
     print("accept_transition_contract_audit_status =", accept_contract_audit_status)
     print("accept_transition_contract_fast_status_deploy =", str(accept_contract_fast_status_deploy).lower())
     print("accept_transition_contract_gate_opened =", str(accept_contract_source_change_gate_opened).lower())
+    print("report_dependency_cycle_auditor =", report_cycle_result)
+    print("report_dependency_cycle_audit_status =", report_cycle_audit_status)
+    print("report_dependency_cycle_detected_cycle_count =", report_cycle_detected_cycle_count)
+    print("report_dependency_cycle_allowed_cycle_count =", report_cycle_allowed_cycle_count)
+    print("report_dependency_cycle_high_risk_check_count =", report_cycle_high_risk_check_count)
+    print("report_dependency_cycle_deploy =", str(report_cycle_deploy).lower())
     print("system_integrity =", integrity_value)
     print("agent_status =", agent_value)
     print("deploy = false" if deploy_ok else f"deploy_values = {deploy_values}")
