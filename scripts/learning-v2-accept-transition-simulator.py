@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import os
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -103,11 +104,24 @@ def main():
             if key in (payload.get("policy") or {}):
                 require_false(name, payload, key, failures)
 
-    fast = run_fast_status()
-    fast_kv = fast["kv"]
+    fast_status_dependency_mode = os.environ.get("LEARNING_V2_SIMULATOR_FAST_STATUS_MODE", "skip").strip().lower()
 
-    if fast["returncode"] != 0:
-        failures.append(f"fast_status_returncode_not_zero:{fast['returncode']}")
+    if fast_status_dependency_mode == "call":
+        fast = run_fast_status()
+        fast_kv = fast["kv"]
+
+        if fast["returncode"] != 0:
+            failures.append(f"fast_status_returncode_not_zero:{fast['returncode']}")
+    else:
+        # Default is deliberately decoupled.
+        # This prevents a report cycle:
+        # fast-status -> simulator report -> simulator -> fast-status.
+        fast = {"returncode": None, "stdout": "", "stderr": "", "kv": {}}
+        fast_kv = {
+            "learning_v2_fast_status": "not_called_by_simulator",
+            "deploy": "not_called_by_simulator",
+        }
+        fast_status_dependency_mode = "skip"
 
     current = {
         "stable_outcome": gate.get("stable_outcome"),
@@ -118,6 +132,7 @@ def main():
         "packet_status": packet.get("packet_status"),
         "packet_audit_status": packet_auditor.get("audit_status"),
         "chain_status": chain.get("chain_status"),
+        "fast_status_dependency_mode": fast_status_dependency_mode,
         "fast_status_result": fast_kv.get("learning_v2_fast_status"),
         "fast_status_deploy": fast_kv.get("deploy"),
     }
@@ -125,14 +140,17 @@ def main():
     if current["stable_outcome"] != "pending":
         warnings.append(f"current_stable_outcome_not_pending:{current['stable_outcome']}")
 
+    expected_fast_status_result = "ok" if fast_status_dependency_mode == "call" else "not_called_by_simulator"
+    expected_fast_status_deploy = "false" if fast_status_dependency_mode == "call" else "not_called_by_simulator"
+
     expected_pending = {
         "planner_status": "not_ready_waiting_for_review_signal",
         "source_change_decision": "blocked_waiting_for_accept_outcome",
         "packet_status": "not_ready",
         "packet_audit_status": "consistent_pending_block",
         "chain_status": "consistent_pending_block",
-        "fast_status_result": "ok",
-        "fast_status_deploy": "false",
+        "fast_status_result": expected_fast_status_result,
+        "fast_status_deploy": expected_fast_status_deploy,
     }
 
     for key, expected in expected_pending.items():
