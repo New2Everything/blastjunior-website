@@ -56,6 +56,7 @@ def main():
         ("tamper_guard", ["python3", "scripts/learning-v2-tamper-guard.py"]),
         ("target_family_registry_auditor", ["python3", "scripts/learning-v2-target-family-registry-auditor.py"]),
         ("lifecycle_sequence_verifier", ["python3", "scripts/learning-v2-lifecycle-sequence-verifier.py"]),
+        ("report_dependency_cycle_auditor", ["python3", "scripts/learning-v2-report-dependency-cycle-auditor.py"]),
         ("control_status", ["python3", "scripts/learning-v2-control.py", "status"]),
     ]
 
