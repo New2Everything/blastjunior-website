@@ -20,6 +20,7 @@ ALLOWED_STAGED_PREFIXES = (
 
 ALLOWED_STAGED_EXACT = {
     "learning-v2/RUNBOOK.md",
+    "learning-v2/mode-policy.json",
     "learning-v2/CONSTITUTION.md",
     "learning-v2/target-family-registry.json",
     "learning-v2/push-approval-state.json",

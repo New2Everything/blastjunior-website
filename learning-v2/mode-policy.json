@@ -1,0 +1,115 @@
+{
+  "version": "mode-policy-v1",
+  "created_for": "learning-v2 staged self-evolution",
+  "modes": {
+    "system_build_only": {
+      "description": "System engineering only. Active learning cycle must stay paused.",
+      "learning_cycle_enabled": false,
+      "topic_selector_allowed": false,
+      "stage_executor_allowed": false,
+      "proposal_generation_allowed": false,
+      "source_changes_allowed": false,
+      "git_add_allowed": false,
+      "git_commit_allowed": false,
+      "git_push_allowed": false,
+      "deploy_allowed": false,
+      "active_cycle_must_be_paused": true,
+      "required_state": {
+        "system_build_only": true,
+        "allow_source_changes": false,
+        "allow_git_commit": false,
+        "allow_deploy": false
+      }
+    },
+    "learning_observe_only": {
+      "description": "Learning brain may run. It can select topics, observe, synthesize, and generate proposals, but cannot modify website source.",
+      "learning_cycle_enabled": true,
+      "topic_selector_allowed": true,
+      "stage_executor_allowed": true,
+      "proposal_generation_allowed": true,
+      "source_changes_allowed": false,
+      "git_add_allowed": false,
+      "git_commit_allowed": false,
+      "git_push_allowed": false,
+      "deploy_allowed": false,
+      "active_cycle_must_be_paused": false,
+      "required_state": {
+        "system_build_only": false,
+        "allow_source_changes": false,
+        "allow_git_commit": false,
+        "allow_deploy": false
+      }
+    },
+    "source_change_allowed": {
+      "description": "Source changes may be made only within explicitly approved scope. Git commit, push, and deploy remain blocked.",
+      "learning_cycle_enabled": true,
+      "topic_selector_allowed": true,
+      "stage_executor_allowed": true,
+      "proposal_generation_allowed": true,
+      "source_changes_allowed": true,
+      "git_add_allowed": false,
+      "git_commit_allowed": false,
+      "git_push_allowed": false,
+      "deploy_allowed": false,
+      "active_cycle_must_be_paused": false,
+      "requires_explicit_scope": true,
+      "required_state": {
+        "system_build_only": false,
+        "allow_source_changes": true,
+        "allow_git_commit": false,
+        "allow_deploy": false
+      }
+    },
+    "release_allowed": {
+      "description": "Release actions require explicit future manual unlock. This mode is not enabled by default.",
+      "learning_cycle_enabled": true,
+      "topic_selector_allowed": true,
+      "stage_executor_allowed": true,
+      "proposal_generation_allowed": true,
+      "source_changes_allowed": true,
+      "git_add_allowed": "manual_unlock_required",
+      "git_commit_allowed": "manual_unlock_required",
+      "git_push_allowed": "manual_unlock_required",
+      "deploy_allowed": "manual_unlock_required",
+      "active_cycle_must_be_paused": false,
+      "requires_explicit_scope": true,
+      "requires_release_plan": true,
+      "requires_rollback_plan": true,
+      "requires_manual_unlock": true
+    }
+  },
+  "hard_rules": {
+    "website_source_roots": [
+      "public/",
+      "components/",
+      "assets/",
+      "src/",
+      "functions/",
+      "workers/"
+    ],
+    "release_never_allowed_without_manual_unlock": true,
+    "system_build_only_blocks_topic_selector": true,
+    "system_build_only_blocks_stage_executors": true
+  },
+  "mainline_governance": {
+    "mission_statement": "learning-v2 is a self-evolving system that discovers bugs and learning opportunities as co-equal first-class signals, forms hypotheses, validates them, extracts reusable patterns, reduces its own complexity, and improves safely inside system-enforced gates.",
+    "bug_discovery_and_learning_opportunity_discovery_are_co_equal": true,
+    "must_not_degrade_to_bug_only_system": true,
+    "human_code_review_is_not_primary_safety_boundary": true,
+    "safety_boundary_is_system_gates_auditors_baselines_policy": true,
+    "reduce_own_complexity_before_feature_growth": true,
+    "no_new_script_before_capability_lookup": true,
+    "reuse_or_extend_existing_tool_before_creating_new_tool": true,
+    "every_script_must_have_capability_family": true,
+    "every_script_must_have_lifecycle_state": true,
+    "every_script_must_have_exit_or_retirement_path": true,
+    "lifecycle_states": [
+      "protected_core",
+      "active_chain",
+      "experimental",
+      "quarantine_candidate",
+      "retire_candidate_later",
+      "retired"
+    ]
+  }
+}

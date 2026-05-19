@@ -74,6 +74,75 @@ def main():
         {"path": str(MODE_POLICY)}
     )
 
+    governance = policy.get("mainline_governance") or {}
+    mission_statement = governance.get("mission_statement") or ""
+
+    add_check(
+        "mainline_governance_exists",
+        isinstance(governance, dict) and bool(governance),
+        {"mainline_governance_present": bool(governance)}
+    )
+
+    add_check(
+        "mission_statement_mentions_bug_and_learning_opportunity",
+        ("bug" in mission_statement.lower()) and ("learning opportun" in mission_statement.lower()),
+        {"mission_statement": mission_statement}
+    )
+
+    add_check(
+        "bug_and_learning_opportunity_are_co_equal",
+        governance.get("bug_discovery_and_learning_opportunity_discovery_are_co_equal") is True,
+        {"value": governance.get("bug_discovery_and_learning_opportunity_discovery_are_co_equal")}
+    )
+
+    add_check(
+        "not_bug_only_system",
+        governance.get("must_not_degrade_to_bug_only_system") is True,
+        {"value": governance.get("must_not_degrade_to_bug_only_system")}
+    )
+
+    add_check(
+        "human_code_review_not_primary_safety_boundary",
+        governance.get("human_code_review_is_not_primary_safety_boundary") is True,
+        {"value": governance.get("human_code_review_is_not_primary_safety_boundary")}
+    )
+
+    add_check(
+        "safety_boundary_is_system_gates",
+        governance.get("safety_boundary_is_system_gates_auditors_baselines_policy") is True,
+        {"value": governance.get("safety_boundary_is_system_gates_auditors_baselines_policy")}
+    )
+
+    add_check(
+        "reduce_complexity_before_feature_growth",
+        governance.get("reduce_own_complexity_before_feature_growth") is True,
+        {"value": governance.get("reduce_own_complexity_before_feature_growth")}
+    )
+
+    add_check(
+        "no_new_script_before_capability_lookup",
+        governance.get("no_new_script_before_capability_lookup") is True,
+        {"value": governance.get("no_new_script_before_capability_lookup")}
+    )
+
+    add_check(
+        "reuse_or_extend_existing_tool_first",
+        governance.get("reuse_or_extend_existing_tool_before_creating_new_tool") is True,
+        {"value": governance.get("reuse_or_extend_existing_tool_before_creating_new_tool")}
+    )
+
+    add_check(
+        "script_lifecycle_metadata_required",
+        governance.get("every_script_must_have_capability_family") is True
+        and governance.get("every_script_must_have_lifecycle_state") is True
+        and governance.get("every_script_must_have_exit_or_retirement_path") is True,
+        {
+            "every_script_must_have_capability_family": governance.get("every_script_must_have_capability_family"),
+            "every_script_must_have_lifecycle_state": governance.get("every_script_must_have_lifecycle_state"),
+            "every_script_must_have_exit_or_retirement_path": governance.get("every_script_must_have_exit_or_retirement_path"),
+        }
+    )
+
     add_check(
         "current_mode_resolved",
         mode is not None,
