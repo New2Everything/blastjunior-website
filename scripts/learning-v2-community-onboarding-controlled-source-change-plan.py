@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,6 +24,9 @@ def load_json(path, default=None):
     if not p.exists():
         return default
     return json.loads(p.read_text(encoding="utf-8"))
+
+def save_json(path, obj):
+    Path(path).write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 def latest_proposal_report():
     reports = sorted(REPORT_DIR.glob("community-onboarding-proposal-planner-*.json"))
@@ -175,6 +179,10 @@ def build_change_plan(proposals):
     return sorted(plans, key=lambda x: x.get("execution_priority", 99))
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--apply", action="store_true", help="write manual-review waiting state only; never modifies website source")
+    args = ap.parse_args()
+
     state = load_json(STATE, default={})
     policy = state.get("self_evolution_policy") or {}
     integrity = state.get("last_system_integrity") or {}
@@ -186,6 +194,15 @@ def main():
 
     if policy.get("mode") != "learning_observe_only":
         failures.append(f"mode_not_learning_observe_only:{policy.get('mode')}")
+
+    if state.get("current_topic") != "community-experience":
+        failures.append(f"current_topic_not_community_experience:{state.get('current_topic')}")
+
+    if state.get("current_stage") != "community_onboarding_plan_ready":
+        failures.append(f"current_stage_not_community_onboarding_plan_ready:{state.get('current_stage')}")
+
+    if state.get("current_target_family") != TARGET_FAMILY:
+        failures.append(f"target_family_mismatch:{state.get('current_target_family')}")
 
     if state.get("allow_source_changes") is not False:
         failures.append(f"allow_source_changes_not_false:{state.get('allow_source_changes')}")
@@ -308,7 +325,7 @@ def main():
     print("change_plan_count =", len(change_plans))
     print("recommended_next_step =", payload["recommended_next_step"])
     print("source_change_allowed_now = false")
-    print("state_written = false")
+    print("state_written =", "true" if args.apply and not failures else "false")
     print("business_source_written = false")
     print("git_commit = false")
     print("git_push = false")
@@ -326,6 +343,51 @@ def main():
             f"status={p.get('execution_status')} "
             f"risk={p.get('risk')}"
         )
+
+
+    if args.apply and not failures:
+        state.setdefault("history", [])
+        state["history"].append({
+            "at": now_iso(),
+            "executor": "community_onboarding_controlled_source_change_plan",
+            "stage_before": "community_onboarding_plan_ready",
+            "stage_after": "community_onboarding_manual_review_required",
+            "target_family": TARGET_FAMILY,
+            "proposal_report": str(proposal_path),
+            "plan_report": str(out_json),
+            "proposal_count": len(proposals),
+            "change_plan_count": len(change_plans),
+            "recommended_next_step": payload["recommended_next_step"],
+            "source_changed": False,
+            "source_change_allowed_now": False,
+            "business_source_written": False,
+            "git_commit": False,
+            "git_push": False,
+            "deploy": False,
+        })
+        state["last_community_onboarding_controlled_source_change_plan"] = {
+            "at": now_iso(),
+            "result": "community_onboarding_manual_review_required",
+            "target_family": TARGET_FAMILY,
+            "proposal_report": str(proposal_path),
+            "plan_report": str(out_json),
+            "proposal_count": len(proposals),
+            "change_plan_count": len(change_plans),
+            "recommended_next_step": payload["recommended_next_step"],
+            "source_changed": False,
+            "source_change_allowed_now": False,
+            "business_source_written": False,
+            "git_commit": False,
+            "git_push": False,
+            "deploy": False,
+        }
+        state["current_stage"] = "community_onboarding_manual_review_required"
+        state["next_action"] = (
+            "Manual review required before opening source_change_gate. "
+            "Do not modify website source, commit, push, or deploy."
+        )
+        state["updated_at"] = now_iso()
+        save_json(STATE, state)
 
     if failures:
         print()

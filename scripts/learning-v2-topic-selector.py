@@ -33,12 +33,14 @@ ALL_TOPICS = [
     "typography",
     "interaction-design",
     "content-hierarchy",
+    "community-experience",
     "simplicity",
 ]
 
 PRIORITY_TOPICS = [
     "simplicity",
     "content-hierarchy",
+    "community-experience",
     "mobile-first",
     "accessibility-basics",
     "performance-basics",
@@ -51,9 +53,17 @@ PRIORITY_TOPICS = [
 EXECUTOR_READY_TOPICS = {
     "simplicity",
     "accessibility-basics",
+    "community-experience",
 }
 
 TOPIC_TARGET_FAMILIES = {
+    "community-experience": [
+        {
+            "target_family": "community.onboarding_experience",
+            "stage": "community_onboarding_probe",
+            "reason": "autonomous research-derived observe-only target family for community onboarding experience",
+        },
+    ],
     "accessibility-basics": [
         {
             "target_family": "accessibility.navigation_button_semantics",
