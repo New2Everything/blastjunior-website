@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import json
 from collections import Counter
 from datetime import datetime, timezone
@@ -28,6 +29,9 @@ def load_json(path, default=None):
         return default
     return json.loads(p.read_text(encoding="utf-8"))
 
+def save_json(path, obj):
+    Path(path).write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
 def latest_probe_report():
     reports = sorted([
         p for p in REPORT_DIR.glob("community-engagement-path-probe-*.json")
@@ -55,6 +59,10 @@ def status_rank(status):
     }.get(str(status).lower(), 9)
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--apply", action="store_true", help="write resolver result to state.json; never modifies website source")
+    args = ap.parse_args()
+
     state = load_json(STATE, default={})
     policy = state.get("self_evolution_policy") or {}
 
@@ -65,6 +73,15 @@ def main():
 
     if policy.get("mode") != "learning_observe_only":
         failures.append(f"mode_not_learning_observe_only:{policy.get('mode')}")
+
+    if state.get("current_topic") != "community-experience":
+        failures.append(f"current_topic_not_community_experience:{state.get('current_topic')}")
+
+    if state.get("current_stage") != "community_engagement_path_probe":
+        failures.append(f"current_stage_not_community_engagement_path_probe:{state.get('current_stage')}")
+
+    if state.get("current_target_family") != TARGET_FAMILY:
+        failures.append(f"target_family_mismatch:{state.get('current_target_family')}")
 
     if state.get("allow_source_changes") is not False:
         failures.append(f"allow_source_changes_not_false:{state.get('allow_source_changes')}")
@@ -156,12 +173,15 @@ def main():
     if failures:
         decision = "blocked"
         next_step = "fix_resolver_blockers"
+        stage_after = None
     elif not actionable:
         decision = "no_action_needed"
         next_step = "return_to_next_target_selector"
+        stage_after = "track_complete"
     else:
         decision = "proposal_ready"
         next_step = "build_community_engagement_path_proposal_planner"
+        stage_after = "community_engagement_path_proposal_ready"
 
     result = "ok" if not failures else "blocked"
 
@@ -183,6 +203,7 @@ def main():
         "file_counts": file_counts,
         "decision": decision,
         "next_step": next_step,
+        "stage_after": stage_after,
         "prioritized_findings": prioritized,
         "recommended_scope": recommended_scope,
         "policy": {
@@ -248,6 +269,7 @@ def main():
     out_md.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     print("community_engagement_path_probe_resolver =", result)
+    print("mode =", "apply" if args.apply else "dry_run")
     print("target_family =", TARGET_FAMILY)
     print("probe_report =", str(probe_path) if probe_path else None)
     print("finding_count =", len(findings))
@@ -255,10 +277,11 @@ def main():
     print("high_or_medium_count =", payload["high_or_medium_count"])
     print("decision =", decision)
     print("next_step =", next_step)
+    print("would_set_stage =", stage_after)
     print("prioritized_finding_count =", len(prioritized))
     print("candidate_target_files_for_future_proposal =", json.dumps(recommended_scope["candidate_target_files_for_future_proposal"], ensure_ascii=False))
     print("not_recommended_first_target_files =", json.dumps(recommended_scope["not_recommended_first_target_files"], ensure_ascii=False))
-    print("state_written = False")
+    print("state_written =", "true" if args.apply and result == "ok" else "false")
     print("business_source_written = False")
     print("source_change_gate_opened = False")
     print("human_review_required = False")
@@ -273,5 +296,82 @@ def main():
     if failures:
         print("failures =", json.dumps(failures, ensure_ascii=False, indent=2))
 
+    if failures:
+        raise SystemExit(2)
+
+    if not args.apply:
+        print("state_updated = false")
+        return 0
+
+    state.setdefault("history", [])
+    state["history"].append({
+        "at": now_iso(),
+        "executor": "community_engagement_path_probe_resolver",
+        "stage_before": "community_engagement_path_probe",
+        "stage_after": stage_after,
+        "target_family": TARGET_FAMILY,
+        "probe_report": str(probe_path),
+        "resolver_report": str(out_json),
+        "decision": decision,
+        "finding_count": len(findings),
+        "review_or_missing_count": payload["review_or_missing_count"],
+        "high_or_medium_count": payload["high_or_medium_count"],
+        "source_changed": False,
+        "business_source_written": False,
+        "git_commit": False,
+        "git_push": False,
+        "deploy": False,
+    })
+
+    state["last_community_engagement_path_probe_resolver"] = {
+        "at": now_iso(),
+        "result": stage_after,
+        "decision": decision,
+        "target_family": TARGET_FAMILY,
+        "probe_report": str(probe_path),
+        "resolver_report": str(out_json),
+        "finding_count": len(findings),
+        "review_or_missing_count": payload["review_or_missing_count"],
+        "high_or_medium_count": payload["high_or_medium_count"],
+        "source_changed": False,
+        "business_source_written": False,
+        "git_commit": False,
+        "git_push": False,
+        "deploy": False,
+    }
+
+    if stage_after == "track_complete":
+        track = {
+            "at": now_iso(),
+            "track_id": TARGET_FAMILY,
+            "topic": "community-experience",
+            "stage_before": "community_engagement_path_probe",
+            "stage_after": "track_complete",
+            "result": "track_complete",
+            "reason": "observe-only community engagement path probe found no actionable missing/review items",
+            "probe_report": str(probe_path),
+            "resolver_report": str(out_json),
+            "source_changed": False,
+            "business_source_written": False,
+            "git_commit": False,
+            "git_push": False,
+            "deploy": False,
+        }
+        state.setdefault("completed_tracks", [])
+        existing = {x.get("track_id") for x in state["completed_tracks"] if isinstance(x, dict)}
+        if TARGET_FAMILY not in existing:
+            state["completed_tracks"].append(track)
+        state["last_track_complete"] = track
+        state["next_action"] = "Finalize this completed observe-only target family to idle."
+    else:
+        state["next_action"] = "Build community engagement proposal planner. Do not modify website source."
+
+    state["current_stage"] = stage_after
+    state["updated_at"] = now_iso()
+    save_json(STATE, state)
+
+    print("state_updated = true")
+    return 0
+
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

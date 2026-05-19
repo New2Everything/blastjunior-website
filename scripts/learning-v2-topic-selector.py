@@ -63,6 +63,11 @@ TOPIC_TARGET_FAMILIES = {
             "stage": "community_onboarding_probe",
             "reason": "autonomous research-derived observe-only target family for community onboarding experience",
         },
+        {
+            "target_family": "community.engagement_path",
+            "stage": "community_engagement_path_probe",
+            "reason": "autonomous research-derived observe-only target family for community engagement path",
+        },
     ],
     "accessibility-basics": [
         {
