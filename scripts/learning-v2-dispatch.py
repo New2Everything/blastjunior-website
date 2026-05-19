@@ -321,6 +321,27 @@ def predict_branch(topic, stage, allow_source_changes, target_family=None):
             "blocked_reason": None,
         }
 
+    if topic == "community-experience" and stage == "community_onboarding_manual_review_required":
+        if target_family != "community.onboarding_experience":
+            return {
+                "executor": "blocked_community_onboarding_manual_review_target_family_mismatch",
+                "child_script": None,
+                "blocked_reason": f"community_onboarding_manual_review_required_requires_target_family_community.onboarding_experience_got:{target_family}",
+                "source_write_risk": False,
+                "would_write_state": False,
+                "would_write_reports": True,
+                "would_write_experiments": False,
+            }
+        return {
+            "executor": "community_onboarding_manual_review_parker",
+            "child_script": "scripts/learning-v2-community-onboarding-manual-review-parker.py",
+            "blocked_reason": None,
+            "source_write_risk": False,
+            "would_write_state": True,
+            "would_write_reports": True,
+            "would_write_experiments": False,
+        }
+
     if topic == "community-experience" and stage == "community_onboarding_plan_ready":
         if target_family != "community.onboarding_experience":
             return {
