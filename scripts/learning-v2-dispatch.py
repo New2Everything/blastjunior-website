@@ -321,6 +321,72 @@ def predict_branch(topic, stage, allow_source_changes, target_family=None):
             "blocked_reason": None,
         }
 
+    if topic == "research-derived":
+        candidate_path = Path("/root/.openclaw/workspace/learning-v2/research/target-family-candidates.jsonl")
+        candidates = []
+        if candidate_path.exists():
+            for line in candidate_path.read_text(encoding="utf-8").splitlines():
+                if line.strip():
+                    candidates.append(json.loads(line))
+
+        match = None
+        for c in candidates:
+            if c.get("target_family") == target_family and c.get("recommended_stage") == stage:
+                match = c
+
+        if not match:
+            return {
+                "executor": "blocked_research_derived_candidate_not_found",
+                "child_script": None,
+                "blocked_reason": f"research_derived_candidate_not_found_for_target_family:{target_family}:stage:{stage}",
+                "source_write_risk": False,
+                "would_write_state": False,
+                "would_write_reports": True,
+                "would_write_experiments": False,
+            }
+
+        child_name = match.get("recommended_probe_script")
+        allowed = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
+        if (
+            not child_name
+            or "/" in child_name
+            or "\\" in child_name
+            or not child_name.startswith("learning-v2-")
+            or not child_name.endswith("-probe.py")
+            or any(ch not in allowed for ch in child_name)
+        ):
+            return {
+                "executor": "blocked_research_derived_unsafe_probe_script",
+                "child_script": None,
+                "blocked_reason": f"unsafe_research_derived_probe_script:{child_name}",
+                "source_write_risk": False,
+                "would_write_state": False,
+                "would_write_reports": True,
+                "would_write_experiments": False,
+            }
+
+        child_script = f"scripts/{child_name}"
+        if not Path(child_script).exists():
+            return {
+                "executor": "blocked_research_derived_probe_missing",
+                "child_script": None,
+                "blocked_reason": f"research_derived_probe_missing:{child_script}",
+                "source_write_risk": False,
+                "would_write_state": False,
+                "would_write_reports": True,
+                "would_write_experiments": False,
+            }
+
+        return {
+            "executor": "research_derived_observe_only_probe",
+            "child_script": child_script,
+            "blocked_reason": None,
+            "source_write_risk": False,
+            "would_write_state": False,
+            "would_write_reports": True,
+            "would_write_experiments": False,
+        }
+
     if topic == "community-experience" and stage == "community_engagement_path_probe":
         if target_family != "community.engagement_path":
             return {

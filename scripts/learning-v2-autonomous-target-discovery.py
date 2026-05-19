@@ -158,12 +158,42 @@ def main():
     )
 
     selected = ready[0] if ready else None
-    top_blocked = blocked[0] if blocked else None
+
+    def has_blocker(item, name):
+        return name in (item.get("blockers") or [])
+
+    def has_blocker_prefix(item, prefix):
+        return any(str(b).startswith(prefix) for b in (item.get("blockers") or []))
+
+    def is_terminal_blocked(item):
+        return (
+            has_blocker(item, "target_family_disabled")
+            or has_blocker(item, "target_family_completed")
+        )
+
+    # Important: completed/disabled candidates are evidence, not next work.
+    # Prefer a non-terminal candidate that is only blocked by missing probe scaffolding.
+    actionable_blocked = [
+        x for x in blocked
+        if not is_terminal_blocked(x)
+    ]
+
+    missing_probe_blocked = [
+        x for x in actionable_blocked
+        if has_blocker_prefix(x, "recommended_probe_script_missing")
+    ]
+
+    if missing_probe_blocked:
+        top_blocked = missing_probe_blocked[0]
+    elif actionable_blocked:
+        top_blocked = actionable_blocked[0]
+    else:
+        top_blocked = blocked[0] if blocked else None
 
     if selected:
         discovery_status = "ready_candidate_found"
         recommended_next_step = "wire_selected_candidate_to_selector_and_dispatch_after_probe_verification"
-    elif top_blocked and any(str(b).startswith("recommended_probe_script_missing") for b in top_blocked["blockers"]):
+    elif top_blocked and has_blocker_prefix(top_blocked, "recommended_probe_script_missing") and not is_terminal_blocked(top_blocked):
         discovery_status = "missing_probe_for_best_candidate"
         recommended_next_step = "create_observe_only_probe_scaffold_for_best_candidate"
     elif candidates:
