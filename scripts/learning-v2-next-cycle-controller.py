@@ -159,6 +159,12 @@ def main():
     latest_proposal_planning_path = latest_report("learning-v2-proposal-planning-dry-run-*.json")
     latest_proposal_planning = load_json(latest_proposal_planning_path, {}) if latest_proposal_planning_path else {}
 
+    latest_consolidated_review_path = latest_report("learning-v2-consolidated-source-change-review-packet-dry-run-*.json")
+    latest_consolidated_review = load_json(latest_consolidated_review_path, {}) if latest_consolidated_review_path else {}
+
+    latest_autonomous_review_policy_path = latest_report("learning-v2-autonomous-review-policy-dry-run-*.json")
+    latest_autonomous_review_policy = load_json(latest_autonomous_review_policy_path, {}) if latest_autonomous_review_policy_path else {}
+
     current_topic = state.get("current_topic")
     current_stage = state.get("current_stage")
     current_target_family = state.get("current_target_family")
@@ -219,6 +225,44 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_autonomous_review_policy_path
+            and latest_autonomous_review_policy.get("source_change_plan_dry_run_allowed") is True
+            and latest_autonomous_review_policy.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "source_change_plan_dry_run_ready"
+            recommended_next_action = "build_source_change_plan_dry_run_for_consolidated_packet"
+            requires_human_review = False
+            reasons.append(
+                "autonomous review policy approved source-change plan dry-run only; source gate and website edits remain blocked"
+            )
+            allowed_actions.append("source_change_plan_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
+            latest_consolidated_review_path
+            and latest_consolidated_review.get("record_count") == len(approved_proposal_planning_targets)
+            and latest_consolidated_review.get("decision") == "consolidated_source_change_review_packet_ready"
+        ):
+            controller_decision = "autonomous_review_policy_required"
+            recommended_next_action = "run_autonomous_review_policy_before_source_change_plan"
+            requires_human_review = False
+            reasons.append(
+                "consolidated source-change review packet exists; run autonomous policy before any source-change plan"
+            )
+            allowed_actions.append("autonomous_review_policy_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
             latest_proposal_planning_path
             and latest_plan_approved_count == len(approved_proposal_planning_targets)
             and latest_plan_proposal_count == len(approved_proposal_planning_targets)
@@ -357,6 +401,18 @@ def main():
             "approved_target_count": latest_proposal_planning.get("approved_target_count"),
             "proposal_count": latest_proposal_planning.get("proposal_count"),
             "decision": latest_proposal_planning.get("decision"),
+        },
+        "latest_consolidated_review": {
+            "path": str(latest_consolidated_review_path) if latest_consolidated_review_path else None,
+            "record_count": latest_consolidated_review.get("record_count"),
+            "decision": latest_consolidated_review.get("decision"),
+            "risk_level": (latest_consolidated_review.get("risk_assessment") or {}).get("risk_level"),
+        },
+        "latest_autonomous_review_policy": {
+            "path": str(latest_autonomous_review_policy_path) if latest_autonomous_review_policy_path else None,
+            "policy_decision": latest_autonomous_review_policy.get("policy_decision"),
+            "source_change_plan_dry_run_allowed": latest_autonomous_review_policy.get("source_change_plan_dry_run_allowed"),
+            "source_change_gate_allowed": latest_autonomous_review_policy.get("source_change_gate_allowed"),
         },
         "counts": {
             "manual_review_count": len(manual_review_items),
