@@ -156,6 +156,9 @@ def main():
     latest_manual_consolidation_path = latest_report("learning-v2-manual-review-consolidation-dry-run-*.json")
     latest_manual_consolidation = load_json(latest_manual_consolidation_path, {}) if latest_manual_consolidation_path else {}
 
+    latest_proposal_planning_path = latest_report("learning-v2-proposal-planning-dry-run-*.json")
+    latest_proposal_planning = load_json(latest_proposal_planning_path, {}) if latest_proposal_planning_path else {}
+
     current_topic = state.get("current_topic")
     current_stage = state.get("current_stage")
     current_target_family = state.get("current_target_family")
@@ -212,14 +215,37 @@ def main():
         blocked_actions.extend(["source_discovery", "website_source_change", "deploy"])
 
     elif approved_proposal_planning_targets:
-        controller_decision = "proposal_planning_ready"
-        recommended_next_action = "build_proposal_planning_dry_run_for_approved_targets"
-        requires_human_review = False
-        reasons.append(
-            "human review decisions approved proposal planning targets; source change remains blocked until proposal review"
-        )
-        allowed_actions.append("proposal_planning_dry_run")
-        blocked_actions.extend(["source_discovery", "new_candidate_generation", "website_source_change", "deploy"])
+        latest_plan_approved_count = latest_proposal_planning.get("approved_target_count")
+        latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
+
+        if (
+            latest_proposal_planning_path
+            and latest_plan_approved_count == len(approved_proposal_planning_targets)
+            and latest_plan_proposal_count == len(approved_proposal_planning_targets)
+        ):
+            controller_decision = "proposal_review_required"
+            recommended_next_action = "human_review_proposal_plans_before_source_change_gate"
+            requires_human_review = True
+            reasons.append(
+                "matching proposal planning packet already exists; human review is required before source_change_gate"
+            )
+            allowed_actions.append("human_review_proposal_plans")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        else:
+            controller_decision = "proposal_planning_ready"
+            recommended_next_action = "build_proposal_planning_dry_run_for_approved_targets"
+            requires_human_review = False
+            reasons.append(
+                "human review decisions approved proposal planning targets; source change remains blocked until proposal review"
+            )
+            allowed_actions.append("proposal_planning_dry_run")
+            blocked_actions.extend(["source_discovery", "new_candidate_generation", "website_source_change", "deploy"])
 
     elif evidence_requested_targets and not approved_proposal_planning_targets:
         controller_decision = "evidence_collection_required"
@@ -325,6 +351,12 @@ def main():
             "manual_review_count": latest_manual_consolidation.get("manual_review_count"),
             "review_debt_score": latest_manual_consolidation.get("review_debt_score"),
             "decision": latest_manual_consolidation.get("decision"),
+        },
+        "latest_proposal_planning": {
+            "path": str(latest_proposal_planning_path) if latest_proposal_planning_path else None,
+            "approved_target_count": latest_proposal_planning.get("approved_target_count"),
+            "proposal_count": latest_proposal_planning.get("proposal_count"),
+            "decision": latest_proposal_planning.get("decision"),
         },
         "counts": {
             "manual_review_count": len(manual_review_items),
