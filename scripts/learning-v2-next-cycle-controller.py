@@ -1,0 +1,398 @@
+#!/usr/bin/env python3
+import argparse
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+from collections import Counter
+
+WORKSPACE = Path("/root/.openclaw/workspace")
+BASE = WORKSPACE / "learning-v2"
+RESEARCH = BASE / "research"
+REPORT_DIR = BASE / "reports"
+SNAPSHOT_DIR = BASE / "snapshots"
+
+REPORT_DIR.mkdir(parents=True, exist_ok=True)
+SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
+
+CONTROLLER_ID = "learning-v2-next-cycle-controller-v0"
+
+def now_iso():
+    return datetime.now(timezone.utc).isoformat()
+
+def stamp():
+    return datetime.now().strftime("%Y%m%d-%H%M%S")
+
+def load_json(path, default=None):
+    if default is None:
+        default = {}
+    try:
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        return {"_load_error": str(e), "_path": str(path)}
+    return default
+
+def load_jsonl(path):
+    if not path.exists():
+        return []
+    rows = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            rows.append(json.loads(line))
+        except Exception:
+            pass
+    return rows
+
+def latest_report(pattern):
+    files = sorted(REPORT_DIR.glob(pattern))
+    return files[-1] if files else None
+
+def classify_manual_review_item(item):
+    target = str(item.get("target_family") or "")
+    review_count = item.get("review_recommended_count")
+    signal_count = item.get("signal_present_count")
+
+    if not isinstance(review_count, int):
+        review_count = 1
+    if not isinstance(signal_count, int):
+        signal_count = 0
+
+    # High severity: many explicit gaps, or action-critical first-success/homepage problems with low signal.
+    if review_count >= 3:
+        return "high", 3, "review_recommended_count>=3"
+    if "homepage_primary_cta" in target and review_count >= 2:
+        return "high", 3, "homepage_primary_cta_with_multiple_review_gaps"
+    if "make-the-first-successful-action-obvious" in target and review_count >= 2 and signal_count == 0:
+        return "high", 3, "first_success_action_has_gaps_and_no_signal"
+
+    # Medium severity: meaningful gaps exist, but some signal is present or scope is narrower.
+    if review_count >= 2:
+        return "medium", 2, "review_recommended_count>=2"
+    if "mobile_first" in target and review_count >= 1:
+        return "medium", 2, "mobile_first_gap_requires_visual_or_device_review"
+
+    # Low severity: one weak or old review item.
+    return "low", 1, "low_review_debt"
+
+
+def compute_review_debt(manual_review_items):
+    items = []
+    total_score = 0
+
+    for item in manual_review_items:
+        severity, score, reason = classify_manual_review_item(item)
+        total_score += score
+        items.append({
+            "item_id": item.get("item_id"),
+            "target_family": item.get("target_family"),
+            "severity": severity,
+            "score": score,
+            "score_reason": reason,
+            "review_recommended_count": item.get("review_recommended_count"),
+            "signal_present_count": item.get("signal_present_count"),
+            "status": item.get("status"),
+            "reason": item.get("reason"),
+        })
+
+    return {
+        "review_debt_score": total_score,
+        "review_debt_threshold": 8,
+        "review_debt_items": items,
+        "review_debt_by_severity": {
+            "high": sum(1 for x in items if x["severity"] == "high"),
+            "medium": sum(1 for x in items if x["severity"] == "medium"),
+            "low": sum(1 for x in items if x["severity"] == "low"),
+        },
+    }
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--apply", action="store_true", help="Reserved; controller is dry-run only in v0.")
+    args = ap.parse_args()
+
+    state = load_json(BASE / "state.json", {})
+    candidates = load_jsonl(RESEARCH / "target-family-candidates.jsonl")
+    triage = load_jsonl(RESEARCH / "web-source-candidate-relevance-triage.jsonl")
+    sources = load_jsonl(RESEARCH / "sources.jsonl")
+    digests = load_jsonl(RESEARCH / "digests.jsonl")
+    patterns = load_jsonl(RESEARCH / "design-patterns.jsonl")
+    queue = load_jsonl(RESEARCH / "web-source-discovery-queue.jsonl")
+
+    latest_auto_path = latest_report("autonomous-target-discovery-*.json")
+    latest_auto = load_json(latest_auto_path, {}) if latest_auto_path else {}
+
+    latest_source_discovery_path = latest_report("research-web-candidate-discovery-v1-*.json")
+    latest_source_discovery = load_json(latest_source_discovery_path, {}) if latest_source_discovery_path else {}
+
+    latest_manual_consolidation_path = latest_report("learning-v2-manual-review-consolidation-dry-run-*.json")
+    latest_manual_consolidation = load_json(latest_manual_consolidation_path, {}) if latest_manual_consolidation_path else {}
+
+    current_topic = state.get("current_topic")
+    current_stage = state.get("current_stage")
+    current_target_family = state.get("current_target_family")
+    manual_review_items = state.get("manual_review_items") or []
+    disabled_target_families = state.get("disabled_target_families") or []
+
+    review_debt = compute_review_debt(manual_review_items)
+    review_debt_score = review_debt["review_debt_score"]
+    review_debt_threshold = review_debt["review_debt_threshold"]
+
+    auto_status = latest_auto.get("discovery_status")
+    selected_candidate = latest_auto.get("selected_candidate")
+    top_blocked_candidate = latest_auto.get("top_blocked_candidate") or {}
+
+    last_fresh_candidate_count = int(latest_source_discovery.get("fresh_candidate_count") or 0)
+    last_pending_task_count = int(latest_source_discovery.get("pending_task_count") or 0)
+
+    triage_counts = Counter(r.get("decision") for r in triage)
+    candidate_counts_by_topic = Counter(r.get("topic") for r in candidates)
+
+    allowed_actions = []
+    blocked_actions = []
+    reasons = []
+    recommended_next_action = None
+    controller_decision = None
+    requires_human_review = False
+
+    if current_topic or current_stage or current_target_family:
+        controller_decision = "continue_active_lifecycle"
+        recommended_next_action = "run_dispatch_or_current_stage_resolver"
+        reasons.append("state has an active lifecycle; do not start new discovery or new candidate selection")
+        allowed_actions.append("continue current lifecycle only")
+        blocked_actions.extend(["source_discovery", "new_candidate_activation", "website_source_change", "deploy"])
+
+    elif auto_status == "ready_candidate_found" and selected_candidate:
+        controller_decision = "run_ready_candidate"
+        recommended_next_action = "activate_selected_candidate_then_dispatch"
+        reasons.append("autonomous discovery found a ready candidate with existing probe")
+        allowed_actions.extend(["selected_candidate_activator_dry_run", "selected_candidate_activator_apply", "dispatch_dry_run", "dispatch_apply"])
+        blocked_actions.extend(["source_discovery", "website_source_change", "deploy"])
+
+    elif auto_status == "missing_probe_for_best_candidate" and top_blocked_candidate:
+        controller_decision = "scaffold_missing_probe"
+        recommended_next_action = "create_observe_only_probe_scaffold_for_best_candidate"
+        reasons.append("best candidate exists but its observe-only probe script is missing")
+        allowed_actions.append("research_derived_probe_scaffold_generator_apply")
+        blocked_actions.extend(["source_discovery", "website_source_change", "deploy"])
+
+    elif (
+        auto_status == "candidates_exist_but_not_actionable"
+        and int(latest_auto.get("ready_candidate_count") or 0) == 0
+        and review_debt_score >= review_debt_threshold
+    ):
+        latest_consolidation_count = latest_manual_consolidation.get("manual_review_count")
+        latest_consolidation_score = latest_manual_consolidation.get("review_debt_score")
+
+        if (
+            latest_manual_consolidation_path
+            and latest_consolidation_count == len(manual_review_items)
+            and latest_consolidation_score == review_debt_score
+        ):
+            controller_decision = "human_review_required_after_consolidation"
+            recommended_next_action = "human_review_manual_items_then_decide_source_change_gate_or_archive"
+            requires_human_review = True
+            reasons.append(
+                "review debt score remains above threshold and a matching consolidation report already exists; "
+                f"review_debt_score={review_debt_score}, threshold={review_debt_threshold}"
+            )
+            allowed_actions.append("human_review_manual_items")
+            blocked_actions.extend(["source_discovery", "new_candidate_generation", "website_source_change", "deploy"])
+        else:
+            controller_decision = "manual_review_consolidation_required"
+            recommended_next_action = "build_manual_review_consolidation_report_before_more_discovery"
+            requires_human_review = True
+            reasons.append(
+                "review debt score reached threshold while candidate pool has no ready candidate; "
+                f"review_debt_score={review_debt_score}, threshold={review_debt_threshold}"
+            )
+            allowed_actions.append("manual_review_consolidation_dry_run")
+            blocked_actions.extend(["source_discovery", "new_candidate_generation", "website_source_change", "deploy"])
+
+    elif auto_status == "candidates_exist_but_not_actionable":
+        controller_decision = "candidate_pool_exhausted_or_disabled"
+        recommended_next_action = "stop_or_refresh_research_queue_after_human_review"
+        reasons.append("candidate pool exists but all actionable items are disabled, completed, or require manual review")
+        allowed_actions.append("research_queue_redesign_dry_run")
+        blocked_actions.extend(["blind_source_discovery", "website_source_change", "deploy"])
+
+    elif last_pending_task_count > 0 and last_fresh_candidate_count > 0 and len(manual_review_items) < 5:
+        controller_decision = "bounded_source_discovery_allowed"
+        recommended_next_action = "run_one_bounded_source_discovery_cycle_with_triage_gate"
+        reasons.append("source queue still has pending tasks and the last discovery produced fresh candidates")
+        allowed_actions.append("one_bounded_source_discovery_cycle")
+        blocked_actions.extend(["unbounded_source_discovery_loop", "website_source_change", "deploy"])
+
+    else:
+        controller_decision = "pause_for_human_direction"
+        recommended_next_action = "pause_and_request_human_review"
+        requires_human_review = True
+        reasons.append("no active lifecycle, no ready candidate, and no strong reason to continue discovery")
+        allowed_actions.append("human_review")
+        blocked_actions.extend(["source_discovery", "new_candidate_generation", "website_source_change", "deploy"])
+
+    payload = {
+        "generated_at": now_iso(),
+        "controller_id": CONTROLLER_ID,
+        "result": "ok",
+        "mode": "dry_run",
+        "apply": bool(args.apply),
+        "controller_decision": controller_decision,
+        "recommended_next_action": recommended_next_action,
+        "requires_human_review": requires_human_review,
+        "reasons": reasons,
+        "allowed_actions": allowed_actions,
+        "blocked_actions": blocked_actions,
+        "current_state": {
+            "current_topic": current_topic,
+            "current_stage": current_stage,
+            "current_target_family": current_target_family,
+            "next_action": state.get("next_action"),
+            "allow_source_changes": state.get("allow_source_changes"),
+            "allow_git_commit": state.get("allow_git_commit"),
+            "allow_deploy": state.get("allow_deploy"),
+        },
+        "latest_autonomous_discovery": {
+            "path": str(latest_auto_path) if latest_auto_path else None,
+            "discovery_status": auto_status,
+            "ready_candidate_count": latest_auto.get("ready_candidate_count"),
+            "blocked_candidate_count": latest_auto.get("blocked_candidate_count"),
+            "selected_candidate_target_family": (selected_candidate or {}).get("target_family") if isinstance(selected_candidate, dict) else None,
+            "top_blocked_target_family": top_blocked_candidate.get("target_family"),
+            "top_blocked_blockers": top_blocked_candidate.get("blockers"),
+        },
+        "latest_source_discovery": {
+            "path": str(latest_source_discovery_path) if latest_source_discovery_path else None,
+            "pending_task_count": last_pending_task_count,
+            "fresh_candidate_count": last_fresh_candidate_count,
+            "duplicate_candidate_count": latest_source_discovery.get("duplicate_candidate_count"),
+        },
+        "latest_manual_review_consolidation": {
+            "path": str(latest_manual_consolidation_path) if latest_manual_consolidation_path else None,
+            "manual_review_count": latest_manual_consolidation.get("manual_review_count"),
+            "review_debt_score": latest_manual_consolidation.get("review_debt_score"),
+            "decision": latest_manual_consolidation.get("decision"),
+        },
+        "counts": {
+            "manual_review_count": len(manual_review_items),
+            "disabled_target_family_count": len(disabled_target_families),
+            "target_family_candidate_count": len(candidates),
+            "source_count": len(sources),
+            "digest_count": len(digests),
+            "pattern_count": len(patterns),
+            "discovery_queue_count": len(queue),
+            "triage_count": len(triage),
+        },
+        "review_debt": review_debt,
+        "triage_counts": dict(triage_counts),
+        "candidate_counts_by_topic": dict(candidate_counts_by_topic),
+        "manual_review_items_preview": [
+            {
+                "item_id": x.get("item_id"),
+                "target_family": x.get("target_family"),
+                "status": x.get("status"),
+                "reason": x.get("reason"),
+                "review_recommended_count": x.get("review_recommended_count"),
+                "signal_present_count": x.get("signal_present_count"),
+            }
+            for x in manual_review_items[-10:]
+        ],
+        "safety": {
+            "business_source_written": False,
+            "website_source_written": False,
+            "state_written": False,
+            "git_commit": False,
+            "git_push": False,
+            "deploy": False,
+        },
+    }
+
+    ts = stamp()
+    json_path = REPORT_DIR / f"learning-v2-next-cycle-controller-dry-run-{ts}.json"
+    md_path = SNAPSHOT_DIR / f"learning-v2-next-cycle-controller-dry-run-{ts}.md"
+
+    json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    md = []
+    md.append("# Learning V2 Next Cycle Controller Dry Run")
+    md.append("")
+    md.append(f"- generated_at: `{payload['generated_at']}`")
+    md.append(f"- result: `{payload['result']}`")
+    md.append(f"- controller_decision: `{controller_decision}`")
+    md.append(f"- recommended_next_action: `{recommended_next_action}`")
+    md.append(f"- requires_human_review: `{str(requires_human_review).lower()}`")
+    md.append(f"- deploy: `false`")
+    md.append("")
+    md.append("## Reasons")
+    md.append("")
+    for r in reasons:
+        md.append(f"- {r}")
+    md.append("")
+    md.append("## Allowed Actions")
+    md.append("")
+    for a in allowed_actions:
+        md.append(f"- {a}")
+    md.append("")
+    md.append("## Blocked Actions")
+    md.append("")
+    for b in blocked_actions:
+        md.append(f"- {b}")
+    md.append("")
+    md.append("## Current State")
+    md.append("")
+    for k, v in payload["current_state"].items():
+        md.append(f"- {k}: `{v}`")
+    md.append("")
+    md.append("## Counts")
+    md.append("")
+    for k, v in payload["counts"].items():
+        md.append(f"- {k}: `{v}`")
+    md.append("")
+    md.append("## Review Debt Score")
+    md.append("")
+    md.append(f"- review_debt_score: `{review_debt_score}`")
+    md.append(f"- review_debt_threshold: `{review_debt_threshold}`")
+    for k, v in review_debt["review_debt_by_severity"].items():
+        md.append(f"- {k}: `{v}`")
+    md.append("")
+    md.append("## Latest Autonomous Discovery")
+    md.append("")
+    for k, v in payload["latest_autonomous_discovery"].items():
+        md.append(f"- {k}: `{v}`")
+    md.append("")
+    md.append("## Manual Review Preview")
+    md.append("")
+    for item in payload["manual_review_items_preview"]:
+        md.append(f"- `{item.get('target_family')}` | review={item.get('review_recommended_count')} | signal={item.get('signal_present_count')} | {item.get('reason')}")
+    md.append("")
+    md.append("## Safety")
+    md.append("")
+    for k, v in payload["safety"].items():
+        md.append(f"- {k}: `{str(v).lower()}`")
+
+    md_path.write_text("\n".join(md) + "\n", encoding="utf-8")
+
+    print("next_cycle_controller = ok")
+    print("mode = dry_run")
+    print("controller_decision =", controller_decision)
+    print("recommended_next_action =", recommended_next_action)
+    print("requires_human_review =", str(requires_human_review).lower())
+    print("manual_review_count =", len(manual_review_items))
+    print("review_debt_score =", review_debt_score)
+    print("review_debt_threshold =", review_debt_threshold)
+    print("review_debt_by_severity =", json.dumps(review_debt["review_debt_by_severity"], ensure_ascii=False))
+    print("target_family_candidate_count =", len(candidates))
+    print("triage_counts =", json.dumps(dict(triage_counts), ensure_ascii=False))
+    print("latest_autonomous_discovery_status =", auto_status)
+    print("report_json =", json_path)
+    print("report_md =", md_path)
+    print("business_source_written = false")
+    print("website_source_written = false")
+    print("state_written = false")
+    print("git_commit = false")
+    print("git_push = false")
+    print("deploy = false")
+
+if __name__ == "__main__":
+    raise SystemExit(main())
