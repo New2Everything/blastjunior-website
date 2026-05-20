@@ -49,6 +49,33 @@ def latest_report(pattern):
     files = sorted(REPORT_DIR.glob(pattern))
     return files[-1] if files else None
 
+
+RESOLVED_MANUAL_REVIEW_STATUSES = {
+    "archived_superseded",
+    "proposal_planning_approved",
+    "evidence_requested",
+    "archived_no_action",
+    "archived",
+}
+
+
+def is_open_manual_review_item(item):
+    status = item.get("status")
+    status_after = item.get("status_after_decision")
+    action = item.get("human_review_decision_action")
+
+    if status in RESOLVED_MANUAL_REVIEW_STATUSES:
+        return False
+    if status_after in RESOLVED_MANUAL_REVIEW_STATUSES:
+        return False
+    if action in {
+        "archive_manual_review_item",
+        "mark_proposal_planning_approved",
+        "mark_evidence_requested",
+    }:
+        return False
+    return True
+
 def classify_manual_review_item(item):
     target = str(item.get("target_family") or "")
     review_count = item.get("review_recommended_count")
@@ -133,9 +160,16 @@ def main():
     current_stage = state.get("current_stage")
     current_target_family = state.get("current_target_family")
     manual_review_items = state.get("manual_review_items") or []
+    open_manual_review_items = [x for x in manual_review_items if is_open_manual_review_item(x)]
+    resolved_manual_review_items = [x for x in manual_review_items if not is_open_manual_review_item(x)]
+
+    approved_proposal_planning_targets = state.get("approved_proposal_planning_targets") or []
+    evidence_requested_targets = state.get("evidence_requested_targets") or []
+    archived_manual_review_targets = state.get("archived_manual_review_targets") or []
+
     disabled_target_families = state.get("disabled_target_families") or []
 
-    review_debt = compute_review_debt(manual_review_items)
+    review_debt = compute_review_debt(open_manual_review_items)
     review_debt_score = review_debt["review_debt_score"]
     review_debt_threshold = review_debt["review_debt_threshold"]
 
@@ -176,6 +210,24 @@ def main():
         reasons.append("best candidate exists but its observe-only probe script is missing")
         allowed_actions.append("research_derived_probe_scaffold_generator_apply")
         blocked_actions.extend(["source_discovery", "website_source_change", "deploy"])
+
+    elif approved_proposal_planning_targets:
+        controller_decision = "proposal_planning_ready"
+        recommended_next_action = "build_proposal_planning_dry_run_for_approved_targets"
+        requires_human_review = False
+        reasons.append(
+            "human review decisions approved proposal planning targets; source change remains blocked until proposal review"
+        )
+        allowed_actions.append("proposal_planning_dry_run")
+        blocked_actions.extend(["source_discovery", "new_candidate_generation", "website_source_change", "deploy"])
+
+    elif evidence_requested_targets and not approved_proposal_planning_targets:
+        controller_decision = "evidence_collection_required"
+        recommended_next_action = "collect_requested_evidence_before_more_discovery"
+        requires_human_review = True
+        reasons.append("manual review requested additional evidence before proposal planning or source discovery")
+        allowed_actions.append("collect_requested_evidence")
+        blocked_actions.extend(["source_discovery", "new_candidate_generation", "website_source_change", "deploy"])
 
     elif (
         auto_status == "candidates_exist_but_not_actionable"
@@ -276,6 +328,11 @@ def main():
         },
         "counts": {
             "manual_review_count": len(manual_review_items),
+            "open_manual_review_count": len(open_manual_review_items),
+            "resolved_manual_review_count": len(resolved_manual_review_items),
+            "approved_proposal_planning_target_count": len(approved_proposal_planning_targets),
+            "evidence_requested_target_count": len(evidence_requested_targets),
+            "archived_manual_review_target_count": len(archived_manual_review_targets),
             "disabled_target_family_count": len(disabled_target_families),
             "target_family_candidate_count": len(candidates),
             "source_count": len(sources),
@@ -292,12 +349,17 @@ def main():
                 "item_id": x.get("item_id"),
                 "target_family": x.get("target_family"),
                 "status": x.get("status"),
+                "status_after_decision": x.get("status_after_decision"),
+                "human_review_decision_action": x.get("human_review_decision_action"),
                 "reason": x.get("reason"),
                 "review_recommended_count": x.get("review_recommended_count"),
                 "signal_present_count": x.get("signal_present_count"),
             }
             for x in manual_review_items[-10:]
         ],
+        "approved_proposal_planning_targets": approved_proposal_planning_targets,
+        "evidence_requested_targets": evidence_requested_targets,
+        "archived_manual_review_targets": archived_manual_review_targets,
         "safety": {
             "business_source_written": False,
             "website_source_written": False,
@@ -379,6 +441,10 @@ def main():
     print("recommended_next_action =", recommended_next_action)
     print("requires_human_review =", str(requires_human_review).lower())
     print("manual_review_count =", len(manual_review_items))
+    print("open_manual_review_count =", len(open_manual_review_items))
+    print("resolved_manual_review_count =", len(resolved_manual_review_items))
+    print("approved_proposal_planning_target_count =", len(approved_proposal_planning_targets))
+    print("evidence_requested_target_count =", len(evidence_requested_targets))
     print("review_debt_score =", review_debt_score)
     print("review_debt_threshold =", review_debt_threshold)
     print("review_debt_by_severity =", json.dumps(review_debt["review_debt_by_severity"], ensure_ascii=False))
