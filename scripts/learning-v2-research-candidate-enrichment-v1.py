@@ -15,6 +15,7 @@ REPORT_DIR = BASE / "reports"
 RESEARCH_DIR = BASE / "research"
 
 PACKETS = RESEARCH_DIR / "web-source-candidate-enrichment-packets.jsonl"
+TRIAGE = RESEARCH_DIR / "web-source-candidate-relevance-triage.jsonl"
 ENRICHMENTS = RESEARCH_DIR / "web-source-candidate-enrichments.jsonl"
 
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -324,10 +325,43 @@ def main():
 
     packets = read_jsonl(PACKETS)
     done = existing_enrichment_candidate_ids()
-    pending = [p for p in packets if p.get("candidate_id") not in done]
+    pending_all = [p for p in packets if p.get("candidate_id") not in done]
+
+    triage_rows = read_jsonl(TRIAGE) if TRIAGE.exists() else []
+    triage_by_candidate_id = {
+        r.get("candidate_id"): r
+        for r in triage_rows
+        if r.get("candidate_id")
+    }
+
+    triage_skips = []
+    pending = []
+
+    for pkt in pending_all:
+        cid = pkt.get("candidate_id")
+        decision = (triage_by_candidate_id.get(cid) or {}).get("decision")
+
+        if decision == "keep":
+            pending.append(pkt)
+        elif decision in ("reject", "needs_manual_review"):
+            triage_skips.append({
+                "candidate_id": cid,
+                "reason": f"relevance_triage_{decision}",
+                "decision": decision,
+                "title": pkt.get("title"),
+                "url": pkt.get("url"),
+            })
+        else:
+            triage_skips.append({
+                "candidate_id": cid,
+                "reason": "missing_relevance_triage",
+                "decision": decision,
+                "title": pkt.get("title"),
+                "url": pkt.get("url"),
+            })
 
     records = []
-    skips = []
+    skips = list(triage_skips)
     processed = 0
 
     if not failures:
