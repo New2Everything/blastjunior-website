@@ -59,6 +59,7 @@ def main():
     modules_path = latest_report("learning-v2-required-gate-evidence-modules-dry-run-*.json")
     snapshot_path = latest_report("learning-v2-pre-change-evidence-snapshot-dry-run-*.json")
     preview_path = latest_report("learning-v2-file-level-patch-preview-dry-run-*.json")
+    browser_visual_auditor_path = latest_report("learning-v2-browser-visual-capture-auditor-dry-run-*.json")
 
     if not modules_auditor_path:
         raise SystemExit("no required gate evidence modules auditor report found")
@@ -73,6 +74,7 @@ def main():
     modules_report = load_json(modules_path, {})
     snapshot = load_json(snapshot_path, {})
     preview = load_json(preview_path, {})
+    browser_visual_auditor = load_json(browser_visual_auditor_path, {}) if browser_visual_auditor_path else {}
 
     hard_blocks = []
     warnings = []
@@ -97,21 +99,28 @@ def main():
     if preview.get("preview_status") != "patch_preview_ready_for_audit":
         hard_blocks.append("patch_preview_not_ready")
 
+    visual_evidence_confirmed = (
+        browser_visual_auditor.get("audit_status") == "browser_visual_capture_ready_for_final_gate_recheck"
+        and browser_visual_auditor.get("visual_evidence_confirmed") is True
+        and browser_visual_auditor.get("final_gate_recheck_allowed") is True
+        and browser_visual_auditor.get("source_change_gate_allowed") is False
+    )
+
     modules = modules_report.get("modules") or []
     for m in modules:
         name = m.get("module")
         status = m.get("status")
         evidence = m.get("evidence") or {}
 
-        if status == "ready_with_required_followup":
+        if status == "ready_with_required_followup" and not visual_evidence_confirmed:
             pending_required_evidence.append(f"{name}:required_followup_not_completed")
 
         if name == "mobile_visual_snapshot_or_validation_module":
-            if evidence.get("actual_screenshot_captured") is not True:
+            if evidence.get("actual_screenshot_captured") is not True and not visual_evidence_confirmed:
                 pending_required_evidence.append("mobile_visual_snapshot_or_validation_module:actual_screenshot_not_captured")
 
         if name == "pre_change_visual_snapshot_module":
-            if evidence.get("actual_visual_snapshot_captured") is not True:
+            if evidence.get("actual_visual_snapshot_captured") is not True and not visual_evidence_confirmed:
                 pending_required_evidence.append("pre_change_visual_snapshot_module:actual_visual_snapshot_not_captured")
 
     warnings.extend(modules_auditor.get("warnings") or [])
@@ -155,6 +164,8 @@ def main():
         "required_gate_evidence_modules_source": str(modules_path),
         "pre_change_evidence_snapshot_source": str(snapshot_path),
         "patch_preview_source": str(preview_path),
+        "browser_visual_capture_auditor_source": str(browser_visual_auditor_path) if browser_visual_auditor_path else None,
+        "visual_evidence_confirmed": visual_evidence_confirmed,
         "audit_status": audit_status,
         "recommended_next_action": recommended_next_action,
         "pending_required_evidence": sorted(set(pending_required_evidence)),
@@ -232,6 +243,7 @@ def main():
     print("mode = dry_run")
     print("audit_status =", audit_status)
     print("recommended_next_action =", recommended_next_action)
+    print("visual_evidence_confirmed =", str(visual_evidence_confirmed).lower())
     print("visual_evidence_required =", str(visual_evidence_required).lower())
     print("gate_open_allowed =", str(gate_open_allowed).lower())
     print("source_change_gate_allowed = false")

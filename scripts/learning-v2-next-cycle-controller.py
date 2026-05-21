@@ -267,6 +267,26 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_final_source_change_gate_auditor_path
+            and latest_final_source_change_gate_auditor.get("audit_status") == "gate_open_candidate_ready_but_not_opened"
+            and latest_final_source_change_gate_auditor.get("gate_open_allowed") is False
+            and latest_final_source_change_gate_auditor.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "source_change_gate_open_request_required"
+            recommended_next_action = "run_source_change_gate_open_request_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "final gate auditor recheck passed with visual evidence; prepare gate-open request dry-run, but do not open gate yet"
+            )
+            allowed_actions.append("source_change_gate_open_request_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
             latest_browser_visual_capture_auditor_path
             and latest_browser_visual_capture_auditor.get("audit_status") == "browser_visual_capture_ready_for_final_gate_recheck"
             and latest_browser_visual_capture_auditor.get("final_gate_recheck_allowed") is True
@@ -838,6 +858,7 @@ def main():
         "latest_final_source_change_gate_auditor": {
             "path": str(latest_final_source_change_gate_auditor_path) if latest_final_source_change_gate_auditor_path else None,
             "audit_status": latest_final_source_change_gate_auditor.get("audit_status"),
+            "visual_evidence_confirmed": latest_final_source_change_gate_auditor.get("visual_evidence_confirmed"),
             "visual_evidence_required": latest_final_source_change_gate_auditor.get("visual_evidence_required"),
             "gate_open_allowed": latest_final_source_change_gate_auditor.get("gate_open_allowed"),
             "source_change_gate_allowed": latest_final_source_change_gate_auditor.get("source_change_gate_allowed"),
