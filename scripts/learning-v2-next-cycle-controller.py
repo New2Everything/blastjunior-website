@@ -174,6 +174,9 @@ def main():
     latest_source_change_gate_readiness_path = latest_report("learning-v2-source-change-gate-readiness-dry-run-*.json")
     latest_source_change_gate_readiness = load_json(latest_source_change_gate_readiness_path, {}) if latest_source_change_gate_readiness_path else {}
 
+    latest_file_level_patch_preview_path = latest_report("learning-v2-file-level-patch-preview-dry-run-*.json")
+    latest_file_level_patch_preview = load_json(latest_file_level_patch_preview_path, {}) if latest_file_level_patch_preview_path else {}
+
     current_topic = state.get("current_topic")
     current_stage = state.get("current_stage")
     current_target_family = state.get("current_target_family")
@@ -234,6 +237,26 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_file_level_patch_preview_path
+            and latest_file_level_patch_preview.get("preview_status") == "patch_preview_ready_for_audit"
+            and latest_file_level_patch_preview.get("patch_preview_audit_allowed") is True
+            and latest_file_level_patch_preview.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "patch_preview_audit_required"
+            recommended_next_action = "run_patch_preview_auditor_before_any_source_change_gate"
+            requires_human_review = False
+            reasons.append(
+                "file-level patch preview exists and includes rollback/post-validation; audit it before any gate or website write"
+            )
+            allowed_actions.append("patch_preview_auditor_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
             latest_source_change_gate_readiness_path
             and latest_source_change_gate_readiness.get("readiness_status") == "patch_preview_required_before_gate"
             and latest_source_change_gate_readiness.get("source_change_gate_allowed") is False
@@ -500,6 +523,13 @@ def main():
             "recommended_next_action": latest_source_change_gate_readiness.get("recommended_next_action"),
             "gate_open_readiness": latest_source_change_gate_readiness.get("gate_open_readiness"),
             "source_change_gate_allowed": latest_source_change_gate_readiness.get("source_change_gate_allowed"),
+        },
+        "latest_file_level_patch_preview": {
+            "path": str(latest_file_level_patch_preview_path) if latest_file_level_patch_preview_path else None,
+            "preview_status": latest_file_level_patch_preview.get("preview_status"),
+            "patch_preview_count": latest_file_level_patch_preview.get("patch_preview_count"),
+            "patch_preview_audit_allowed": latest_file_level_patch_preview.get("patch_preview_audit_allowed"),
+            "source_change_gate_allowed": latest_file_level_patch_preview.get("source_change_gate_allowed"),
         },
         "counts": {
             "manual_review_count": len(manual_review_items),
