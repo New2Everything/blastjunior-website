@@ -222,6 +222,9 @@ def main():
     latest_controlled_source_change_real_write_request_auditor_path = latest_report("learning-v2-controlled-source-change-real-write-request-auditor-dry-run-*.json")
     latest_controlled_source_change_real_write_request_auditor = load_json(latest_controlled_source_change_real_write_request_auditor_path, {}) if latest_controlled_source_change_real_write_request_auditor_path else {}
 
+    latest_deployment_route_contract_path = latest_report("learning-v2-deployment-route-contract-dry-run-*.json")
+    latest_deployment_route_contract = load_json(latest_deployment_route_contract_path, {}) if latest_deployment_route_contract_path else {}
+
     latest_visual_evidence_capture_validation_path = latest_report("learning-v2-visual-evidence-capture-validation-dry-run-*.json")
     latest_visual_evidence_capture_validation = load_json(latest_visual_evidence_capture_validation_path, {}) if latest_visual_evidence_capture_validation_path else {}
 
@@ -291,6 +294,49 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_deployment_route_contract_path
+            and latest_deployment_route_contract.get("contract_status") == "deployment_route_contract_ready_for_audit"
+            and latest_deployment_route_contract.get("contract_audit_allowed") is True
+            and latest_deployment_route_contract.get("deploy_allowed") is False
+        ):
+            controller_decision = "deployment_route_contract_audit_required"
+            recommended_next_action = "run_deployment_route_contract_auditor_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "deployment route contract is ready; audit GitHub-main-to-Cloudflare-Pages route before any real-write executor"
+            )
+            allowed_actions.append("deployment_route_contract_auditor_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "website_source_change",
+                "git_commit",
+                "git_push",
+                "deploy",
+            ])
+        elif (
+            latest_controlled_source_change_real_write_request_auditor_path
+            and latest_controlled_source_change_real_write_request_auditor.get("audit_status") == "controlled_source_change_real_write_request_ready_for_executor_dry_run"
+            and latest_controlled_source_change_real_write_request_auditor.get("executor_dry_run_allowed") is True
+            and not latest_deployment_route_contract_path
+        ):
+            controller_decision = "deployment_route_contract_required_before_real_write_executor"
+            recommended_next_action = "run_deployment_route_contract_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "real-write executor is blocked until GitHub-main-to-Cloudflare-Pages deployment route contract exists"
+            )
+            allowed_actions.append("deployment_route_contract_dry_run")
+            blocked_actions.extend([
+                "controlled_source_change_real_write_executor_dry_run",
+                "source_discovery",
+                "new_candidate_generation",
+                "website_source_change",
+                "git_commit",
+                "git_push",
+                "deploy",
+            ])
+        elif (
             latest_controlled_source_change_real_write_request_auditor_path
             and latest_controlled_source_change_real_write_request_auditor.get("audit_status") == "controlled_source_change_real_write_request_ready_for_executor_dry_run"
             and latest_controlled_source_change_real_write_request_auditor.get("executor_dry_run_allowed") is True
@@ -1097,6 +1143,12 @@ def main():
             "audit_status": latest_controlled_source_change_real_write_request_auditor.get("audit_status"),
             "executor_dry_run_allowed": latest_controlled_source_change_real_write_request_auditor.get("executor_dry_run_allowed"),
             "source_change_gate_allowed": latest_controlled_source_change_real_write_request_auditor.get("source_change_gate_allowed"),
+        },
+        "latest_deployment_route_contract": {
+            "path": str(latest_deployment_route_contract_path) if latest_deployment_route_contract_path else None,
+            "contract_status": latest_deployment_route_contract.get("contract_status"),
+            "contract_audit_allowed": latest_deployment_route_contract.get("contract_audit_allowed"),
+            "deploy_allowed": latest_deployment_route_contract.get("deploy_allowed"),
         },
         "latest_visual_evidence_capture_validation": {
             "path": str(latest_visual_evidence_capture_validation_path) if latest_visual_evidence_capture_validation_path else None,
