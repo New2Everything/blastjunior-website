@@ -195,6 +195,9 @@ def main():
     latest_required_gate_evidence_modules_auditor_path = latest_report("learning-v2-required-gate-evidence-modules-auditor-dry-run-*.json")
     latest_required_gate_evidence_modules_auditor = load_json(latest_required_gate_evidence_modules_auditor_path, {}) if latest_required_gate_evidence_modules_auditor_path else {}
 
+    latest_final_source_change_gate_auditor_path = latest_report("learning-v2-final-source-change-gate-auditor-dry-run-*.json")
+    latest_final_source_change_gate_auditor = load_json(latest_final_source_change_gate_auditor_path, {}) if latest_final_source_change_gate_auditor_path else {}
+
     current_topic = state.get("current_topic")
     current_stage = state.get("current_stage")
     current_target_family = state.get("current_target_family")
@@ -255,6 +258,25 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_final_source_change_gate_auditor_path
+            and latest_final_source_change_gate_auditor.get("audit_status") == "gate_blocked_pending_visual_evidence"
+            and latest_final_source_change_gate_auditor.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "visual_evidence_required_before_source_change_gate"
+            recommended_next_action = "build_visual_evidence_capture_or_validation_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "final gate auditor blocked gate because visual/mobile evidence is still pending"
+            )
+            allowed_actions.append("visual_evidence_capture_or_validation_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
             latest_required_gate_evidence_modules_auditor_path
             and latest_required_gate_evidence_modules_auditor.get("audit_status") == "required_gate_evidence_modules_ready_for_final_gate_auditor"
             and latest_required_gate_evidence_modules_auditor.get("final_gate_auditor_allowed") is True
@@ -706,6 +728,13 @@ def main():
             "audit_status": latest_required_gate_evidence_modules_auditor.get("audit_status"),
             "final_gate_auditor_allowed": latest_required_gate_evidence_modules_auditor.get("final_gate_auditor_allowed"),
             "source_change_gate_allowed": latest_required_gate_evidence_modules_auditor.get("source_change_gate_allowed"),
+        },
+        "latest_final_source_change_gate_auditor": {
+            "path": str(latest_final_source_change_gate_auditor_path) if latest_final_source_change_gate_auditor_path else None,
+            "audit_status": latest_final_source_change_gate_auditor.get("audit_status"),
+            "visual_evidence_required": latest_final_source_change_gate_auditor.get("visual_evidence_required"),
+            "gate_open_allowed": latest_final_source_change_gate_auditor.get("gate_open_allowed"),
+            "source_change_gate_allowed": latest_final_source_change_gate_auditor.get("source_change_gate_allowed"),
         },
         "counts": {
             "manual_review_count": len(manual_review_items),
