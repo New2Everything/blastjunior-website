@@ -180,6 +180,9 @@ def main():
     latest_patch_preview_auditor_path = latest_report("learning-v2-patch-preview-auditor-dry-run-*.json")
     latest_patch_preview_auditor = load_json(latest_patch_preview_auditor_path, {}) if latest_patch_preview_auditor_path else {}
 
+    latest_source_change_gate_open_policy_path = latest_report("learning-v2-source-change-gate-open-policy-dry-run-*.json")
+    latest_source_change_gate_open_policy = load_json(latest_source_change_gate_open_policy_path, {}) if latest_source_change_gate_open_policy_path else {}
+
     current_topic = state.get("current_topic")
     current_stage = state.get("current_stage")
     current_target_family = state.get("current_target_family")
@@ -240,6 +243,25 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_source_change_gate_open_policy_path
+            and latest_source_change_gate_open_policy.get("policy_decision") == "require_pre_change_evidence_before_gate"
+            and latest_source_change_gate_open_policy.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "pre_change_evidence_required_before_gate"
+            recommended_next_action = "build_pre_change_evidence_snapshot_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "gate open policy requires pre-change evidence before any source_change_gate can open"
+            )
+            allowed_actions.append("pre_change_evidence_snapshot_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
             latest_patch_preview_auditor_path
             and latest_patch_preview_auditor.get("audit_status") == "patch_preview_ready_for_gate_policy_review"
             and latest_patch_preview_auditor.get("gate_policy_review_allowed") is True
@@ -559,6 +581,13 @@ def main():
             "audit_status": latest_patch_preview_auditor.get("audit_status"),
             "gate_policy_review_allowed": latest_patch_preview_auditor.get("gate_policy_review_allowed"),
             "source_change_gate_allowed": latest_patch_preview_auditor.get("source_change_gate_allowed"),
+        },
+        "latest_source_change_gate_open_policy": {
+            "path": str(latest_source_change_gate_open_policy_path) if latest_source_change_gate_open_policy_path else None,
+            "policy_decision": latest_source_change_gate_open_policy.get("policy_decision"),
+            "pre_change_evidence_required": latest_source_change_gate_open_policy.get("pre_change_evidence_required"),
+            "gate_open_policy_allowed": latest_source_change_gate_open_policy.get("gate_open_policy_allowed"),
+            "source_change_gate_allowed": latest_source_change_gate_open_policy.get("source_change_gate_allowed"),
         },
         "counts": {
             "manual_review_count": len(manual_review_items),
