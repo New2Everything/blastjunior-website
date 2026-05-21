@@ -177,6 +177,9 @@ def main():
     latest_file_level_patch_preview_path = latest_report("learning-v2-file-level-patch-preview-dry-run-*.json")
     latest_file_level_patch_preview = load_json(latest_file_level_patch_preview_path, {}) if latest_file_level_patch_preview_path else {}
 
+    latest_patch_preview_auditor_path = latest_report("learning-v2-patch-preview-auditor-dry-run-*.json")
+    latest_patch_preview_auditor = load_json(latest_patch_preview_auditor_path, {}) if latest_patch_preview_auditor_path else {}
+
     current_topic = state.get("current_topic")
     current_stage = state.get("current_stage")
     current_target_family = state.get("current_target_family")
@@ -237,6 +240,26 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_patch_preview_auditor_path
+            and latest_patch_preview_auditor.get("audit_status") == "patch_preview_ready_for_gate_policy_review"
+            and latest_patch_preview_auditor.get("gate_policy_review_allowed") is True
+            and latest_patch_preview_auditor.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "source_change_gate_policy_required"
+            recommended_next_action = "run_source_change_gate_open_policy_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "patch preview auditor passed for gate policy review only; source gate and website edits remain blocked"
+            )
+            allowed_actions.append("source_change_gate_policy_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
             latest_file_level_patch_preview_path
             and latest_file_level_patch_preview.get("preview_status") == "patch_preview_ready_for_audit"
             and latest_file_level_patch_preview.get("patch_preview_audit_allowed") is True
@@ -530,6 +553,12 @@ def main():
             "patch_preview_count": latest_file_level_patch_preview.get("patch_preview_count"),
             "patch_preview_audit_allowed": latest_file_level_patch_preview.get("patch_preview_audit_allowed"),
             "source_change_gate_allowed": latest_file_level_patch_preview.get("source_change_gate_allowed"),
+        },
+        "latest_patch_preview_auditor": {
+            "path": str(latest_patch_preview_auditor_path) if latest_patch_preview_auditor_path else None,
+            "audit_status": latest_patch_preview_auditor.get("audit_status"),
+            "gate_policy_review_allowed": latest_patch_preview_auditor.get("gate_policy_review_allowed"),
+            "source_change_gate_allowed": latest_patch_preview_auditor.get("source_change_gate_allowed"),
         },
         "counts": {
             "manual_review_count": len(manual_review_items),
