@@ -183,6 +183,9 @@ def main():
     latest_source_change_gate_open_policy_path = latest_report("learning-v2-source-change-gate-open-policy-dry-run-*.json")
     latest_source_change_gate_open_policy = load_json(latest_source_change_gate_open_policy_path, {}) if latest_source_change_gate_open_policy_path else {}
 
+    latest_pre_change_evidence_snapshot_path = latest_report("learning-v2-pre-change-evidence-snapshot-dry-run-*.json")
+    latest_pre_change_evidence_snapshot = load_json(latest_pre_change_evidence_snapshot_path, {}) if latest_pre_change_evidence_snapshot_path else {}
+
     current_topic = state.get("current_topic")
     current_stage = state.get("current_stage")
     current_target_family = state.get("current_target_family")
@@ -243,6 +246,26 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_pre_change_evidence_snapshot_path
+            and latest_pre_change_evidence_snapshot.get("snapshot_status") == "pre_change_evidence_snapshot_ready_for_audit"
+            and latest_pre_change_evidence_snapshot.get("evidence_audit_allowed") is True
+            and latest_pre_change_evidence_snapshot.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "pre_change_evidence_audit_required"
+            recommended_next_action = "run_pre_change_evidence_auditor_before_gate"
+            requires_human_review = False
+            reasons.append(
+                "pre-change evidence snapshot exists; audit evidence before any source_change_gate can open"
+            )
+            allowed_actions.append("pre_change_evidence_auditor_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
             latest_source_change_gate_open_policy_path
             and latest_source_change_gate_open_policy.get("policy_decision") == "require_pre_change_evidence_before_gate"
             and latest_source_change_gate_open_policy.get("source_change_gate_allowed") is False
@@ -588,6 +611,13 @@ def main():
             "pre_change_evidence_required": latest_source_change_gate_open_policy.get("pre_change_evidence_required"),
             "gate_open_policy_allowed": latest_source_change_gate_open_policy.get("gate_open_policy_allowed"),
             "source_change_gate_allowed": latest_source_change_gate_open_policy.get("source_change_gate_allowed"),
+        },
+        "latest_pre_change_evidence_snapshot": {
+            "path": str(latest_pre_change_evidence_snapshot_path) if latest_pre_change_evidence_snapshot_path else None,
+            "snapshot_status": latest_pre_change_evidence_snapshot.get("snapshot_status"),
+            "candidate_file_count": latest_pre_change_evidence_snapshot.get("candidate_file_count"),
+            "evidence_audit_allowed": latest_pre_change_evidence_snapshot.get("evidence_audit_allowed"),
+            "source_change_gate_allowed": latest_pre_change_evidence_snapshot.get("source_change_gate_allowed"),
         },
         "counts": {
             "manual_review_count": len(manual_review_items),
