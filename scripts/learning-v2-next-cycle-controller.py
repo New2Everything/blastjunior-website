@@ -228,6 +228,9 @@ def main():
     latest_deployment_route_contract_auditor_path = latest_report("learning-v2-deployment-route-contract-auditor-dry-run-*.json")
     latest_deployment_route_contract_auditor = load_json(latest_deployment_route_contract_auditor_path, {}) if latest_deployment_route_contract_auditor_path else {}
 
+    latest_controlled_source_change_real_write_executor_path = latest_report("learning-v2-controlled-source-change-real-write-executor-dry-run-*.json")
+    latest_controlled_source_change_real_write_executor = load_json(latest_controlled_source_change_real_write_executor_path, {}) if latest_controlled_source_change_real_write_executor_path else {}
+
     latest_visual_evidence_capture_validation_path = latest_report("learning-v2-visual-evidence-capture-validation-dry-run-*.json")
     latest_visual_evidence_capture_validation = load_json(latest_visual_evidence_capture_validation_path, {}) if latest_visual_evidence_capture_validation_path else {}
 
@@ -297,6 +300,27 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_controlled_source_change_real_write_executor_path
+            and latest_controlled_source_change_real_write_executor.get("executor_status") == "controlled_source_change_real_write_executor_dry_run_ready_for_audit"
+            and latest_controlled_source_change_real_write_executor.get("executor_audit_allowed") is True
+            and latest_controlled_source_change_real_write_executor.get("deploy_allowed") is False
+        ):
+            controller_decision = "controlled_source_change_real_write_executor_audit_required"
+            recommended_next_action = "run_controlled_source_change_real_write_executor_auditor_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "controlled real-write executor dry-run is ready; audit executor before any real source write can be enabled"
+            )
+            allowed_actions.append("controlled_source_change_real_write_executor_auditor_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "website_source_change",
+                "git_commit",
+                "git_push",
+                "deploy",
+            ])
+        elif (
             latest_deployment_route_contract_auditor_path
             and latest_deployment_route_contract_auditor.get("audit_status") == "deployment_route_contract_ready_for_real_write_executor_dry_run"
             and latest_deployment_route_contract_auditor.get("real_write_executor_dry_run_allowed") is True
@@ -1179,6 +1203,12 @@ def main():
             "audit_status": latest_deployment_route_contract_auditor.get("audit_status"),
             "real_write_executor_dry_run_allowed": latest_deployment_route_contract_auditor.get("real_write_executor_dry_run_allowed"),
             "deploy_allowed": latest_deployment_route_contract_auditor.get("deploy_allowed"),
+        },
+        "latest_controlled_source_change_real_write_executor": {
+            "path": str(latest_controlled_source_change_real_write_executor_path) if latest_controlled_source_change_real_write_executor_path else None,
+            "executor_status": latest_controlled_source_change_real_write_executor.get("executor_status"),
+            "executor_audit_allowed": latest_controlled_source_change_real_write_executor.get("executor_audit_allowed"),
+            "deploy_allowed": latest_controlled_source_change_real_write_executor.get("deploy_allowed"),
         },
         "latest_visual_evidence_capture_validation": {
             "path": str(latest_visual_evidence_capture_validation_path) if latest_visual_evidence_capture_validation_path else None,
