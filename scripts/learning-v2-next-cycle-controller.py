@@ -198,6 +198,9 @@ def main():
     latest_final_source_change_gate_auditor_path = latest_report("learning-v2-final-source-change-gate-auditor-dry-run-*.json")
     latest_final_source_change_gate_auditor = load_json(latest_final_source_change_gate_auditor_path, {}) if latest_final_source_change_gate_auditor_path else {}
 
+    latest_source_change_gate_open_request_path = latest_report("learning-v2-source-change-gate-open-request-dry-run-*.json")
+    latest_source_change_gate_open_request = load_json(latest_source_change_gate_open_request_path, {}) if latest_source_change_gate_open_request_path else {}
+
     latest_visual_evidence_capture_validation_path = latest_report("learning-v2-visual-evidence-capture-validation-dry-run-*.json")
     latest_visual_evidence_capture_validation = load_json(latest_visual_evidence_capture_validation_path, {}) if latest_visual_evidence_capture_validation_path else {}
 
@@ -267,6 +270,26 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_source_change_gate_open_request_path
+            and latest_source_change_gate_open_request.get("request_status") == "source_change_gate_open_request_ready_for_audit"
+            and latest_source_change_gate_open_request.get("request_audit_allowed") is True
+            and latest_source_change_gate_open_request.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "source_change_gate_open_request_audit_required"
+            recommended_next_action = "run_source_change_gate_open_request_auditor_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "source-change gate open request packet is ready; audit the request before any gate may open"
+            )
+            allowed_actions.append("source_change_gate_open_request_auditor_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
             latest_final_source_change_gate_auditor_path
             and latest_final_source_change_gate_auditor.get("audit_status") == "gate_open_candidate_ready_but_not_opened"
             and latest_final_source_change_gate_auditor.get("gate_open_allowed") is False
@@ -862,6 +885,12 @@ def main():
             "visual_evidence_required": latest_final_source_change_gate_auditor.get("visual_evidence_required"),
             "gate_open_allowed": latest_final_source_change_gate_auditor.get("gate_open_allowed"),
             "source_change_gate_allowed": latest_final_source_change_gate_auditor.get("source_change_gate_allowed"),
+        },
+        "latest_source_change_gate_open_request": {
+            "path": str(latest_source_change_gate_open_request_path) if latest_source_change_gate_open_request_path else None,
+            "request_status": latest_source_change_gate_open_request.get("request_status"),
+            "request_audit_allowed": latest_source_change_gate_open_request.get("request_audit_allowed"),
+            "source_change_gate_allowed": latest_source_change_gate_open_request.get("source_change_gate_allowed"),
         },
         "latest_visual_evidence_capture_validation": {
             "path": str(latest_visual_evidence_capture_validation_path) if latest_visual_evidence_capture_validation_path else None,
