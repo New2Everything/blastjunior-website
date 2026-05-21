@@ -204,6 +204,9 @@ def main():
     latest_browser_visual_capture_path = latest_report("learning-v2-browser-visual-capture-dry-run-*.json")
     latest_browser_visual_capture = load_json(latest_browser_visual_capture_path, {}) if latest_browser_visual_capture_path else {}
 
+    latest_browser_visual_capture_auditor_path = latest_report("learning-v2-browser-visual-capture-auditor-dry-run-*.json")
+    latest_browser_visual_capture_auditor = load_json(latest_browser_visual_capture_auditor_path, {}) if latest_browser_visual_capture_auditor_path else {}
+
     current_topic = state.get("current_topic")
     current_stage = state.get("current_stage")
     current_target_family = state.get("current_target_family")
@@ -264,6 +267,26 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_browser_visual_capture_auditor_path
+            and latest_browser_visual_capture_auditor.get("audit_status") == "browser_visual_capture_ready_for_final_gate_recheck"
+            and latest_browser_visual_capture_auditor.get("final_gate_recheck_allowed") is True
+            and latest_browser_visual_capture_auditor.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "final_gate_recheck_required_after_visual_evidence"
+            recommended_next_action = "rerun_final_source_change_gate_auditor_with_visual_evidence"
+            requires_human_review = False
+            reasons.append(
+                "browser visual evidence audit passed; final source-change gate auditor should recheck with visual evidence confirmed"
+            )
+            allowed_actions.append("final_source_change_gate_auditor_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
             latest_browser_visual_capture_path
             and latest_browser_visual_capture.get("capture_status") == "browser_visual_capture_ready_for_audit"
             and latest_browser_visual_capture.get("visual_evidence_audit_allowed") is True
@@ -833,6 +856,13 @@ def main():
             "mobile_validated_count": latest_browser_visual_capture.get("mobile_validated_count"),
             "visual_evidence_audit_allowed": latest_browser_visual_capture.get("visual_evidence_audit_allowed"),
             "source_change_gate_allowed": latest_browser_visual_capture.get("source_change_gate_allowed"),
+        },
+        "latest_browser_visual_capture_auditor": {
+            "path": str(latest_browser_visual_capture_auditor_path) if latest_browser_visual_capture_auditor_path else None,
+            "audit_status": latest_browser_visual_capture_auditor.get("audit_status"),
+            "visual_evidence_confirmed": latest_browser_visual_capture_auditor.get("visual_evidence_confirmed"),
+            "final_gate_recheck_allowed": latest_browser_visual_capture_auditor.get("final_gate_recheck_allowed"),
+            "source_change_gate_allowed": latest_browser_visual_capture_auditor.get("source_change_gate_allowed"),
         },
         "counts": {
             "manual_review_count": len(manual_review_items),
