@@ -189,6 +189,9 @@ def main():
     latest_pre_change_evidence_auditor_path = latest_report("learning-v2-pre-change-evidence-auditor-dry-run-*.json")
     latest_pre_change_evidence_auditor = load_json(latest_pre_change_evidence_auditor_path, {}) if latest_pre_change_evidence_auditor_path else {}
 
+    latest_required_gate_evidence_modules_path = latest_report("learning-v2-required-gate-evidence-modules-dry-run-*.json")
+    latest_required_gate_evidence_modules = load_json(latest_required_gate_evidence_modules_path, {}) if latest_required_gate_evidence_modules_path else {}
+
     current_topic = state.get("current_topic")
     current_stage = state.get("current_stage")
     current_target_family = state.get("current_target_family")
@@ -249,6 +252,26 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_required_gate_evidence_modules_path
+            and latest_required_gate_evidence_modules.get("modules_status") == "required_gate_evidence_modules_ready_for_audit"
+            and latest_required_gate_evidence_modules.get("evidence_modules_audit_allowed") is True
+            and latest_required_gate_evidence_modules.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "required_gate_evidence_modules_audit_required"
+            recommended_next_action = "run_required_gate_evidence_modules_auditor_before_gate"
+            requires_human_review = False
+            reasons.append(
+                "required gate evidence modules exist; audit modules before any source_change_gate can open"
+            )
+            allowed_actions.append("required_gate_evidence_modules_auditor_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
             latest_pre_change_evidence_auditor_path
             and latest_pre_change_evidence_auditor.get("audit_status") == "pre_change_evidence_ready_for_required_evidence_modules"
             and latest_pre_change_evidence_auditor.get("required_evidence_modules_allowed") is True
@@ -647,6 +670,13 @@ def main():
             "audit_status": latest_pre_change_evidence_auditor.get("audit_status"),
             "required_evidence_modules_allowed": latest_pre_change_evidence_auditor.get("required_evidence_modules_allowed"),
             "source_change_gate_allowed": latest_pre_change_evidence_auditor.get("source_change_gate_allowed"),
+        },
+        "latest_required_gate_evidence_modules": {
+            "path": str(latest_required_gate_evidence_modules_path) if latest_required_gate_evidence_modules_path else None,
+            "modules_status": latest_required_gate_evidence_modules.get("modules_status"),
+            "built_module_count": latest_required_gate_evidence_modules.get("built_module_count"),
+            "evidence_modules_audit_allowed": latest_required_gate_evidence_modules.get("evidence_modules_audit_allowed"),
+            "source_change_gate_allowed": latest_required_gate_evidence_modules.get("source_change_gate_allowed"),
         },
         "counts": {
             "manual_review_count": len(manual_review_items),
