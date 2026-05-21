@@ -165,6 +165,12 @@ def main():
     latest_autonomous_review_policy_path = latest_report("learning-v2-autonomous-review-policy-dry-run-*.json")
     latest_autonomous_review_policy = load_json(latest_autonomous_review_policy_path, {}) if latest_autonomous_review_policy_path else {}
 
+    latest_source_change_plan_path = latest_report("learning-v2-source-change-plan-dry-run-*.json")
+    latest_source_change_plan = load_json(latest_source_change_plan_path, {}) if latest_source_change_plan_path else {}
+
+    latest_source_change_plan_auditor_path = latest_report("learning-v2-source-change-plan-auditor-dry-run-*.json")
+    latest_source_change_plan_auditor = load_json(latest_source_change_plan_auditor_path, {}) if latest_source_change_plan_auditor_path else {}
+
     current_topic = state.get("current_topic")
     current_stage = state.get("current_stage")
     current_target_family = state.get("current_target_family")
@@ -225,6 +231,45 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_source_change_plan_auditor_path
+            and latest_source_change_plan_auditor.get("audit_status") == "plan_ready_for_gate_review"
+            and latest_source_change_plan_auditor.get("gate_review_allowed") is True
+            and latest_source_change_plan_auditor.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "source_change_gate_review_ready"
+            recommended_next_action = "build_source_change_gate_readiness_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "source-change plan auditor passed for gate review only; source gate and website edits remain blocked"
+            )
+            allowed_actions.append("source_change_gate_readiness_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
+            latest_source_change_plan_path
+            and latest_source_change_plan.get("decision") == "source_change_plan_dry_run_ready"
+            and latest_source_change_plan.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "source_change_plan_audit_required"
+            recommended_next_action = "run_source_change_plan_auditor_before_any_gate_or_website_write"
+            requires_human_review = False
+            reasons.append(
+                "source-change plan dry-run exists; audit it before any gate review or website write"
+            )
+            allowed_actions.append("source_change_plan_auditor_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
             latest_autonomous_review_policy_path
             and latest_autonomous_review_policy.get("source_change_plan_dry_run_allowed") is True
             and latest_autonomous_review_policy.get("source_change_gate_allowed") is False
@@ -413,6 +458,19 @@ def main():
             "policy_decision": latest_autonomous_review_policy.get("policy_decision"),
             "source_change_plan_dry_run_allowed": latest_autonomous_review_policy.get("source_change_plan_dry_run_allowed"),
             "source_change_gate_allowed": latest_autonomous_review_policy.get("source_change_gate_allowed"),
+        },
+        "latest_source_change_plan": {
+            "path": str(latest_source_change_plan_path) if latest_source_change_plan_path else None,
+            "decision": latest_source_change_plan.get("decision"),
+            "candidate_file_count": latest_source_change_plan.get("candidate_file_count"),
+            "missing_file_count": latest_source_change_plan.get("missing_file_count"),
+            "source_change_gate_allowed": latest_source_change_plan.get("source_change_gate_allowed"),
+        },
+        "latest_source_change_plan_auditor": {
+            "path": str(latest_source_change_plan_auditor_path) if latest_source_change_plan_auditor_path else None,
+            "audit_status": latest_source_change_plan_auditor.get("audit_status"),
+            "gate_review_allowed": latest_source_change_plan_auditor.get("gate_review_allowed"),
+            "source_change_gate_allowed": latest_source_change_plan_auditor.get("source_change_gate_allowed"),
         },
         "counts": {
             "manual_review_count": len(manual_review_items),
