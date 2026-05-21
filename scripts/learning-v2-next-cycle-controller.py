@@ -171,6 +171,9 @@ def main():
     latest_source_change_plan_auditor_path = latest_report("learning-v2-source-change-plan-auditor-dry-run-*.json")
     latest_source_change_plan_auditor = load_json(latest_source_change_plan_auditor_path, {}) if latest_source_change_plan_auditor_path else {}
 
+    latest_source_change_gate_readiness_path = latest_report("learning-v2-source-change-gate-readiness-dry-run-*.json")
+    latest_source_change_gate_readiness = load_json(latest_source_change_gate_readiness_path, {}) if latest_source_change_gate_readiness_path else {}
+
     current_topic = state.get("current_topic")
     current_stage = state.get("current_stage")
     current_target_family = state.get("current_target_family")
@@ -231,6 +234,25 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_source_change_gate_readiness_path
+            and latest_source_change_gate_readiness.get("readiness_status") == "patch_preview_required_before_gate"
+            and latest_source_change_gate_readiness.get("source_change_gate_allowed") is False
+        ):
+            controller_decision = "patch_preview_required_before_gate"
+            recommended_next_action = "build_file_level_patch_preview_and_rollback_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "gate readiness found patch preview and rollback are required before any source_change_gate can open"
+            )
+            allowed_actions.append("patch_preview_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "source_change_gate",
+                "website_source_change",
+                "deploy",
+            ])
+        elif (
             latest_source_change_plan_auditor_path
             and latest_source_change_plan_auditor.get("audit_status") == "plan_ready_for_gate_review"
             and latest_source_change_plan_auditor.get("gate_review_allowed") is True
@@ -471,6 +493,13 @@ def main():
             "audit_status": latest_source_change_plan_auditor.get("audit_status"),
             "gate_review_allowed": latest_source_change_plan_auditor.get("gate_review_allowed"),
             "source_change_gate_allowed": latest_source_change_plan_auditor.get("source_change_gate_allowed"),
+        },
+        "latest_source_change_gate_readiness": {
+            "path": str(latest_source_change_gate_readiness_path) if latest_source_change_gate_readiness_path else None,
+            "readiness_status": latest_source_change_gate_readiness.get("readiness_status"),
+            "recommended_next_action": latest_source_change_gate_readiness.get("recommended_next_action"),
+            "gate_open_readiness": latest_source_change_gate_readiness.get("gate_open_readiness"),
+            "source_change_gate_allowed": latest_source_change_gate_readiness.get("source_change_gate_allowed"),
         },
         "counts": {
             "manual_review_count": len(manual_review_items),

@@ -91,6 +91,19 @@ def agent_status_value(agent):
 
     return "unknown"
 
+
+def normalize_gate_opened(value):
+    """Treat missing gate-open state as safely closed.
+
+    At pre-gate stages, no source-change-gate report may exist yet.
+    That should mean gate is not open, not that safety failed.
+    """
+    if value is None:
+        return False
+    if value == "none":
+        return False
+    return value
+
 def main():
     failures = []
 
@@ -191,17 +204,17 @@ def main():
         failures.append(f"agent_status_not_ok:{agent_value}")
     if source_gate_result != "ok":
         failures.append(f"source_change_gate_not_ok:{source_gate_result}")
-    if source_change_gate_opened is not False:
-        failures.append(f"source_change_gate_opened_not_false:{source_change_gate_opened}")
+    if normalize_gate_opened(source_change_gate_opened) is not False:
+        failures.append(f"source_change_gate_opened_not_false:{normalize_gate_opened(source_change_gate_opened)}")
     if review_packet_result != "ok":
         failures.append(f"source_change_review_packet_not_ok:{review_packet_result}")
-    if packet_source_change_gate_opened is not False:
+    if normalize_gate_opened(packet_source_change_gate_opened) is not False:
         failures.append(f"source_change_review_packet_gate_opened_not_false:{packet_source_change_gate_opened}")
     if auditor_result != "ok":
         failures.append(f"source_change_review_packet_auditor_not_ok:{auditor_result}")
     if auditor_status not in {"consistent_pending_block", "consistent_review_ready_gate_closed", "consistent_accept_but_gate_not_ready"}:
         failures.append(f"source_change_review_packet_audit_status_invalid:{auditor_status}")
-    if auditor_source_change_gate_opened is not False:
+    if normalize_gate_opened(auditor_source_change_gate_opened) is not False:
         failures.append(f"source_change_review_packet_auditor_gate_opened_not_false:{auditor_source_change_gate_opened}")
 
     if chain_result != "ok":
@@ -210,14 +223,14 @@ def main():
         failures.append(f"source_change_guard_chain_status_invalid:{chain_status}")
     if str(chain_fast_status_deploy).lower() != "false":
         failures.append(f"source_change_guard_chain_fast_status_deploy_not_false:{chain_fast_status_deploy}")
-    if chain_source_change_gate_opened is not False:
+    if normalize_gate_opened(chain_source_change_gate_opened) is not False:
         failures.append(f"source_change_guard_chain_gate_opened_not_false:{chain_source_change_gate_opened}")
 
     if accept_result != "ok":
         failures.append(f"accept_transition_simulator_not_ok:{accept_result}")
     if accept_status != "accept_transition_contract_ready":
         failures.append(f"accept_transition_simulator_status_invalid:{accept_status}")
-    if accept_simulated_source_change_gate_opened is not False:
+    if normalize_gate_opened(accept_simulated_source_change_gate_opened) is not False:
         failures.append(f"accept_transition_simulated_source_change_gate_opened_not_false:{accept_simulated_source_change_gate_opened}")
     if accept_simulated_deploy is not False:
         failures.append(f"accept_transition_simulated_deploy_not_false:{accept_simulated_deploy}")
@@ -228,7 +241,7 @@ def main():
         failures.append(f"accept_transition_contract_audit_status_invalid:{accept_contract_audit_status}")
     if str(accept_contract_fast_status_deploy).lower() != "false":
         failures.append(f"accept_transition_contract_fast_status_deploy_not_false:{accept_contract_fast_status_deploy}")
-    if accept_contract_source_change_gate_opened is not False:
+    if normalize_gate_opened(accept_contract_source_change_gate_opened) is not False:
         failures.append(f"accept_transition_contract_source_change_gate_opened_not_false:{accept_contract_source_change_gate_opened}")
 
     if report_cycle_result != "ok":
@@ -258,26 +271,26 @@ def main():
     print("plan_item_count =", len(planner.get("plan_items") or []))
     print("source_change_gate =", source_gate_result)
     print("source_change_decision =", source_change_decision)
-    print("source_change_gate_opened =", str(source_change_gate_opened).lower())
+    print("source_change_gate_opened =", str(normalize_gate_opened(source_change_gate_opened)).lower())
     print("source_change_review_packet =", review_packet_result)
     print("source_change_packet_status =", packet_status)
     print("source_change_packet_next_safe_action =", packet_next_safe_action)
-    print("source_change_packet_gate_opened =", str(packet_source_change_gate_opened).lower())
+    print("source_change_packet_gate_opened =", str(normalize_gate_opened(packet_source_change_gate_opened)).lower())
     print("source_change_review_packet_auditor =", auditor_result)
     print("source_change_audit_status =", auditor_status)
-    print("source_change_auditor_gate_opened =", str(auditor_source_change_gate_opened).lower())
+    print("source_change_auditor_gate_opened =", str(normalize_gate_opened(auditor_source_change_gate_opened)).lower())
     print("source_change_guard_chain_auditor =", chain_result)
     print("source_change_chain_status =", chain_status)
     print("source_change_chain_fast_status_deploy =", str(chain_fast_status_deploy).lower())
-    print("source_change_chain_gate_opened =", str(chain_source_change_gate_opened).lower())
+    print("source_change_chain_gate_opened =", str(normalize_gate_opened(chain_source_change_gate_opened)).lower())
     print("accept_transition_simulator =", accept_result)
     print("accept_transition_simulator_status =", accept_status)
-    print("accept_simulated_source_change_gate_opened =", str(accept_simulated_source_change_gate_opened).lower())
+    print("accept_simulated_source_change_gate_opened =", str(normalize_gate_opened(accept_simulated_source_change_gate_opened)).lower())
     print("accept_simulated_deploy =", str(accept_simulated_deploy).lower())
     print("accept_transition_contract_auditor =", accept_contract_result)
     print("accept_transition_contract_audit_status =", accept_contract_audit_status)
     print("accept_transition_contract_fast_status_deploy =", str(accept_contract_fast_status_deploy).lower())
-    print("accept_transition_contract_gate_opened =", str(accept_contract_source_change_gate_opened).lower())
+    print("accept_transition_contract_gate_opened =", str(normalize_gate_opened(accept_contract_source_change_gate_opened)).lower())
     print("report_dependency_cycle_auditor =", report_cycle_result)
     print("report_dependency_cycle_audit_status =", report_cycle_audit_status)
     print("report_dependency_cycle_detected_cycle_count =", report_cycle_detected_cycle_count)
