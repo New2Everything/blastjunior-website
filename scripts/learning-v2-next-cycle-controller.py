@@ -264,6 +264,9 @@ def main():
     latest_controlled_source_change_actual_write_executor_auditor_path = latest_report("learning-v2-controlled-source-change-actual-write-executor-auditor-dry-run-*.json")
     latest_controlled_source_change_actual_write_executor_auditor = load_json(latest_controlled_source_change_actual_write_executor_auditor_path, {}) if latest_controlled_source_change_actual_write_executor_auditor_path else {}
 
+    latest_controlled_source_change_post_write_validation_path = latest_report("learning-v2-controlled-source-change-post-write-validation-dry-run-*.json")
+    latest_controlled_source_change_post_write_validation = load_json(latest_controlled_source_change_post_write_validation_path, {}) if latest_controlled_source_change_post_write_validation_path else {}
+
     latest_visual_evidence_capture_validation_path = latest_report("learning-v2-visual-evidence-capture-validation-dry-run-*.json")
     latest_visual_evidence_capture_validation = load_json(latest_visual_evidence_capture_validation_path, {}) if latest_visual_evidence_capture_validation_path else {}
 
@@ -333,6 +336,27 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_controlled_source_change_post_write_validation_path
+            and latest_controlled_source_change_post_write_validation.get("validation_status") == "controlled_source_change_post_write_validation_ready_for_git_diff_audit_dry_run"
+            and latest_controlled_source_change_post_write_validation.get("git_diff_audit_dry_run_allowed") is True
+            and latest_controlled_source_change_post_write_validation.get("actual_source_written") is False
+        ):
+            controller_decision = "controlled_source_change_git_diff_audit_dry_run_required"
+            recommended_next_action = "run_controlled_source_change_git_diff_audit_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "post-write validation dry-run passed; run git diff audit dry-run only"
+            )
+            allowed_actions.append("controlled_source_change_git_diff_audit_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "website_source_change",
+                "git_commit",
+                "git_push",
+                "deploy",
+            ])
+        elif (
             latest_controlled_source_change_actual_write_executor_auditor_path
             and latest_controlled_source_change_actual_write_executor_auditor.get("audit_status") == "controlled_source_change_actual_write_executor_ready_for_post_write_validation_dry_run"
             and latest_controlled_source_change_actual_write_executor_auditor.get("post_write_validation_dry_run_allowed") is True
@@ -1549,6 +1573,12 @@ def main():
             "post_write_validation_dry_run_allowed": latest_controlled_source_change_actual_write_executor_auditor.get("post_write_validation_dry_run_allowed"),
             "actual_source_write_allowed": latest_controlled_source_change_actual_write_executor_auditor.get("actual_source_write_allowed"),
             "actual_source_written": latest_controlled_source_change_actual_write_executor_auditor.get("actual_source_written"),
+        },
+        "latest_controlled_source_change_post_write_validation": {
+            "path": str(latest_controlled_source_change_post_write_validation_path) if latest_controlled_source_change_post_write_validation_path else None,
+            "validation_status": latest_controlled_source_change_post_write_validation.get("validation_status"),
+            "git_diff_audit_dry_run_allowed": latest_controlled_source_change_post_write_validation.get("git_diff_audit_dry_run_allowed"),
+            "actual_source_written": latest_controlled_source_change_post_write_validation.get("actual_source_written"),
         },
         "latest_visual_evidence_capture_validation": {
             "path": str(latest_visual_evidence_capture_validation_path) if latest_visual_evidence_capture_validation_path else None,
