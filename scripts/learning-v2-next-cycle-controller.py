@@ -270,6 +270,9 @@ def main():
     latest_controlled_source_change_git_diff_audit_path = latest_report("learning-v2-controlled-source-change-git-diff-audit-dry-run-*.json")
     latest_controlled_source_change_git_diff_audit = load_json(latest_controlled_source_change_git_diff_audit_path, {}) if latest_controlled_source_change_git_diff_audit_path else {}
 
+    latest_controlled_source_change_git_commit_gate_path = latest_report("learning-v2-controlled-source-change-git-commit-gate-dry-run-*.json")
+    latest_controlled_source_change_git_commit_gate = load_json(latest_controlled_source_change_git_commit_gate_path, {}) if latest_controlled_source_change_git_commit_gate_path else {}
+
     latest_visual_evidence_capture_validation_path = latest_report("learning-v2-visual-evidence-capture-validation-dry-run-*.json")
     latest_visual_evidence_capture_validation = load_json(latest_visual_evidence_capture_validation_path, {}) if latest_visual_evidence_capture_validation_path else {}
 
@@ -339,6 +342,28 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_controlled_source_change_git_commit_gate_path
+            and latest_controlled_source_change_git_commit_gate.get("gate_status") == "controlled_source_change_git_commit_gate_ready_for_git_push_gate_dry_run"
+            and latest_controlled_source_change_git_commit_gate.get("git_push_gate_dry_run_allowed") is True
+            and latest_controlled_source_change_git_commit_gate.get("git_commit_allowed") is False
+            and latest_controlled_source_change_git_commit_gate.get("actual_source_written") is False
+        ):
+            controller_decision = "controlled_source_change_git_push_gate_dry_run_required"
+            recommended_next_action = "run_controlled_source_change_git_push_gate_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "git commit gate dry-run passed; run git push gate dry-run only"
+            )
+            allowed_actions.append("controlled_source_change_git_push_gate_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "website_source_change",
+                "git_commit",
+                "git_push",
+                "deploy",
+            ])
+        elif (
             latest_controlled_source_change_git_diff_audit_path
             and latest_controlled_source_change_git_diff_audit.get("audit_status") == "controlled_source_change_git_diff_audit_ready_for_git_commit_gate_dry_run"
             and latest_controlled_source_change_git_diff_audit.get("git_commit_gate_dry_run_allowed") is True
@@ -1611,6 +1636,13 @@ def main():
             "git_commit_gate_dry_run_allowed": latest_controlled_source_change_git_diff_audit.get("git_commit_gate_dry_run_allowed"),
             "git_commit_allowed": latest_controlled_source_change_git_diff_audit.get("git_commit_allowed"),
             "actual_source_written": latest_controlled_source_change_git_diff_audit.get("actual_source_written"),
+        },
+        "latest_controlled_source_change_git_commit_gate": {
+            "path": str(latest_controlled_source_change_git_commit_gate_path) if latest_controlled_source_change_git_commit_gate_path else None,
+            "gate_status": latest_controlled_source_change_git_commit_gate.get("gate_status"),
+            "git_push_gate_dry_run_allowed": latest_controlled_source_change_git_commit_gate.get("git_push_gate_dry_run_allowed"),
+            "git_commit_allowed": latest_controlled_source_change_git_commit_gate.get("git_commit_allowed"),
+            "actual_source_written": latest_controlled_source_change_git_commit_gate.get("actual_source_written"),
         },
         "latest_visual_evidence_capture_validation": {
             "path": str(latest_visual_evidence_capture_validation_path) if latest_visual_evidence_capture_validation_path else None,
