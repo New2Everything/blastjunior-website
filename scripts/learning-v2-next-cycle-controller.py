@@ -255,6 +255,9 @@ def main():
     latest_controlled_source_change_actual_source_write_gate_opener_path = latest_report("learning-v2-controlled-source-change-actual-source-write-gate-opener-dry-run-*.json")
     latest_controlled_source_change_actual_source_write_gate_opener = load_json(latest_controlled_source_change_actual_source_write_gate_opener_path, {}) if latest_controlled_source_change_actual_source_write_gate_opener_path else {}
 
+    latest_controlled_source_change_actual_source_write_gate_opener_auditor_path = latest_report("learning-v2-controlled-source-change-actual-source-write-gate-opener-auditor-dry-run-*.json")
+    latest_controlled_source_change_actual_source_write_gate_opener_auditor = load_json(latest_controlled_source_change_actual_source_write_gate_opener_auditor_path, {}) if latest_controlled_source_change_actual_source_write_gate_opener_auditor_path else {}
+
     latest_visual_evidence_capture_validation_path = latest_report("learning-v2-visual-evidence-capture-validation-dry-run-*.json")
     latest_visual_evidence_capture_validation = load_json(latest_visual_evidence_capture_validation_path, {}) if latest_visual_evidence_capture_validation_path else {}
 
@@ -324,6 +327,28 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_controlled_source_change_actual_source_write_gate_opener_auditor_path
+            and latest_controlled_source_change_actual_source_write_gate_opener_auditor.get("audit_status") == "controlled_source_change_actual_source_write_gate_opener_ready_for_actual_write_executor_dry_run"
+            and latest_controlled_source_change_actual_source_write_gate_opener_auditor.get("actual_write_executor_dry_run_allowed") is True
+            and latest_controlled_source_change_actual_source_write_gate_opener_auditor.get("actual_source_write_allowed") is False
+            and latest_controlled_source_change_actual_source_write_gate_opener_auditor.get("actual_source_write_gate_opened") is False
+        ):
+            controller_decision = "controlled_source_change_actual_write_executor_dry_run_required"
+            recommended_next_action = "run_controlled_source_change_actual_write_executor_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "actual source-write gate opener audit passed; run actual write executor dry-run only"
+            )
+            allowed_actions.append("controlled_source_change_actual_write_executor_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "website_source_change",
+                "git_commit",
+                "git_push",
+                "deploy",
+            ])
+        elif (
             latest_controlled_source_change_actual_source_write_gate_opener_path
             and latest_controlled_source_change_actual_source_write_gate_opener.get("opener_status") == "controlled_source_change_actual_source_write_gate_opener_dry_run_ready_for_audit"
             and latest_controlled_source_change_actual_source_write_gate_opener.get("gate_opener_audit_allowed") is True
@@ -1453,6 +1478,13 @@ def main():
             "gate_opener_audit_allowed": latest_controlled_source_change_actual_source_write_gate_opener.get("gate_opener_audit_allowed"),
             "actual_source_write_allowed": latest_controlled_source_change_actual_source_write_gate_opener.get("actual_source_write_allowed"),
             "actual_source_write_gate_opened": latest_controlled_source_change_actual_source_write_gate_opener.get("actual_source_write_gate_opened"),
+        },
+        "latest_controlled_source_change_actual_source_write_gate_opener_auditor": {
+            "path": str(latest_controlled_source_change_actual_source_write_gate_opener_auditor_path) if latest_controlled_source_change_actual_source_write_gate_opener_auditor_path else None,
+            "audit_status": latest_controlled_source_change_actual_source_write_gate_opener_auditor.get("audit_status"),
+            "actual_write_executor_dry_run_allowed": latest_controlled_source_change_actual_source_write_gate_opener_auditor.get("actual_write_executor_dry_run_allowed"),
+            "actual_source_write_allowed": latest_controlled_source_change_actual_source_write_gate_opener_auditor.get("actual_source_write_allowed"),
+            "actual_source_write_gate_opened": latest_controlled_source_change_actual_source_write_gate_opener_auditor.get("actual_source_write_gate_opened"),
         },
         "latest_visual_evidence_capture_validation": {
             "path": str(latest_visual_evidence_capture_validation_path) if latest_visual_evidence_capture_validation_path else None,
