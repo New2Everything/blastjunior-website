@@ -237,6 +237,9 @@ def main():
     latest_controlled_source_change_real_write_apply_request_path = latest_report("learning-v2-controlled-source-change-real-write-apply-request-dry-run-*.json")
     latest_controlled_source_change_real_write_apply_request = load_json(latest_controlled_source_change_real_write_apply_request_path, {}) if latest_controlled_source_change_real_write_apply_request_path else {}
 
+    latest_controlled_source_change_real_write_apply_request_auditor_path = latest_report("learning-v2-controlled-source-change-real-write-apply-request-auditor-dry-run-*.json")
+    latest_controlled_source_change_real_write_apply_request_auditor = load_json(latest_controlled_source_change_real_write_apply_request_auditor_path, {}) if latest_controlled_source_change_real_write_apply_request_auditor_path else {}
+
     latest_visual_evidence_capture_validation_path = latest_report("learning-v2-visual-evidence-capture-validation-dry-run-*.json")
     latest_visual_evidence_capture_validation = load_json(latest_visual_evidence_capture_validation_path, {}) if latest_visual_evidence_capture_validation_path else {}
 
@@ -306,6 +309,27 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_controlled_source_change_real_write_apply_request_auditor_path
+            and latest_controlled_source_change_real_write_apply_request_auditor.get("audit_status") == "controlled_source_change_real_write_apply_request_ready_for_apply_executor_dry_run"
+            and latest_controlled_source_change_real_write_apply_request_auditor.get("apply_executor_dry_run_allowed") is True
+            and latest_controlled_source_change_real_write_apply_request_auditor.get("actual_source_write_allowed") is False
+        ):
+            controller_decision = "controlled_source_change_real_write_apply_executor_dry_run_required"
+            recommended_next_action = "run_controlled_source_change_real_write_apply_executor_dry_run"
+            requires_human_review = False
+            reasons.append(
+                "controlled real-write apply request audit passed; run apply executor dry-run only"
+            )
+            allowed_actions.append("controlled_source_change_real_write_apply_executor_dry_run")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "website_source_change",
+                "git_commit",
+                "git_push",
+                "deploy",
+            ])
+        elif (
             latest_controlled_source_change_real_write_apply_request_path
             and latest_controlled_source_change_real_write_apply_request.get("request_status") == "controlled_source_change_real_write_apply_request_ready_for_audit"
             and latest_controlled_source_change_real_write_apply_request.get("apply_request_audit_allowed") is True
@@ -1269,6 +1293,12 @@ def main():
             "request_status": latest_controlled_source_change_real_write_apply_request.get("request_status"),
             "apply_request_audit_allowed": latest_controlled_source_change_real_write_apply_request.get("apply_request_audit_allowed"),
             "actual_source_write_allowed": latest_controlled_source_change_real_write_apply_request.get("actual_source_write_allowed"),
+        },
+        "latest_controlled_source_change_real_write_apply_request_auditor": {
+            "path": str(latest_controlled_source_change_real_write_apply_request_auditor_path) if latest_controlled_source_change_real_write_apply_request_auditor_path else None,
+            "audit_status": latest_controlled_source_change_real_write_apply_request_auditor.get("audit_status"),
+            "apply_executor_dry_run_allowed": latest_controlled_source_change_real_write_apply_request_auditor.get("apply_executor_dry_run_allowed"),
+            "actual_source_write_allowed": latest_controlled_source_change_real_write_apply_request_auditor.get("actual_source_write_allowed"),
         },
         "latest_visual_evidence_capture_validation": {
             "path": str(latest_visual_evidence_capture_validation_path) if latest_visual_evidence_capture_validation_path else None,
