@@ -279,6 +279,9 @@ def main():
     latest_controlled_source_change_cloudflare_pages_status_check_path = latest_report("learning-v2-controlled-source-change-cloudflare-pages-status-check-dry-run-*.json")
     latest_controlled_source_change_cloudflare_pages_status_check = load_json(latest_controlled_source_change_cloudflare_pages_status_check_path, {}) if latest_controlled_source_change_cloudflare_pages_status_check_path else {}
 
+    latest_controlled_source_change_lifecycle_completion_path = latest_report("learning-v2-controlled-source-change-lifecycle-completion-dry-run-*.json")
+    latest_controlled_source_change_lifecycle_completion = load_json(latest_controlled_source_change_lifecycle_completion_path, {}) if latest_controlled_source_change_lifecycle_completion_path else {}
+
     latest_visual_evidence_capture_validation_path = latest_report("learning-v2-visual-evidence-capture-validation-dry-run-*.json")
     latest_visual_evidence_capture_validation = load_json(latest_visual_evidence_capture_validation_path, {}) if latest_visual_evidence_capture_validation_path else {}
 
@@ -348,6 +351,28 @@ def main():
         latest_plan_proposal_count = latest_proposal_planning.get("proposal_count")
 
         if (
+            latest_controlled_source_change_lifecycle_completion_path
+            and latest_controlled_source_change_lifecycle_completion.get("completion_status") == "controlled_source_change_lifecycle_completion_dry_run_complete"
+            and latest_controlled_source_change_lifecycle_completion.get("lifecycle_closed") is True
+            and latest_controlled_source_change_lifecycle_completion.get("actual_source_written") is False
+            and latest_controlled_source_change_lifecycle_completion.get("deploy_allowed") is False
+        ):
+            controller_decision = "controlled_source_change_lifecycle_dry_run_complete"
+            recommended_next_action = "commit_controlled_source_change_lifecycle_completion_routing"
+            requires_human_review = False
+            reasons.append(
+                "controlled source-change lifecycle dry-run completed with no source write, commit, push, Cloudflare API call, or deploy"
+            )
+            allowed_actions.append("commit_controlled_source_change_lifecycle_completion_routing")
+            blocked_actions.extend([
+                "source_discovery",
+                "new_candidate_generation",
+                "website_source_change",
+                "git_commit",
+                "git_push",
+                "deploy",
+            ])
+        elif (
             latest_controlled_source_change_cloudflare_pages_status_check_path
             and latest_controlled_source_change_cloudflare_pages_status_check.get("check_status") == "controlled_source_change_cloudflare_pages_status_check_ready_for_lifecycle_completion_dry_run"
             and latest_controlled_source_change_cloudflare_pages_status_check.get("lifecycle_completion_dry_run_allowed") is True
@@ -1707,6 +1732,13 @@ def main():
             "lifecycle_completion_dry_run_allowed": latest_controlled_source_change_cloudflare_pages_status_check.get("lifecycle_completion_dry_run_allowed"),
             "cloudflare_deploy_allowed": latest_controlled_source_change_cloudflare_pages_status_check.get("cloudflare_deploy_allowed"),
             "actual_source_written": latest_controlled_source_change_cloudflare_pages_status_check.get("actual_source_written"),
+        },
+        "latest_controlled_source_change_lifecycle_completion": {
+            "path": str(latest_controlled_source_change_lifecycle_completion_path) if latest_controlled_source_change_lifecycle_completion_path else None,
+            "completion_status": latest_controlled_source_change_lifecycle_completion.get("completion_status"),
+            "lifecycle_closed": latest_controlled_source_change_lifecycle_completion.get("lifecycle_closed"),
+            "actual_source_written": latest_controlled_source_change_lifecycle_completion.get("actual_source_written"),
+            "deploy_allowed": latest_controlled_source_change_lifecycle_completion.get("deploy_allowed"),
         },
         "latest_visual_evidence_capture_validation": {
             "path": str(latest_visual_evidence_capture_validation_path) if latest_visual_evidence_capture_validation_path else None,
