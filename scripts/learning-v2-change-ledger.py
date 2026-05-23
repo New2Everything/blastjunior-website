@@ -159,6 +159,15 @@ def enrich_item(item):
     return item
 
 def build_policy(git_info):
+    if POLICY.exists():
+        existing = json.loads(POLICY.read_text(encoding="utf-8"))
+        if str(existing.get("mode", "")).startswith("autonomous_"):
+            existing.setdefault("generated_at", now_iso())
+            existing.setdefault("repo", {})
+            existing["repo"]["branch"] = git_info["branch"]["stdout"]
+            existing["repo"]["upstream"] = git_info["upstream"]["stdout"]
+            return existing
+
     return {
         "generated_at": now_iso(),
         "mode": "observer_only",

@@ -265,7 +265,7 @@ def main():
             "state_written": False,
             "business_source_written": False,
             "source_change_gate_opened": False,
-            "human_review_required": False,
+            "autonomous_policy_gate_required": False,
             "machine_policy_gate": True,
             "git_commit": False,
             "git_push": False,
@@ -291,7 +291,7 @@ def main():
     lines.append("- state_written: `false`")
     lines.append("- business_source_written: `false`")
     lines.append("- source_change_gate_opened: `false`")
-    lines.append("- human_review_required: `false`")
+    lines.append("- autonomous_policy_gate_required: `false`")
     lines.append("- machine_policy_gate: `true`")
     lines.append("- git_commit: `false`")
     lines.append("- git_push: `false`")
@@ -324,7 +324,7 @@ def main():
     print("state_written = False")
     print("business_source_written = False")
     print("source_change_gate_opened = False")
-    print("human_review_required = False")
+    print("autonomous_policy_gate_required = False")
     print("machine_policy_gate = True")
     print("git_commit = False")
     print("git_push = False")

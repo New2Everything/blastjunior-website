@@ -1,0 +1,77 @@
+{
+  "generated_at": "2026-05-23T01:55:00+00:00",
+  "mode": "autonomous_guarded_design",
+  "repo": {
+    "owner": "New2Everything",
+    "name": "blastjunior-website",
+    "branch": "main",
+    "upstream": "origin/main",
+    "deploy_trigger_assumption": "Cloudflare Pages likely deploys when GitHub branch receives a push"
+  },
+  "human_role": [
+    "start system",
+    "stop system",
+    "set learning direction",
+    "set modification direction",
+    "set risk boundary"
+  ],
+  "commit_policy": {
+    "allow_commit": true,
+    "allow_push": false,
+    "allow_deploy": false,
+    "reason": "commit allowed for system-governance changes only; push/deploy require autonomous deploy gates"
+  },
+  "autonomous_release_gate": {
+    "require_operator_start_enabled": true,
+    "require_clean_or_approved_dirty_baseline": true,
+    "require_change_ledger": true,
+    "require_pre_deploy_doctor_ok": true,
+    "require_backup_for_source_changes": true,
+    "require_post_deploy_observer": true,
+    "require_rollback_plan": true,
+    "require_no_business_source_dirty_unless_whitelisted": true
+  },
+  "allowed_now": [
+    "system governance commits",
+    "observer reports",
+    "doctor reports",
+    "autonomous policy design",
+    "change ledger snapshots",
+    "learning-v2 system scripts"
+  ],
+  "blocked_now": [
+    "git push",
+    "Cloudflare Pages deploy",
+    "wrangler deploy",
+    "Cloudflare API mutation",
+    "new website source auto-apply"
+  ],
+  "production_route_iron_law": {
+    "updated_at": "2026-05-23T23:19:43.425926+00:00",
+    "rule": "GitHub is the source of truth. Cloudflare Pages is the deployment target. OpenClaw may modify local repository files only through guarded source-change lifecycle. No direct Cloudflare deploy unless emergency override is explicitly enabled.",
+    "zh": "GitHub 是源码真相源；Cloudflare Pages 是部署目标；OpenClaw 只能通过受控生命周期修改本地仓库，然后经 GitHub 触发 Cloudflare Pages 部署；不走直接 Cloudflare 上传，除非进入明确的紧急模式。",
+    "canonical_route": [
+      "OpenClaw / learning-v2 modifies local repository files",
+      "local validation",
+      "rollback packet",
+      "git diff audit",
+      "commit gate",
+      "push gate",
+      "git push to GitHub",
+      "Cloudflare Pages Git integration auto deploy",
+      "post-deploy observer"
+    ],
+    "blocked_as_primary_route": [
+      "direct Cloudflare Pages upload",
+      "wrangler deploy as normal route",
+      "Cloudflare API mutation as normal route",
+      "editing deployed site without GitHub source update"
+    ],
+    "emergency_override": {
+      "allowed": false,
+      "requires_explicit_policy_change": true,
+      "requires_named_emergency_mode": true,
+      "requires_post_restore_to_github_source_of_truth": true
+    }
+  }
+}

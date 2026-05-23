@@ -171,7 +171,7 @@ def build_change_plan(proposals):
                 "target_file": rel_file,
                 "file_info": info,
                 "execution_priority": 99,
-                "execution_status": "manual_review_required",
+                "execution_status": "autonomous_policy_required",
                 "risk": p.get("risk") or "unknown",
                 "source_change_allowed_now": False,
             })
@@ -180,7 +180,7 @@ def build_change_plan(proposals):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--apply", action="store_true", help="write manual-review waiting state only; never modifies website source")
+    ap.add_argument("--apply", action="store_true", help="write autonomous-policy waiting state only; never modifies website source")
     args = ap.parse_args()
 
     state = load_json(STATE, default={})
@@ -242,7 +242,7 @@ def main():
         "change_plan_count": len(change_plans),
         "recommended_first_change": first_change,
         "change_plans": change_plans,
-        "recommended_next_step": "build_homepage_onboarding_source_change_dry_run_executor" if first_change else "manual_review_required",
+        "recommended_next_step": "build_homepage_onboarding_source_change_dry_run_executor" if first_change else "autonomous_policy_required",
         "policy": {
             "source_change_allowed_now": False,
             "state_written": False,
@@ -351,7 +351,7 @@ def main():
             "at": now_iso(),
             "executor": "community_onboarding_controlled_source_change_plan",
             "stage_before": "community_onboarding_plan_ready",
-            "stage_after": "community_onboarding_manual_review_required",
+            "stage_after": "community_onboarding_autonomous_policy_required",
             "target_family": TARGET_FAMILY,
             "proposal_report": str(proposal_path),
             "plan_report": str(out_json),
@@ -367,7 +367,7 @@ def main():
         })
         state["last_community_onboarding_controlled_source_change_plan"] = {
             "at": now_iso(),
-            "result": "community_onboarding_manual_review_required",
+            "result": "community_onboarding_autonomous_policy_required",
             "target_family": TARGET_FAMILY,
             "proposal_report": str(proposal_path),
             "plan_report": str(out_json),
@@ -381,7 +381,7 @@ def main():
             "git_push": False,
             "deploy": False,
         }
-        state["current_stage"] = "community_onboarding_manual_review_required"
+        state["current_stage"] = "community_onboarding_autonomous_policy_required"
         state["next_action"] = (
             "Manual review required before opening source_change_gate. "
             "Do not modify website source, commit, push, or deploy."

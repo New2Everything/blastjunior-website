@@ -92,7 +92,7 @@ def build_review_items(probe):
             item["apply_allowed_now"] = False
 
         else:
-            item["proposal_type"] = "manual_review"
+            item["proposal_type"] = "autonomous_policy_review"
             item["proposal_summary"] = "Manual review only."
             item["apply_allowed_now"] = False
 

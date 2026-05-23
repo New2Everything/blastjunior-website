@@ -9,6 +9,7 @@ WORKSPACE = Path("/root/.openclaw/workspace")
 BASE = WORKSPACE / "learning-v2"
 REPORT_DIR = BASE / "reports"
 SNAPSHOT_DIR = BASE / "snapshots"
+VISUAL_EVIDENCE_DIR = BASE / "visual-evidence"
 
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
@@ -76,6 +77,36 @@ def main():
     preview = load_json(preview_path, {})
     browser_visual_auditor = load_json(browser_visual_auditor_path, {}) if browser_visual_auditor_path else {}
 
+    visual_evidence_tasks = []
+    visual_evidence_completions = []
+    if VISUAL_EVIDENCE_DIR.exists():
+        for task_path in sorted(VISUAL_EVIDENCE_DIR.glob("*-visual-evidence-task-*.json")):
+            task = load_json(task_path, {})
+            if task:
+                task["_task_path"] = str(task_path)
+                visual_evidence_tasks.append(task)
+
+        for completion_path in sorted(VISUAL_EVIDENCE_DIR.glob("*-visual-evidence-completion-*.json")):
+            completion = load_json(completion_path, {})
+            if completion:
+                completion["_completion_path"] = str(completion_path)
+                visual_evidence_completions.append(completion)
+
+    completed_visual_task_ids = set()
+    completed_visual_target_families = set()
+    for c in visual_evidence_completions:
+        if (
+            c.get("status") in ["completed", "accepted", "visual_evidence_completed"]
+            and c.get("visual_evidence_confirmed") is True
+            and c.get("source_change_gate_allowed") is False
+            and c.get("git_push") is False
+            and c.get("deploy") is False
+        ):
+            if c.get("task_id"):
+                completed_visual_task_ids.add(c.get("task_id"))
+            if c.get("target_family"):
+                completed_visual_target_families.add(c.get("target_family"))
+
     hard_blocks = []
     warnings = []
     pending_required_evidence = []
@@ -123,6 +154,30 @@ def main():
             if evidence.get("actual_visual_snapshot_captured") is not True and not visual_evidence_confirmed:
                 pending_required_evidence.append("pre_change_visual_snapshot_module:actual_visual_snapshot_not_captured")
 
+    for task in visual_evidence_tasks:
+        acceptance = task.get("acceptance_policy") or {}
+        target_family = task.get("target_family") or "unknown_target_family"
+        task_id = task.get("task_id") or Path(task.get("_task_path", "")).name
+
+        if acceptance.get("source_change_allowed") is not False:
+            hard_blocks.append(f"{target_family}:visual_task_allows_source_change")
+        if acceptance.get("git_push") is not False:
+            hard_blocks.append(f"{target_family}:visual_task_allows_git_push")
+        if acceptance.get("deploy") is not False:
+            hard_blocks.append(f"{target_family}:visual_task_allows_deploy")
+
+        task_completed = (
+            task.get("status") in ["completed", "accepted", "visual_evidence_completed"]
+            or task.get("evidence_status") in ["completed", "accepted", "visual_evidence_completed"]
+            or task.get("completed") is True
+            or task.get("visual_evidence_confirmed") is True
+            or task_id in completed_visual_task_ids
+            or target_family in completed_visual_target_families
+        )
+
+        if not task_completed:
+            pending_required_evidence.append(f"{target_family}:{task_id}:visual_evidence_task_not_completed")
+
     warnings.extend(modules_auditor.get("warnings") or [])
     warnings.extend(modules_report.get("warnings") or [])
 
@@ -165,6 +220,19 @@ def main():
         "pre_change_evidence_snapshot_source": str(snapshot_path),
         "patch_preview_source": str(preview_path),
         "browser_visual_capture_auditor_source": str(browser_visual_auditor_path) if browser_visual_auditor_path else None,
+        "visual_evidence_task_count": len(visual_evidence_tasks),
+        "visual_evidence_completion_count": len(visual_evidence_completions),
+        "completed_visual_task_ids": sorted(completed_visual_task_ids),
+        "completed_visual_target_families": sorted(completed_visual_target_families),
+        "visual_evidence_tasks": [
+            {
+                "task_path": x.get("_task_path"),
+                "task_id": x.get("task_id"),
+                "target_family": x.get("target_family"),
+                "reason": x.get("reason"),
+            }
+            for x in visual_evidence_tasks
+        ],
         "visual_evidence_confirmed": visual_evidence_confirmed,
         "audit_status": audit_status,
         "recommended_next_action": recommended_next_action,

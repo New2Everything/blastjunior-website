@@ -119,11 +119,11 @@ def main():
     elif lifecycle_stage == "controlled_change_plan_ready":
         apply_allowed = False
         source_change_allowed = False
-        warnings.append("controlled_plan_exists_but_apply_requires_separate_human_gate")
+        warnings.append("controlled_plan_exists_but_apply_requires_autonomous_policy_gate")
 
     forbidden_actions = [
         "do_not_edit_public_files_without_source_change_gate",
-        "do_not_apply_without_explicit_human_instruction",
+        "do_not_apply_without_autonomous_policy_gate",
         "do_not_commit_without_dedicated_commit_gate",
         "do_not_push_without_push_approval_gate",
         "do_not_deploy",

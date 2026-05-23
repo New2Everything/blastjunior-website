@@ -20,6 +20,7 @@ BASE = WORKSPACE / "learning-v2"
 STATE = BASE / "state.json"
 MODE_POLICY = BASE / "mode-policy.json"
 INBOX = BASE / "inbox/directives-inbox.jsonl"
+INBOX_DIR = BASE / "inbox"
 PATTERNS = BASE / "patterns.jsonl"
 REPORT_DIR = BASE / "reports"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -54,9 +55,17 @@ EXECUTOR_READY_TOPICS = {
     "simplicity",
     "accessibility-basics",
     "community-experience",
+    "mobile-first",
 }
 
 TOPIC_TARGET_FAMILIES = {
+    "mobile-first": [
+        {
+            "target_family": "mobile_first.nav_density",
+            "stage": "mobile_first_nav_density_probe",
+            "reason": "operator/research-derived target family for mobile navigation density observe-only probe",
+        },
+    ],
     "community-experience": [
         {
             "target_family": "community.onboarding_experience",
@@ -113,9 +122,28 @@ def save_json(path, obj):
     Path(path).write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 def load_inbox():
-    if not INBOX.exists():
-        return []
-    return [json.loads(l) for l in INBOX.read_text(encoding="utf-8").splitlines() if l.strip()]
+    entries = []
+    if INBOX.exists():
+        entries.extend(json.loads(l) for l in INBOX.read_text(encoding="utf-8").splitlines() if l.strip())
+
+    if INBOX_DIR.exists():
+        for p in sorted(INBOX_DIR.glob("operator-direction-*.json")):
+            try:
+                obj = json.loads(p.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            direction = obj.get("direction") or obj.get("raw_text") or ""
+            entries.append({
+                "recorded_at": obj.get("created_at") or now_iso(),
+                "source": obj.get("source") or "operator_direction",
+                "project": obj.get("project") or "BLXST",
+                "raw_text": direction,
+                "status": "recorded",
+                "target": obj.get("direction_id"),
+                "notes": f"loaded_from={p}",
+                "risk_boundary": obj.get("risk_boundary") or {},
+            })
+    return entries
 
 def load_patterns():
     if not PATTERNS.exists():
@@ -244,6 +272,16 @@ def select_topic(state, inbox_entries, patterns_topics):
         if "simplicity" in candidates:
             preferred = "simplicity"
             seed_reason = "constitution/directives emphasize simplicity and less is more"
+
+    if preferred is None:
+        lowered = raw_all.lower()
+        if (
+            "mobile" in lowered
+            and ("nav" in lowered or "navigation" in lowered or "density" in lowered)
+            and "mobile-first" in candidates
+        ):
+            preferred = "mobile-first"
+            seed_reason = "operator/research direction requests mobile navigation density"
 
     if preferred is None:
         for t in PRIORITY_TOPICS:

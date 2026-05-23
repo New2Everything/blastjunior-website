@@ -177,7 +177,7 @@ def main():
 
     state["last_outcome"] = outcome
 
-    # Important: switch system policy from human approval to autonomous guarded apply.
+    # Important: switch system policy to autonomous guarded apply.
     state["self_evolution_policy"] = {
         "mode": "autonomous_guarded_apply",
         "allow_source_changes": True,

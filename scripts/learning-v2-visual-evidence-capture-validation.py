@@ -86,17 +86,27 @@ def main():
 
     final_gate = load_json(final_gate_path, {})
 
+    visual_evidence_already_completed = (
+        final_gate.get("audit_status") == "gate_open_candidate_ready_but_not_opened"
+        and int(final_gate.get("visual_evidence_task_count") or 0) > 0
+        and int(final_gate.get("visual_evidence_completion_count") or 0) > 0
+        and not (final_gate.get("pending_required_evidence") or [])
+        and final_gate.get("source_change_gate_allowed") is False
+        and final_gate.get("source_change_gate_opened") is False
+    )
+
     hard_blocks = []
     warnings = []
 
-    if final_gate.get("audit_status") != "gate_blocked_pending_visual_evidence":
-        hard_blocks.append("final_gate_auditor_not_waiting_for_visual_evidence")
-    if final_gate.get("visual_evidence_required") is not True:
-        hard_blocks.append("visual_evidence_not_required_by_final_gate")
-    if final_gate.get("source_change_gate_allowed") is not False:
-        hard_blocks.append("final_gate_allows_source_change_gate_too_early")
-    if final_gate.get("gate_open_allowed") is not False:
-        hard_blocks.append("final_gate_open_allowed_too_early")
+    if not visual_evidence_already_completed:
+        if final_gate.get("audit_status") != "gate_blocked_pending_visual_evidence":
+            hard_blocks.append("final_gate_auditor_not_waiting_for_visual_evidence")
+        if final_gate.get("visual_evidence_required") is not True:
+            hard_blocks.append("visual_evidence_not_required_by_final_gate")
+        if final_gate.get("source_change_gate_allowed") is not False:
+            hard_blocks.append("final_gate_allows_source_change_gate_too_early")
+        if final_gate.get("gate_open_allowed") is not False:
+            hard_blocks.append("final_gate_open_allowed_too_early")
 
     tooling = {
         "node": command_exists("node"),
@@ -151,11 +161,18 @@ def main():
         if r["viewport"] == "mobile" and not r["actual_mobile_validated"]:
             pending_visual_evidence.append(f"{r['name']}:mobile_validation_pending")
 
-    if not visual_tooling_available:
+    if visual_evidence_already_completed:
+        pending_visual_evidence = []
+
+    if not visual_tooling_available and not visual_evidence_already_completed:
         warnings.append("visual_capture_tooling_not_available_or_not_confirmed")
         warnings.append("playwright_or_equivalent_browser_capture_needed_before_gate")
 
-    if hard_blocks:
+    if visual_evidence_already_completed:
+        validation_status = "visual_evidence_already_completed"
+        recommended_next_action = "continue_final_gate_or_next_controller_step"
+        visual_evidence_audit_allowed = False
+    elif hard_blocks:
         validation_status = "blocked"
         recommended_next_action = "fix_visual_evidence_inputs_before_gate"
         visual_evidence_audit_allowed = False
@@ -179,6 +196,9 @@ def main():
         "mode": "dry_run",
         "apply": bool(args.apply),
         "final_gate_auditor_source": str(final_gate_path),
+        "visual_evidence_already_completed": visual_evidence_already_completed,
+        "completed_visual_task_ids": final_gate.get("completed_visual_task_ids") or [],
+        "completed_visual_target_families": final_gate.get("completed_visual_target_families") or [],
         "validation_status": validation_status,
         "recommended_next_action": recommended_next_action,
         "tooling": tooling,

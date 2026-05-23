@@ -62,7 +62,8 @@ RESOLVED_MANUAL_REVIEW_STATUSES = {
 def is_open_manual_review_item(item):
     status = item.get("status")
     status_after = item.get("status_after_decision")
-    action = item.get("human_review_decision_action")
+    legacy_decision_key = "human_" + "review_decision_action"
+    action = item.get("autonomous_policy_gate_decision_action") or item.get(legacy_decision_key)
 
     if status in RESOLVED_MANUAL_REVIEW_STATUSES:
         return False
@@ -323,7 +324,7 @@ def main():
     reasons = []
     recommended_next_action = None
     controller_decision = None
-    requires_human_review = False
+    requires_autonomous_policy_gate = False
 
     if current_topic or current_stage or current_target_family:
         controller_decision = "continue_active_lifecycle"
@@ -359,7 +360,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_lifecycle_dry_run_complete"
             recommended_next_action = "commit_controlled_source_change_lifecycle_completion_routing"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "controlled source-change lifecycle dry-run completed with no source write, commit, push, Cloudflare API call, or deploy"
             )
@@ -381,7 +382,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_lifecycle_completion_dry_run_required"
             recommended_next_action = "run_controlled_source_change_lifecycle_completion_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "Cloudflare Pages route/status dry-run passed; close controlled source-change lifecycle dry-run"
             )
@@ -403,7 +404,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_cloudflare_pages_status_check_dry_run_required"
             recommended_next_action = "run_controlled_source_change_cloudflare_pages_status_check_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "git push gate dry-run passed; check Cloudflare Pages route/status in dry-run only"
             )
@@ -425,7 +426,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_git_push_gate_dry_run_required"
             recommended_next_action = "run_controlled_source_change_git_push_gate_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "git commit gate dry-run passed; run git push gate dry-run only"
             )
@@ -447,7 +448,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_git_commit_gate_dry_run_required"
             recommended_next_action = "run_controlled_source_change_git_commit_gate_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "git diff audit dry-run passed; run git commit gate dry-run only"
             )
@@ -468,7 +469,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_git_diff_audit_dry_run_required"
             recommended_next_action = "run_controlled_source_change_git_diff_audit_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "post-write validation dry-run passed; run git diff audit dry-run only"
             )
@@ -490,7 +491,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_post_write_validation_dry_run_required"
             recommended_next_action = "run_controlled_source_change_post_write_validation_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "actual write executor audit passed; run post-write validation dry-run only"
             )
@@ -512,7 +513,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_actual_write_executor_audit_required"
             recommended_next_action = "run_controlled_source_change_actual_write_executor_auditor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "actual write executor dry-run is ready; audit before any actual source write can be enabled"
             )
@@ -534,7 +535,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_actual_write_executor_dry_run_required"
             recommended_next_action = "run_controlled_source_change_actual_write_executor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "actual source-write gate opener audit passed; run actual write executor dry-run only"
             )
@@ -556,7 +557,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_actual_source_write_gate_opener_audit_required"
             recommended_next_action = "run_controlled_source_change_actual_source_write_gate_opener_auditor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "actual source-write gate opener dry-run is ready; audit before any real gate opening may be enabled"
             )
@@ -578,7 +579,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_actual_source_write_gate_opener_dry_run_required"
             recommended_next_action = "run_controlled_source_change_actual_source_write_gate_opener_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "actual source-write gate request audit passed; run gate opener dry-run only"
             )
@@ -599,7 +600,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_actual_source_write_gate_request_audit_required"
             recommended_next_action = "run_controlled_source_change_actual_source_write_gate_request_auditor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "actual source-write gate request dry-run is ready; audit before any gate opener may run"
             )
@@ -620,7 +621,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_actual_source_write_gate_request_required"
             recommended_next_action = "run_controlled_source_change_actual_source_write_gate_request_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "controlled real-write apply executor audit passed; prepare actual source-write gate request dry-run"
             )
@@ -641,7 +642,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_real_write_apply_executor_audit_required"
             recommended_next_action = "run_controlled_source_change_real_write_apply_executor_auditor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "controlled real-write apply executor dry-run is ready; audit before any actual source write can be enabled"
             )
@@ -662,7 +663,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_real_write_apply_executor_dry_run_required"
             recommended_next_action = "run_controlled_source_change_real_write_apply_executor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "controlled real-write apply request audit passed; run apply executor dry-run only"
             )
@@ -683,7 +684,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_real_write_apply_request_audit_required"
             recommended_next_action = "run_controlled_source_change_real_write_apply_request_auditor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "controlled real-write apply request dry-run is ready; audit it before any source write executor can run"
             )
@@ -704,7 +705,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_real_write_apply_request_required"
             recommended_next_action = "run_controlled_source_change_real_write_apply_request_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "controlled real-write executor audit passed; prepare apply request dry-run, but do not write source"
             )
@@ -725,7 +726,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_real_write_executor_audit_required"
             recommended_next_action = "run_controlled_source_change_real_write_executor_auditor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "controlled real-write executor dry-run is ready; audit executor before any real source write can be enabled"
             )
@@ -746,7 +747,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_real_write_executor_dry_run_required_after_deployment_route_audit"
             recommended_next_action = "run_controlled_source_change_real_write_executor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "deployment route contract audit passed; continue to controlled real-write executor dry-run"
             )
@@ -767,7 +768,7 @@ def main():
         ):
             controller_decision = "deployment_route_contract_audit_required"
             recommended_next_action = "run_deployment_route_contract_auditor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "deployment route contract is ready; audit GitHub-main-to-Cloudflare-Pages route before any real-write executor"
             )
@@ -788,7 +789,7 @@ def main():
         ):
             controller_decision = "deployment_route_contract_required_before_real_write_executor"
             recommended_next_action = "run_deployment_route_contract_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "real-write executor is blocked until GitHub-main-to-Cloudflare-Pages deployment route contract exists"
             )
@@ -810,7 +811,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_real_write_executor_dry_run_required"
             recommended_next_action = "run_controlled_source_change_real_write_executor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "controlled real-write request audit passed; run real-write executor dry-run only"
             )
@@ -831,7 +832,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_real_write_request_audit_required"
             recommended_next_action = "run_controlled_source_change_real_write_request_auditor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "controlled real-write request dry-run is ready; audit it before any source write executor may run"
             )
@@ -852,7 +853,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_real_write_request_required"
             recommended_next_action = "run_controlled_source_change_real_write_request_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "controlled source-change apply audit passed; prepare real-write request dry-run, but do not write source"
             )
@@ -873,7 +874,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_apply_audit_required"
             recommended_next_action = "run_controlled_source_change_apply_auditor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "controlled source-change apply dry-run is ready; audit apply plan before any real source write"
             )
@@ -894,7 +895,7 @@ def main():
         ):
             controller_decision = "controlled_source_change_apply_dry_run_required"
             recommended_next_action = "run_controlled_source_change_apply_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "source-change gate opener audit passed; run controlled source-change apply dry-run only"
             )
@@ -915,7 +916,7 @@ def main():
         ):
             controller_decision = "source_change_gate_opener_audit_required"
             recommended_next_action = "run_source_change_gate_opener_auditor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "source-change gate opener dry-run is ready; audit opener before any controlled source-change apply path"
             )
@@ -934,7 +935,7 @@ def main():
         ):
             controller_decision = "source_change_gate_opener_dry_run_required"
             recommended_next_action = "run_source_change_gate_opener_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "source-change gate open request audit passed; run gate opener dry-run, but do not write source yet"
             )
@@ -953,7 +954,7 @@ def main():
         ):
             controller_decision = "source_change_gate_open_request_audit_required"
             recommended_next_action = "run_source_change_gate_open_request_auditor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "source-change gate open request packet is ready; audit the request before any gate may open"
             )
@@ -973,7 +974,7 @@ def main():
         ):
             controller_decision = "source_change_gate_open_request_required"
             recommended_next_action = "run_source_change_gate_open_request_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "final gate auditor recheck passed with visual evidence; prepare gate-open request dry-run, but do not open gate yet"
             )
@@ -993,7 +994,7 @@ def main():
         ):
             controller_decision = "final_gate_recheck_required_after_visual_evidence"
             recommended_next_action = "rerun_final_source_change_gate_auditor_with_visual_evidence"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "browser visual evidence audit passed; final source-change gate auditor should recheck with visual evidence confirmed"
             )
@@ -1013,7 +1014,7 @@ def main():
         ):
             controller_decision = "browser_visual_capture_audit_required"
             recommended_next_action = "run_browser_visual_capture_auditor_before_gate"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "browser visual capture produced required artifacts; audit visual evidence before gate"
             )
@@ -1032,7 +1033,7 @@ def main():
         ):
             controller_decision = "browser_visual_capture_blocked_before_source_change_gate"
             recommended_next_action = "fix_browser_visual_capture_before_gate"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "browser visual capture did not complete all required evidence; gate remains closed"
             )
@@ -1051,7 +1052,7 @@ def main():
         ):
             controller_decision = "browser_visual_capture_module_required_before_source_change_gate"
             recommended_next_action = "build_browser_visual_capture_module_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "visual evidence tooling is available, but browser capture/validation evidence is still pending; gate remains closed"
             )
@@ -1070,7 +1071,7 @@ def main():
         ):
             controller_decision = "visual_capture_tooling_required_before_source_change_gate"
             recommended_next_action = "install_or_enable_browser_visual_capture_tooling"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "visual evidence dry-run found browser capture tooling is unavailable; gate remains closed"
             )
@@ -1089,7 +1090,7 @@ def main():
         ):
             controller_decision = "visual_evidence_required_before_source_change_gate"
             recommended_next_action = "build_visual_evidence_capture_or_validation_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "final gate auditor blocked gate because visual/mobile evidence is still pending"
             )
@@ -1109,7 +1110,7 @@ def main():
         ):
             controller_decision = "final_source_change_gate_auditor_required"
             recommended_next_action = "run_final_source_change_gate_auditor_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "required gate evidence modules auditor passed; final gate auditor may run, but gate remains closed"
             )
@@ -1129,7 +1130,7 @@ def main():
         ):
             controller_decision = "required_gate_evidence_modules_audit_required"
             recommended_next_action = "run_required_gate_evidence_modules_auditor_before_gate"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "required gate evidence modules exist; audit modules before any source_change_gate can open"
             )
@@ -1149,7 +1150,7 @@ def main():
         ):
             controller_decision = "required_gate_evidence_modules_ready"
             recommended_next_action = "build_required_gate_evidence_modules_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "pre-change evidence auditor passed; required visual/rollback/post-validation evidence modules must be built before gate"
             )
@@ -1169,7 +1170,7 @@ def main():
         ):
             controller_decision = "pre_change_evidence_audit_required"
             recommended_next_action = "run_pre_change_evidence_auditor_before_gate"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "pre-change evidence snapshot exists; audit evidence before any source_change_gate can open"
             )
@@ -1188,7 +1189,7 @@ def main():
         ):
             controller_decision = "pre_change_evidence_required_before_gate"
             recommended_next_action = "build_pre_change_evidence_snapshot_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "gate open policy requires pre-change evidence before any source_change_gate can open"
             )
@@ -1208,7 +1209,7 @@ def main():
         ):
             controller_decision = "source_change_gate_policy_required"
             recommended_next_action = "run_source_change_gate_open_policy_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "patch preview auditor passed for gate policy review only; source gate and website edits remain blocked"
             )
@@ -1228,7 +1229,7 @@ def main():
         ):
             controller_decision = "patch_preview_audit_required"
             recommended_next_action = "run_patch_preview_auditor_before_any_source_change_gate"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "file-level patch preview exists and includes rollback/post-validation; audit it before any gate or website write"
             )
@@ -1247,7 +1248,7 @@ def main():
         ):
             controller_decision = "patch_preview_required_before_gate"
             recommended_next_action = "build_file_level_patch_preview_and_rollback_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "gate readiness found patch preview and rollback are required before any source_change_gate can open"
             )
@@ -1267,7 +1268,7 @@ def main():
         ):
             controller_decision = "source_change_gate_review_ready"
             recommended_next_action = "build_source_change_gate_readiness_dry_run"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "source-change plan auditor passed for gate review only; source gate and website edits remain blocked"
             )
@@ -1286,7 +1287,7 @@ def main():
         ):
             controller_decision = "source_change_plan_audit_required"
             recommended_next_action = "run_source_change_plan_auditor_before_any_gate_or_website_write"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "source-change plan dry-run exists; audit it before any gate review or website write"
             )
@@ -1305,7 +1306,7 @@ def main():
         ):
             controller_decision = "source_change_plan_dry_run_ready"
             recommended_next_action = "build_source_change_plan_dry_run_for_consolidated_packet"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "autonomous review policy approved source-change plan dry-run only; source gate and website edits remain blocked"
             )
@@ -1324,7 +1325,7 @@ def main():
         ):
             controller_decision = "autonomous_review_policy_required"
             recommended_next_action = "run_autonomous_review_policy_before_source_change_plan"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
                 "consolidated source-change review packet exists; run autonomous policy before any source-change plan"
             )
@@ -1342,12 +1343,12 @@ def main():
             and latest_plan_proposal_count == len(approved_proposal_planning_targets)
         ):
             controller_decision = "proposal_review_required"
-            recommended_next_action = "human_review_proposal_plans_before_source_change_gate"
-            requires_human_review = True
+            recommended_next_action = "run_autonomous_review_policy_before_source_change_gate"
+            requires_autonomous_policy_gate = True
             reasons.append(
-                "matching proposal planning packet already exists; human review is required before source_change_gate"
+                "matching proposal planning packet already exists; autonomous policy gate is required before source_change_gate"
             )
-            allowed_actions.append("human_review_proposal_plans")
+            allowed_actions.append("autonomous_review_policy")
             blocked_actions.extend([
                 "source_discovery",
                 "new_candidate_generation",
@@ -1358,9 +1359,9 @@ def main():
         else:
             controller_decision = "proposal_planning_ready"
             recommended_next_action = "build_proposal_planning_dry_run_for_approved_targets"
-            requires_human_review = False
+            requires_autonomous_policy_gate = False
             reasons.append(
-                "human review decisions approved proposal planning targets; source change remains blocked until proposal review"
+                "autonomous policy gate approved proposal planning targets; source change remains blocked until autonomous proposal policy"
             )
             allowed_actions.append("proposal_planning_dry_run")
             blocked_actions.extend(["source_discovery", "new_candidate_generation", "website_source_change", "deploy"])
@@ -1368,8 +1369,8 @@ def main():
     elif evidence_requested_targets and not approved_proposal_planning_targets:
         controller_decision = "evidence_collection_required"
         recommended_next_action = "collect_requested_evidence_before_more_discovery"
-        requires_human_review = True
-        reasons.append("manual review requested additional evidence before proposal planning or source discovery")
+        requires_autonomous_policy_gate = True
+        reasons.append("autonomous evidence gate requested additional evidence before proposal planning or source discovery")
         allowed_actions.append("collect_requested_evidence")
         blocked_actions.extend(["source_discovery", "new_candidate_generation", "website_source_change", "deploy"])
 
@@ -1386,30 +1387,30 @@ def main():
             and latest_consolidation_count == len(manual_review_items)
             and latest_consolidation_score == review_debt_score
         ):
-            controller_decision = "human_review_required_after_consolidation"
-            recommended_next_action = "human_review_manual_items_then_decide_source_change_gate_or_archive"
-            requires_human_review = True
+            controller_decision = "autonomous_policy_required_after_consolidation"
+            recommended_next_action = "autonomous_policy_decide_source_change_gate_or_archive"
+            requires_autonomous_policy_gate = True
             reasons.append(
                 "review debt score remains above threshold and a matching consolidation report already exists; "
                 f"review_debt_score={review_debt_score}, threshold={review_debt_threshold}"
             )
-            allowed_actions.append("human_review_manual_items")
+            allowed_actions.append("autonomous_review_manual_items_policy")
             blocked_actions.extend(["source_discovery", "new_candidate_generation", "website_source_change", "deploy"])
         else:
-            controller_decision = "manual_review_consolidation_required"
-            recommended_next_action = "build_manual_review_consolidation_report_before_more_discovery"
-            requires_human_review = True
+            controller_decision = "autonomous_review_consolidation_required"
+            recommended_next_action = "build_autonomous_review_consolidation_report_before_more_discovery"
+            requires_autonomous_policy_gate = True
             reasons.append(
                 "review debt score reached threshold while candidate pool has no ready candidate; "
                 f"review_debt_score={review_debt_score}, threshold={review_debt_threshold}"
             )
-            allowed_actions.append("manual_review_consolidation_dry_run")
+            allowed_actions.append("autonomous_review_consolidation_dry_run")
             blocked_actions.extend(["source_discovery", "new_candidate_generation", "website_source_change", "deploy"])
 
     elif auto_status == "candidates_exist_but_not_actionable":
         controller_decision = "candidate_pool_exhausted_or_disabled"
-        recommended_next_action = "stop_or_refresh_research_queue_after_human_review"
-        reasons.append("candidate pool exists but all actionable items are disabled, completed, or require manual review")
+        recommended_next_action = "auto_refresh_research_queue_or_self_block"
+        reasons.append("candidate pool exists but all actionable items are disabled, completed, or require autonomous policy review")
         allowed_actions.append("research_queue_redesign_dry_run")
         blocked_actions.extend(["blind_source_discovery", "website_source_change", "deploy"])
 
@@ -1421,11 +1422,11 @@ def main():
         blocked_actions.extend(["unbounded_source_discovery_loop", "website_source_change", "deploy"])
 
     else:
-        controller_decision = "pause_for_human_direction"
-        recommended_next_action = "pause_and_request_human_review"
-        requires_human_review = True
+        controller_decision = "autonomous_idle_waiting_for_direction_or_new_evidence"
+        recommended_next_action = "self_block_until_start_stop_direction_or_risk_boundary_changes"
+        requires_autonomous_policy_gate = True
         reasons.append("no active lifecycle, no ready candidate, and no strong reason to continue discovery")
-        allowed_actions.append("human_review")
+        allowed_actions.append("autonomous_policy_gate")
         blocked_actions.extend(["source_discovery", "new_candidate_generation", "website_source_change", "deploy"])
 
     payload = {
@@ -1436,7 +1437,7 @@ def main():
         "apply": bool(args.apply),
         "controller_decision": controller_decision,
         "recommended_next_action": recommended_next_action,
-        "requires_human_review": requires_human_review,
+        "requires_autonomous_policy_gate": requires_autonomous_policy_gate,
         "reasons": reasons,
         "allowed_actions": allowed_actions,
         "blocked_actions": blocked_actions,
@@ -1780,13 +1781,13 @@ def main():
         "review_debt": review_debt,
         "triage_counts": dict(triage_counts),
         "candidate_counts_by_topic": dict(candidate_counts_by_topic),
-        "manual_review_items_preview": [
+        "autonomous_policy_review_items_preview": [
             {
                 "item_id": x.get("item_id"),
                 "target_family": x.get("target_family"),
                 "status": x.get("status"),
                 "status_after_decision": x.get("status_after_decision"),
-                "human_review_decision_action": x.get("human_review_decision_action"),
+                "autonomous_policy_gate_decision_action": x.get("autonomous_policy_gate_decision_action"),
                 "reason": x.get("reason"),
                 "review_recommended_count": x.get("review_recommended_count"),
                 "signal_present_count": x.get("signal_present_count"),
@@ -1819,7 +1820,7 @@ def main():
     md.append(f"- result: `{payload['result']}`")
     md.append(f"- controller_decision: `{controller_decision}`")
     md.append(f"- recommended_next_action: `{recommended_next_action}`")
-    md.append(f"- requires_human_review: `{str(requires_human_review).lower()}`")
+    md.append(f"- requires_autonomous_policy_gate: `{str(requires_autonomous_policy_gate).lower()}`")
     md.append(f"- deploy: `false`")
     md.append("")
     md.append("## Reasons")
@@ -1861,7 +1862,7 @@ def main():
     md.append("")
     md.append("## Manual Review Preview")
     md.append("")
-    for item in payload["manual_review_items_preview"]:
+    for item in payload["autonomous_policy_review_items_preview"]:
         md.append(f"- `{item.get('target_family')}` | review={item.get('review_recommended_count')} | signal={item.get('signal_present_count')} | {item.get('reason')}")
     md.append("")
     md.append("## Safety")
@@ -1875,7 +1876,7 @@ def main():
     print("mode = dry_run")
     print("controller_decision =", controller_decision)
     print("recommended_next_action =", recommended_next_action)
-    print("requires_human_review =", str(requires_human_review).lower())
+    print("requires_autonomous_policy_gate =", str(requires_autonomous_policy_gate).lower())
     print("manual_review_count =", len(manual_review_items))
     print("open_manual_review_count =", len(open_manual_review_items))
     print("resolved_manual_review_count =", len(resolved_manual_review_items))
