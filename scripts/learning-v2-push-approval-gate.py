@@ -126,10 +126,12 @@ def main():
     push_has_website_impact = safety_report.get("push_has_website_impact")
     pre_push_blocks = safety_report.get("pre_push_blocks")
 
-    if safety_result != "blocked":
-        warnings.append(f"push_deploy_safety_gate_unexpected:{safety_result}")
-    if push_should_block is not True:
-        warnings.append(f"push_should_block_unexpected:{push_should_block}")
+    if safety_result not in ("ok", "blocked"):
+        warnings.append(f"push_deploy_safety_gate_unknown_result:{safety_result}")
+
+    if safety_result == "blocked" or push_should_block is True:
+        failures.append(f"push_deploy_safety_gate_blocks_push:result={safety_result},push_should_block={push_should_block}")
+
     if pre_push_blocks is not True:
         failures.append("pre_push_not_confirmed_blocking")
 
