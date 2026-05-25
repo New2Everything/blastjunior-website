@@ -126,6 +126,11 @@ def main():
     constitution = WORKSPACE / "learning-v2" / "CONSTITUTION.md"
     if constitution.exists():
         doc_candidates.append("learning-v2/CONSTITUTION.md")
+
+    directives_policy = WORKSPACE / "learning-v2" / "directives-policy.md"
+    if directives_policy.exists():
+        doc_candidates.append("learning-v2/directives-policy.md")
+
     doc_candidates.append("learning-v2/mode-policy.json")
 
     target_family_registry = WORKSPACE / "learning-v2" / "target-family-registry.json"
