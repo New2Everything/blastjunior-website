@@ -131,6 +131,10 @@ def main():
     if directives_policy.exists():
         doc_candidates.append("learning-v2/directives-policy.md")
 
+    patterns = WORKSPACE / "learning-v2" / "patterns.jsonl"
+    if patterns.exists():
+        doc_candidates.append("learning-v2/patterns.jsonl")
+
     doc_candidates.append("learning-v2/mode-policy.json")
 
     target_family_registry = WORKSPACE / "learning-v2" / "target-family-registry.json"

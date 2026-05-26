@@ -1,0 +1,14 @@
+{"recorded_at": "2026-04-26T01:01:10Z", "topic": "homepage-information-hierarchy", "principles": ["内容顺序应先核心价值，再操作入口，再补充信息。", "标题层级和按钮文案应可被快速识别，避免模糊表达。", "移动端优先考虑首屏信息密度和点击目标清晰度。"], "source_count": 1}
+{"recorded_at": "2026-04-26T01:27:52Z", "topic": "homepage-information-hierarchy", "pattern": "首页首屏审查应先过滤 script/style、聊天区按钮、导航和页脚链接，再判断主任务元素。", "confidence": "high"}
+{"recorded_at": "2026-04-26T01:29:30Z", "topic": "homepage-information-hierarchy", "pattern": "如果首屏只有品牌标题和支持性模块，而没有明确动作入口，应优先判定为缺少 primary CTA。", "confidence": "medium-high"}
+{"recorded_at": "2026-04-26T01:32:03Z", "topic": "homepage-information-hierarchy", "pattern": "当首屏只有品牌标题、聊天按钮和信息型导航链接时，应判定 primary CTA 缺失，需要单独设计承载位。", "confidence": "high"}
+{"recorded_at": "2026-04-26T03:43:20Z", "topic": "content-hierarchy", "principles": ["内容顺序应先核心价值，再操作入口，再补充信息。", "标题层级和按钮文案应可被快速识别，避免模糊表达。", "移动端优先考虑首屏信息密度和点击目标清晰度。"], "source_count": 3}
+{"recorded_at": "2026-04-26T05:10:01Z", "topic": "simplicity", "principles": ["内容顺序应先核心价值，再操作入口，再补充信息。", "标题层级和按钮文案应可被快速识别，避免模糊表达。", "移动端优先考虑首屏信息密度和点击目标清晰度。"], "source_count": 3}
+{"recorded_at": "2026-04-26T06:10:02Z", "topic": "mobile-first", "principles": ["内容顺序应先核心价值，再操作入口，再补充信息。", "标题层级和按钮文案应可被快速识别，避免模糊表达。", "移动端优先考虑首屏信息密度和点击目标清晰度。"], "source_count": 3}
+{"recorded_at": "2026-04-26T07:10:02Z", "topic": "interaction-design", "principles": ["内容顺序应先核心价值，再操作入口，再补充信息。", "标题层级和按钮文案应可被快速识别，避免模糊表达。", "移动端优先考虑首屏信息密度和点击目标清晰度。"], "source_count": 3}
+{"recorded_at": "2026-04-26T09:10:02Z", "topic": "accessibility-basics", "principles": ["内容顺序应先核心价值，再操作入口，再补充信息。", "标题层级和按钮文案应可被快速识别，避免模糊表达。", "移动端优先考虑首屏信息密度和点击目标清晰度。"], "source_count": 3}
+{"recorded_at": "2026-04-26T12:10:01Z", "topic": "color-psychology", "principles": ["内容顺序应先核心价值，再操作入口，再补充信息。", "标题层级和按钮文案应可被快速识别，避免模糊表达。", "移动端优先考虑首屏信息密度和点击目标清晰度。"], "source_count": 3}
+{"recorded_at": "2026-04-26T14:10:02Z", "topic": "performance-basics", "principles": ["内容顺序应先核心价值，再操作入口，再补充信息。", "标题层级和按钮文案应可被快速识别，避免模糊表达。", "移动端优先考虑首屏信息密度和点击目标清晰度。"], "source_count": 3}
+{"recorded_at": "2026-04-27T02:44:46Z", "topic": "simplicity", "principles": ["减少首屏同时出现的选择项，降低认知负担。", "优先保留最核心的信息与动作，次要内容应降权或后置。", "简洁不是删空内容，而是让用户更快理解页面重点。"], "source_count": 3}
+{"recorded_at": "2026-04-27T02:48:35Z", "topic": "simplicity", "pattern": "简洁性审查可先按 KEEP / DEMOTE 分类首屏入口，再从可降权对象里只选 1 个做最小调整。", "confidence": "high"}
+{"recorded_at": "2026-04-27T02:50:11Z", "topic": "simplicity", "pattern": "简洁化第一刀应优先选择次级入口或装饰性入口，而不是直接削弱身份识别或互动核心入口。", "confidence": "high"}
