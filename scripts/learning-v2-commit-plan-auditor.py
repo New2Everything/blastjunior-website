@@ -26,6 +26,7 @@ ALLOWED_NORMAL_ADD_FILES = {
     "learning-v2/CONSTITUTION.md",
     "learning-v2/directives-policy.md",
     "learning-v2/patterns.jsonl",
+    "learning-v2/source-evidence-summary.md",
     "learning-v2/mode-policy.json",
     "learning-v2/target-family-registry.json",
     "learning-v2/push-approval-state.json",

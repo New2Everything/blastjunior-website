@@ -135,6 +135,10 @@ def main():
     if patterns.exists():
         doc_candidates.append("learning-v2/patterns.jsonl")
 
+    source_evidence_summary = WORKSPACE / "learning-v2" / "source-evidence-summary.md"
+    if source_evidence_summary.exists():
+        doc_candidates.append("learning-v2/source-evidence-summary.md")
+
     doc_candidates.append("learning-v2/mode-policy.json")
 
     target_family_registry = WORKSPACE / "learning-v2" / "target-family-registry.json"
