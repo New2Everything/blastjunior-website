@@ -19,6 +19,7 @@ WORKSPACE = Path("/root/.openclaw/workspace")
 BASE = WORKSPACE / "learning-v2"
 STATE = BASE / "state.json"
 MODE_POLICY = BASE / "mode-policy.json"
+DIRECTIVES_POLICY_JSON = BASE / "directives-policy.json"
 INBOX = BASE / "inbox/directives-inbox.jsonl"
 INBOX_DIR = BASE / "inbox"
 PATTERNS = BASE / "patterns.jsonl"
@@ -123,6 +124,30 @@ def save_json(path, obj):
 
 def load_inbox():
     entries = []
+
+    if DIRECTIVES_POLICY_JSON.exists():
+        try:
+            policy = load_json(DIRECTIVES_POLICY_JSON, default={}) or {}
+            for directive in policy.get("directives") or []:
+                if directive.get("status") != "active":
+                    continue
+                hint = directive.get("selector_hint") or {}
+                summary = directive.get("summary") or directive.get("directive_id") or ""
+                entries.append({
+                    "recorded_at": now_iso(),
+                    "source": "directives_policy_json",
+                    "project": directive.get("project") or "BLXST",
+                    "raw_text": summary,
+                    "status": "recorded",
+                    "target": directive.get("target") or directive.get("directive_id"),
+                    "notes": "loaded_from=learning-v2/directives-policy.json",
+                    "directive_id": directive.get("directive_id"),
+                    "rule_type": directive.get("rule_type"),
+                    "selector_hint": hint,
+                })
+        except Exception:
+            pass
+
     if INBOX.exists():
         entries.extend(json.loads(l) for l in INBOX.read_text(encoding="utf-8").splitlines() if l.strip())
 

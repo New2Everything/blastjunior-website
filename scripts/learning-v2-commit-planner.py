@@ -131,6 +131,10 @@ def main():
     if directives_policy.exists():
         doc_candidates.append("learning-v2/directives-policy.md")
 
+    directives_policy_json = WORKSPACE / "learning-v2" / "directives-policy.json"
+    if directives_policy_json.exists():
+        doc_candidates.append("learning-v2/directives-policy.json")
+
     patterns = WORKSPACE / "learning-v2" / "patterns.jsonl"
     if patterns.exists():
         doc_candidates.append("learning-v2/patterns.jsonl")

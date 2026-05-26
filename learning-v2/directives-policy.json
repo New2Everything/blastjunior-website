@@ -1,0 +1,53 @@
+{
+  "policy_id": "learning-v2-directives-policy-v1",
+  "version": 1,
+  "purpose": "Machine-readable durable directives distilled from raw user directive queue without preserving raw directive text.",
+  "source_summary": {
+    "human_policy_file": "learning-v2/directives-policy.md",
+    "raw_queue_file": "learning-v2/inbox/directives-inbox.jsonl",
+    "raw_directive_text_included": false
+  },
+  "directives": [
+    {
+      "directive_id": "DP-001",
+      "status": "active",
+      "project": "BLXST",
+      "target": "learning-v2",
+      "rule_type": "priority_rule",
+      "summary": "User direct requirements outrank AI inference.",
+      "selector_hint": {
+        "avoid_topics": [],
+        "priority_behavior": "Prefer explicit user requirements over inferred optimization paths."
+      }
+    },
+    {
+      "directive_id": "DP-002",
+      "status": "active",
+      "project": "BLXST",
+      "target": "learning-v2",
+      "rule_type": "topic_suppression",
+      "summary": "Do not optimize the club website around booking-experience or join-club CTA flows unless explicitly reopened.",
+      "selector_hint": {
+        "avoid_topics": [
+          "booking-experience",
+          "join-club-cta",
+          "default-conversion-cta"
+        ],
+        "priority_behavior": "Suppress rediscovery of booking or join-club CTA flows as default learning targets."
+      }
+    }
+  ],
+  "raw_queue_policy": {
+    "commit_raw_inbox_as_is": false,
+    "delete_raw_inbox_now": false,
+    "archive_raw_inbox_now": false,
+    "reason": "The raw inbox is local directive queue state and may still be consumed by topic selector during transition."
+  },
+  "safety": {
+    "business_source_write_allowed": false,
+    "git_add_allowed": false,
+    "git_commit_allowed": false,
+    "git_push_allowed": false,
+    "deploy_allowed": false
+  }
+}
