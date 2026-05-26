@@ -139,6 +139,10 @@ def main():
     if source_evidence_summary.exists():
         doc_candidates.append("learning-v2/source-evidence-summary.md")
 
+    research_policy_summary = WORKSPACE / "learning-v2" / "research-policy-summary.md"
+    if research_policy_summary.exists():
+        doc_candidates.append("learning-v2/research-policy-summary.md")
+
     doc_candidates.append("learning-v2/mode-policy.json")
 
     target_family_registry = WORKSPACE / "learning-v2" / "target-family-registry.json"
