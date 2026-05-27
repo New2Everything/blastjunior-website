@@ -62,6 +62,38 @@ If `/blxst` is absent, OpenClaw should treat the message as a normal task unless
    - ask a clarification or perform analysis only
    - do not mutate website resources
 
+
+## Authorized Intent Context Guard
+
+`/blxst` is the only recommended prefix for user-direct BLXST tasks, but it is not the only legal Learning V2 entry source.
+
+Valid authorized intent contexts include:
+
+- `user_direct_with_/blxst`
+- `user_confirmed_blxst_after_prompt`
+- `scheduled_learning_task`
+- `autonomous_learning_cycle`
+- `controlled_deploy_phase`
+- `maintenance_observer`
+
+Rules:
+
+- A normal OpenClaw conversation without `/blxst` should not mutate BLXST website resources.
+- Scheduled tasks and autonomous Learning V2 cycles do not require `/blxst`, but they must carry task origin, target project, mode, scope, and gate context.
+- Write, commit, push, and deploy require authorized context plus mode policy plus the relevant gate chain.
+- Reuse existing Learning V2 control layers before creating a new controller.
+
+Reuse priority:
+
+- `mode_policy_auditor`
+- `control_status`
+- `mode_transition_checker`
+- `release_gate`
+- `source_change_gate`
+- `push_deploy_safety_gate`
+- `deployment_route_contract`
+- `push_approval_gate`
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:
