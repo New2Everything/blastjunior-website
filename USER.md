@@ -7,8 +7,8 @@ _Learn about the person you're helping. Update this as you go._
 - **Pronouns:** 
 - **Timezone:** Asia/Singapore
 - **Notes:**
-  - **代码白痴** — 永远不要让他写代码，所有代码相关的事我来处理
-  - **设计白痴** — 永远不要让他做设计决策，所有设计相关的事让Architect处理
+  - **代码相关** — 由小虾处理，不自行写代码
+  - **设计相关** — 由Architect处理，不自行做设计决策
 
 ## Context
 
