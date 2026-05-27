@@ -7,6 +7,37 @@ description: |
 
 # BLXST 部署
 
+## Learning V2 Controlled Deployment Law
+
+This skill has been updated for the Learning V2 controlled deployment era.
+
+Legacy rule now invalid:
+- `git push origin main` must not be treated as production deployment.
+- Cloudflare Pages production auto-deploy must remain disabled unless a separate phase explicitly restores it.
+- Production release must go through Learning V2 controlled deploy.
+
+Current production release path:
+- validate source/data/resource change
+- commit
+- push
+- keep `production_deployments_enabled = false`
+- run `scripts/learning-v2-controlled-pages-deploy.py`
+- verify live site
+- record outcome
+
+OpenClaw is the direct instruction entry point. Learning V2 is the resource classifier, safety gate, deployment controller, audit layer, and self-learning optimizer.
+
+Resource boundaries must be identified before action:
+- Cloudflare Pages: `blastjunior-website`
+- GitHub repo: `New2Everything/blastjunior-website`
+- production domain: `blastjunior.com`
+- Workers: for example `blast-homepage-api`
+- D1 databases for structured website data
+- R2 buckets for media assets
+- KV namespaces for sessions/cache/state
+
+
+
 ## 快速开始
 
 ### 1. 推送代码到 GitHub
