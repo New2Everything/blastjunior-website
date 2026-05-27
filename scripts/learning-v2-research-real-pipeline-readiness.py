@@ -44,7 +44,6 @@ TEST_MARKERS = [
     "test_fixture",
     "Manual test source",
     "Schema validation fixture",
-    "accessibility.navigation_button_semantics",
     "accessibility_nav_button_probe",
 ]
 
