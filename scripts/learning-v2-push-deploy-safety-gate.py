@@ -64,6 +64,15 @@ def parse_name_status(out):
 def is_website_impact(path):
     return path in WEBSITE_IMPACT_EXACT or any(path.startswith(prefix) for prefix in WEBSITE_IMPACT_PREFIXES)
 
+def load_json(path, default=None):
+    try:
+        p = Path(path)
+        if not p.exists():
+            return default
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return default
+
 def load_latest(pattern):
     files = sorted(REPORT_DIR.glob(pattern))
     if not files:
@@ -148,10 +157,30 @@ def main():
         failures.append("pre_push_not_confirmed_blocking")
 
     push_has_website_impact = bool(website_impact_rows)
+
+    push_state_path = BASE / "push-approval-state.json"
+    push_state = load_json(push_state_path, default={})
+
+    website_impact_push_exception = (
+        push_has_website_impact
+        and release_summary.get("ok_for_deploy") is False
+        and push_state.get("cloudflare_deploy_mode") == "option_b_production_auto_deploy_disabled"
+        and push_state.get("deploy_intentionally_blocked") is True
+        and push_state.get("deploy_approved") is False
+        and push_state.get("push_approved") is True
+        and push_state.get("public_changes_approved") is True
+        and push_state.get("cloudflare_deploy_behavior_decided") is True
+        and push_state.get("remaining_dirty_reviewed") is True
+    )
+
     push_should_block = (
         push_has_website_impact
         and release_summary.get("ok_for_deploy") is False
+        and not website_impact_push_exception
     )
+
+    if website_impact_push_exception:
+        warnings.append("website_impact_push_allowed_because_deploy_is_intentionally_blocked")
 
     result = "blocked" if push_should_block or failures else "ok"
 
@@ -167,6 +196,7 @@ def main():
         "committed_rows": committed_rows,
         "website_impact_rows": website_impact_rows,
         "push_has_website_impact": push_has_website_impact,
+        "website_impact_push_exception": website_impact_push_exception,
         "push_should_block": push_should_block,
         "cached_rows": cached_rows,
         "remote_contains_token": remote_contains_token,
@@ -206,6 +236,7 @@ def main():
     lines.append(f"- result: `{result}`")
     lines.append(f"- ahead_count: `{ahead_count}`")
     lines.append(f"- push_has_website_impact: `{str(push_has_website_impact).lower()}`")
+    lines.append(f"- website_impact_push_exception: `{str(website_impact_push_exception).lower()}`")
     lines.append(f"- push_should_block: `{str(push_should_block).lower()}`")
     lines.append(f"- remote_contains_token: `{str(remote_contains_token).lower()}`")
     lines.append(f"- pre_push_blocks: `{str(pre_push_blocks).lower()}`")
@@ -248,6 +279,7 @@ def main():
     print("push_deploy_safety_gate =", result)
     print("ahead_count =", ahead_count)
     print("push_has_website_impact =", str(push_has_website_impact).lower())
+    print("website_impact_push_exception =", str(website_impact_push_exception).lower())
     print("push_should_block =", str(push_should_block).lower())
     print("remote_contains_token =", str(remote_contains_token).lower())
     print("pre_push_blocks =", str(pre_push_blocks).lower())
