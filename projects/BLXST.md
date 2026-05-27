@@ -16,6 +16,16 @@
 
 ---
 
+## Direct Command Entry
+
+The only recommended direct command prefix for BLXST website/resource tasks is `/blxst`.
+
+Use `/blxst` when the user wants OpenClaw to handle BLXST website content, real data, media assets, match records, event pages, Cloudflare resources, or controlled production publishing.
+
+Non-website tasks should remain ordinary OpenClaw tasks and should not automatically enter Learning V2.
+
+All `/blxst` tasks must enter the Intent Router first, then Learning V2 decides the resource boundary and controlled pipeline.
+
 ## 🎯 Learning V2 自主改进工作流
 
 ```

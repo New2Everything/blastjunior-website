@@ -6,6 +6,28 @@ OpenClaw is the direct instruction entry point. Learning V2 is the resource clas
 
 Not every OpenClaw conversation is a website task. Before entering Learning V2, every user instruction must be classified.
 
+## Direct Command Prefix
+
+The only recommended direct command prefix is:
+
+`/blxst`
+
+Meaning:
+
+- The user is explicitly telling OpenClaw this task is related to the BLXST website, data library, media assets, match records, event pages, Cloudflare resources, or production publishing.
+- OpenClaw must route the task into the Intent Router.
+- Learning V2 must then classify the resource boundary and choose the correct controlled pipeline.
+- Ordinary non-website tasks do not need this prefix.
+
+Examples:
+
+- `/blxst update the homepage slogan`
+- `/blxst archive these match records into the event page`
+- `/blxst upload these photos to the correct gallery/event resource`
+- `/blxst publish the confirmed website update through controlled deploy`
+
+If `/blxst` is absent, OpenClaw should treat the message as a normal task unless the content is clearly website/resource/deploy related. If uncertain, ask a clarification or analyze only.
+
 ## Top-Level Routing
 
 1. Non-website task
