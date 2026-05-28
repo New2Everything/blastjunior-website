@@ -1,0 +1,174 @@
+{
+  "registry_id": "blxst-cloudflare-resource-registry-v0",
+  "generated_at": "2026-05-28T01:45:44.828709+00:00",
+  "source_phase": "learning-v2 phase 58a",
+  "purpose": "Bind BLXST / Learning V2 to real Cloudflare resource boundaries so OpenClaw and Learning V2 do not conflict.",
+  "deployment_law": {
+    "push_is_deploy": false,
+    "production_deployments_enabled_required": false,
+    "production_release_method": "Learning V2 controlled Cloudflare Pages deploy"
+  },
+  "pages": {
+    "project_name": "blastjunior-website",
+    "project_id": "98f6ff29-1e91-4c81-b7b3-70543a8c2e21",
+    "domains": [
+      "blastjunior-website.pages.dev",
+      "blastjunior.com",
+      "www.blastjunior.com"
+    ],
+    "github_repo": "New2Everything/blastjunior-website",
+    "production_branch": "main",
+    "deployments_enabled": true,
+    "production_deployments_enabled": false
+  },
+  "workers": {
+    "core": [
+      "blast-api",
+      "blast-auth-api",
+      "blast-homepage-api",
+      "blast-upload-api",
+      "blast-media-api",
+      "blast-news-api",
+      "blast-campaigns-api",
+      "blast-comment-api",
+      "blast-comments-api",
+      "blast-search-api",
+      "blast-static-api"
+    ],
+    "observed_other": [
+      "blast-ai-report-api",
+      "blast-chat-api",
+      "blast-d1-admin",
+      "blast-d1-init",
+      "blast-d1-query",
+      "blast-homepage-api-production",
+      "blast-news-admin-api",
+      "blast-safe-api",
+      "blast-share-api",
+      "blast-subscribe-api",
+      "blastjunior-media",
+      "blastjunior-news",
+      "blastjunior-website",
+      "blastjunior-website-api",
+      "contact-form-handler",
+      "league-api",
+      "unified-media-worker"
+    ],
+    "review_required": [
+      "docs-5xu2n7",
+      "docs-eorgcc",
+      "docs-uc0q37",
+      "news-test-backend-phase",
+      "readme-8ahqhu",
+      "snippets-crcrmb",
+      "snippets-vsdvre",
+      "writerworker"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "USERS_DB",
+      "name": "blast-user-db",
+      "id": "520d5c63-ba38-46db-b4b9-ac3a15e1c298",
+      "primary_use": "users/auth/profile"
+    },
+    {
+      "binding": "NEWS",
+      "name": "news-database",
+      "id": "c2d2f16b-a85e-4cd6-8d95-eb16981c19c4",
+      "primary_use": "news/content"
+    },
+    {
+      "binding": "CAMPAIGNS",
+      "name": "blast-campaigns-db",
+      "id": "bc11dbe6-4f21-490b-b713-70564c95cf8e",
+      "primary_use": "events/seasons/teams/players/standings/match records"
+    },
+    {
+      "binding": "PHOTOS",
+      "name": "blast-photo-db",
+      "id": "9f259478-4234-4a29-92da-66b4c73feac5",
+      "primary_use": "photo metadata/gallery records"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "name": "blastjunior-media",
+      "primary_use": "website media/photos/gallery/sponsor assets"
+    },
+    {
+      "binding": null,
+      "name": "news-images-cdn",
+      "primary_use": "news images",
+      "status": "observed_review_required"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "title": "blast-cache",
+      "id": "ed0efbdc46714aa4802e07abacb72a6e",
+      "primary_use": "cache"
+    },
+    {
+      "title": "blast-comments",
+      "id": "bd00b8ea71124980bf1b906d643c67ff",
+      "primary_use": "comments"
+    },
+    {
+      "title": "blastjunior-registrations",
+      "id": "2a6cf7f5010d4e1ca2552bf416847490",
+      "primary_use": "registrations"
+    },
+    {
+      "title": "blast-photo-meta",
+      "id": "231fb3bc6ad54740a24fa397ef80c441",
+      "primary_use": "photo metadata"
+    },
+    {
+      "title": "blast-safe-logs",
+      "id": "7733bbab3c9d4ab3933f5d11bd4b67cd",
+      "primary_use": "logs"
+    },
+    {
+      "title": "blast-subscriptions",
+      "id": "84a511927bc94affbb9643842e70bedb",
+      "primary_use": "subscriptions"
+    },
+    {
+      "title": "blast-upload-queue",
+      "id": "c9b5fca72cba4078b15a36f6be502903",
+      "primary_use": "upload queue"
+    }
+  ],
+  "routing_examples": {
+    "match_record": [
+      "D1: blast-campaigns-db",
+      "page generation",
+      "controlled deploy if publishing"
+    ],
+    "website_photos": [
+      "R2: blastjunior-media",
+      "D1/KV metadata if needed",
+      "gallery/event page"
+    ],
+    "homepage_slogan": [
+      "static source or content config",
+      "Pages deploy if source changed"
+    ],
+    "login_registration": [
+      "Worker/API gate",
+      "D1 USERS_DB",
+      "KV/session gate"
+    ],
+    "publish": [
+      "controlled Pages deploy only"
+    ]
+  },
+  "unknowns_to_resolve": [
+    "wrangler.toml KV namespace warning: unexpected field name in kv_namespaces[0]",
+    "which of the 36 Workers are active production versus legacy/test",
+    "exact binding-to-namespace mapping for CACHE/SESSIONS/CODES",
+    "whether news-images-cdn is production active or legacy"
+  ]
+}
