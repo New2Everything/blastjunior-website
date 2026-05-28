@@ -86,6 +86,18 @@ def classify(text, origin):
         add("d1_database", "review_required", "database/schema/storage mentioned", "high")
         gates.append("d1_gate")
 
+    unknown_markers = [
+        "新增", "新建", "创建新的", "新增数据库", "新增表", "新表", "new database", "new table",
+        "new worker", "new api", "new route", "new bucket", "new kv", "unknown resource",
+        "新资源", "新结构", "新增结构", "新页面结构", "新内容结构"
+    ]
+
+    if has_any(text, unknown_markers):
+        add("unknown_resource_boundary", "registry_update_required", "new or unknown resource/structure mentioned", "high")
+        gates.append("registry_update_required")
+        gates.append("review_required")
+        warnings.append("unknown_or_new_resource_requires_registry_update")
+
     if not resources:
         gates.append("ordinary_or_uncertain_task")
         warnings.append("no_specific_cloudflare_resource_detected")
@@ -111,6 +123,16 @@ def classify(text, origin):
         "classified_resources": resources,
         "recommended_gates": sorted(set(gates)),
         "warnings": warnings,
+        "registry_driven_policy": {
+            "registry_is_source_of_truth": True,
+            "seed_rules_are_not_complete_truth": True,
+            "unknown_resources_require_review": True,
+            "unknown_resource_labels": [
+                "unknown_resource_boundary",
+                "registry_update_required",
+                "review_required"
+            ]
+        },
         "safety": {
             "classification_only": True,
             "state_written": False,
