@@ -43,6 +43,16 @@ The specific items below are illustrative examples, not an exhaustive list:
 Default rule: unclear provenance, evidence, or authorization context means draft/review-only, not publishable.
 
 
+
+## Registry-Driven Classifier Law
+
+Resource classification must be driven by this registry and future routing-rule extensions, not by a frozen hardcoded list.
+
+When BLXST / Learning V2 adds new Cloudflare resources, database tables, media buckets, Worker routes, or content structures, this registry or its routing rules must be updated so the classifier can recognize them.
+
+Unknown resources should be marked review-required rather than ignored.
+
+
 ## Routing Principle
 
 `/blxst` tasks and authorized Learning V2 system tasks must first identify which resource boundary they touch: Pages, Worker, D1, R2, KV, or a combined path.

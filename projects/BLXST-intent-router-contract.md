@@ -141,6 +141,26 @@ Examples:
 - normal analysis without authorized context → ordinary task or read-only classification only
 
 
+
+## Resource Classifier Extensibility Law
+
+The resource classifier must not become a fixed hardcoded resource list.
+
+Version v0 may use seed rules for known BLXST resources, but the long-term classifier must be registry-driven and extensible.
+
+Required behavior:
+
+- Read Cloudflare Resource Registry as the source of truth for Pages, Workers, D1, R2, KV, and future resources.
+- Treat hardcoded mappings only as seed hints, not as complete truth.
+- If Learning V2 later adds a D1 database, D1 table, R2 bucket, KV namespace, Worker, API route, page structure, or content structure, the classifier must be able to learn it through registry updates or routing-rule updates.
+- Unknown or newly discovered resources must not be ignored.
+- Unknown resources must be classified as `unknown_resource_boundary`, `registry_update_required`, or `review_required`.
+- The classifier must prefer a safe “needs review” result over a false confident result.
+- Adding resources should normally update registry/routing rules before changing classifier code.
+
+This prevents the classifier from breaking when the system self-evolves.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:
