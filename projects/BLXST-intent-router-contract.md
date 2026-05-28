@@ -108,6 +108,39 @@ Content may be:
 Unmarked AI-generated real-world content is forbidden. The system must not fabricate, misrepresent, or publish unverified real-world content, factual content, production data, event data, organization/brand/person data, media assets, or operational facts. Any examples are illustrative and non-exhaustive.
 
 
+
+## Resource Classification Step
+
+Every `/blxst` task and every authorized Learning V2 system task must run resource classification before any mutation.
+
+Classifier:
+
+`python3 scripts/learning-v2-resource-classifier.py --origin <authorized_context> --text "<task text>"`
+
+The classifier is dry-run only. It may read the Cloudflare Resource Registry and write reports, but it must not mutate website source, D1, R2, KV, Workers, Cloudflare Pages, git, or deployment state.
+
+Classification output must identify touched resource boundaries such as:
+
+- Pages/static source
+- Cloudflare Pages controlled deploy
+- Worker/API
+- D1 databases
+- R2 buckets
+- KV namespaces
+- ordinary or uncertain task
+
+A task may proceed to later gates only after its resource boundary is known.
+
+Examples:
+
+- match records → `blast-campaigns-db` plus page generation
+- website photos → `blastjunior-media` plus photo metadata
+- homepage slogan → Pages/static source or content config
+- login/register/session → Worker/API plus `blast-user-db` plus KV/session gate
+- publish confirmed update → controlled Pages deploy gate
+- normal analysis without authorized context → ordinary task or read-only classification only
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:
