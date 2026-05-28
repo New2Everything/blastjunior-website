@@ -105,7 +105,7 @@ Content may be:
 - `ai_researched_or_distilled`
 - `ai_generated_marked`
 
-Unmarked AI-generated real-world content is forbidden. The system must not hallucinate fake match records, fake news, fake event types, fake club logos, or fake production facts.
+Unmarked AI-generated real-world content is forbidden. The system must not fabricate, misrepresent, or publish unverified real-world content, factual content, production data, event data, organization/brand/person data, media assets, or operational facts. Any examples are illustrative and non-exhaustive.
 
 
 ## Cloudflare Resource Boundaries

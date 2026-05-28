@@ -28,15 +28,19 @@ Allowed source types:
 - `ai_researched_or_distilled`: AI searched, processed, summarized, or structured from real-world evidence; must be marked and linked to evidence/source references.
 - `ai_generated_marked`: rare explicitly synthetic content, clearly marked as AI-generated, such as an AI admin identity.
 
-Forbidden:
+Forbidden principle:
 
-- AI must not invent fake match records.
-- AI must not invent fake news.
-- AI must not invent fake event types and present them as real.
-- AI must not invent fake club logos or real-world brand assets.
-- AI must not create unmarked synthetic production data.
+AI must not fabricate, misrepresent, or publish unverified real-world content, factual content, production data, event data, organization/brand/person data, media assets, or operational facts.
 
-Default rule: unclear provenance means draft/review-only, not publishable.
+The specific items below are illustrative examples, not an exhaustive list:
+
+- fake match records
+- fake news
+- fake event types presented as real
+- fake club identities, logos, or real-world brand assets
+- unmarked synthetic production data
+
+Default rule: unclear provenance, evidence, or authorization context means draft/review-only, not publishable.
 
 
 ## Routing Principle

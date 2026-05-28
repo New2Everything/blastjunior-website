@@ -190,13 +190,6 @@
         "allowed_use": "Allowed only for explicitly synthetic roles or helper content, such as an AI admin identity."
       }
     ],
-    "forbidden": [
-      "AI must not invent fake match records.",
-      "AI must not invent fake news.",
-      "AI must not invent fake event types and present them as real.",
-      "AI must not invent fake club logos or real-world brand assets.",
-      "AI must not create unmarked synthetic production data."
-    ],
     "required_metadata_fields": [
       "source_type",
       "source_origin",
@@ -207,6 +200,15 @@
       "ai_generated",
       "review_status"
     ],
-    "default_rule": "If provenance is unclear, store as draft/review-only and do not publish."
+    "default_rule": "If provenance, evidence, or authorization context is unclear, store as draft/review-only and do not publish.",
+    "forbidden_principle": "AI must not fabricate, misrepresent, or publish unverified real-world content, factual content, production data, event data, organization/brand/person data, media assets, or operational facts. All examples are illustrative and non-exhaustive.",
+    "examples_are_non_exhaustive": true,
+    "forbidden_examples_non_exhaustive": [
+      "AI must not invent fake match records.",
+      "AI must not invent fake news.",
+      "AI must not invent fake event types and present them as real.",
+      "AI must not invent fake club logos or real-world brand assets.",
+      "AI must not create unmarked synthetic production data."
+    ]
   }
 }
