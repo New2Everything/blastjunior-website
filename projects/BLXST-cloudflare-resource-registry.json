@@ -170,5 +170,43 @@
     "which of the 36 Workers are active production versus legacy/test",
     "exact binding-to-namespace mapping for CACHE/SESSIONS/CODES",
     "whether news-images-cdn is production active or legacy"
-  ]
+  ],
+  "data_provenance_law": {
+    "purpose": "Allow the system to improve structures and content while preventing fake AI-generated real-world data.",
+    "allowed_source_types": [
+      {
+        "source_type": "human_provided",
+        "meaning": "Provided directly by OldK or submitted by real website users.",
+        "allowed_use": "May be stored and published after validation and resource routing."
+      },
+      {
+        "source_type": "ai_researched_or_distilled",
+        "meaning": "AI searched, processed, summarized, or structured from real-world sources.",
+        "allowed_use": "May be used only with source/evidence metadata and must be marked as AI-processed."
+      },
+      {
+        "source_type": "ai_generated_marked",
+        "meaning": "AI-created content in rare allowed cases, clearly marked as AI-generated.",
+        "allowed_use": "Allowed only for explicitly synthetic roles or helper content, such as an AI admin identity."
+      }
+    ],
+    "forbidden": [
+      "AI must not invent fake match records.",
+      "AI must not invent fake news.",
+      "AI must not invent fake event types and present them as real.",
+      "AI must not invent fake club logos or real-world brand assets.",
+      "AI must not create unmarked synthetic production data."
+    ],
+    "required_metadata_fields": [
+      "source_type",
+      "source_origin",
+      "created_by",
+      "created_at",
+      "evidence_or_user_submission_ref",
+      "ai_processed",
+      "ai_generated",
+      "review_status"
+    ],
+    "default_rule": "If provenance is unclear, store as draft/review-only and do not publish."
+  }
 }

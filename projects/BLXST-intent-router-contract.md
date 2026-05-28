@@ -94,6 +94,20 @@ Reuse priority:
 - `deployment_route_contract`
 - `push_approval_gate`
 
+
+## Content Provenance Rule
+
+Learning V2 may help complete structures and content, but it must mark content source.
+
+Content may be:
+
+- `human_provided`
+- `ai_researched_or_distilled`
+- `ai_generated_marked`
+
+Unmarked AI-generated real-world content is forbidden. The system must not hallucinate fake match records, fake news, fake event types, fake club logos, or fake production facts.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:
