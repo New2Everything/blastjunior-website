@@ -401,6 +401,20 @@ It must not mutate registry files, website source, D1, R2, KV, Workers, Cloudfla
 Routes are non-exhaustive and policy-driven.
 
 
+
+## Content Proposal Factory Step
+
+After Runtime Intake Router, Learning V2 may create a content proposal:
+
+`python3 scripts/learning-v2-content-proposal-factory-dry-run.py --origin <authorized_context> --text "<content>"`
+
+The factory turns selected routes into proposal shapes for event data/pages, media staging, homepage copy changes, registry handoff, or review.
+
+It must not mutate registry files, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+Content proposals remain review-required before any apply or publish step.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

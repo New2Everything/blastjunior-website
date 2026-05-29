@@ -1,0 +1,57 @@
+{
+  "policy_id": "blxst-content-proposal-factory-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "production_mutation_default": false,
+  "purpose": "Turn runtime intake router selected routes into machine-readable content proposals without mutating D1, R2, source, registry, Cloudflare, git, or deployment state.",
+  "proposal_shapes_non_exhaustive": {
+    "structured_data_or_event_page_proposal_dry_run": {
+      "proposal_type": "event_data_and_page_proposal",
+      "allowed_effect": "proposal_only",
+      "requires_review_before_apply": true
+    },
+    "event_page_proposal_dry_run": {
+      "proposal_type": "event_page_proposal",
+      "allowed_effect": "proposal_only",
+      "requires_review_before_apply": true
+    },
+    "media_asset_staging_proposal_dry_run": {
+      "proposal_type": "media_asset_staging_proposal",
+      "allowed_effect": "proposal_only",
+      "requires_review_before_apply": true
+    },
+    "source_copy_change_proposal_dry_run": {
+      "proposal_type": "source_copy_change_proposal",
+      "allowed_effect": "proposal_only",
+      "requires_review_before_apply": true
+    },
+    "registry_update_proposal_dry_run": {
+      "proposal_type": "registry_update_handoff_proposal",
+      "allowed_effect": "proposal_only",
+      "requires_review_before_apply": true
+    },
+    "review_gate_dry_run": {
+      "proposal_type": "review_gate_proposal",
+      "allowed_effect": "review_only",
+      "requires_review_before_apply": true
+    }
+  },
+  "required_common_fields_non_exhaustive": [
+    "source_route_report",
+    "source_intake_report",
+    "proposal_type",
+    "provenance_ref",
+    "review_status",
+    "mutation_allowed",
+    "deploy_allowed",
+    "next_safe_action"
+  ],
+  "hard_rules": [
+    "Factory is proposal-only and must not mutate production resources.",
+    "User-submitted facts require review before publish/apply.",
+    "AI extraction is structure only, not factual authority.",
+    "Unknown route shapes must safe-stop into review proposal.",
+    "Production mutation and deploy remain disabled."
+  ]
+}
