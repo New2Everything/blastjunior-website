@@ -311,6 +311,20 @@ These scripts may declare readiness for a later controlled apply context, but mu
 A ready matrix does not allow real apply now.
 
 
+
+## Autonomous E2E Dry-run Orchestrator Step
+
+Learning V2 may run the autonomous E2E dry-run orchestrator to connect task text through gate plan, failure resolver, dispatcher, next-action handler, registry proposal/review/apply rehearsal, and explicit apply gate when applicable.
+
+Orchestrator:
+
+`python3 scripts/learning-v2-autonomous-e2e-dry-run-orchestrator.py --origin <authorized_context> --text "<task text>"`
+
+The orchestrator follows report outputs and policy decisions. It must not hardcode future resource names, and must not mutate registry files, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+A ready result means readiness for a later controlled context, not real apply now.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

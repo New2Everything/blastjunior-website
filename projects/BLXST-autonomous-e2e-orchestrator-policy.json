@@ -1,0 +1,26 @@
+{
+  "policy_id": "blxst-autonomous-e2e-orchestrator-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "not_real_apply": true,
+  "purpose": "Run the autonomous dry-run chain from task text to final safe-stop/readiness report without mutating source, registry, data, Cloudflare, git, or deploy state.",
+  "chain_steps_non_exhaustive": [
+    "gate_plan_dry_run",
+    "failure_context_resolver",
+    "autonomous_next_action_dispatcher",
+    "next_action_dry_run_handler",
+    "registry_update_proposal_if_selected",
+    "registry_update_proposal_review_if_applicable",
+    "registry_update_apply_rehearsal_if_applicable",
+    "explicit_apply_gate_if_applicable",
+    "final_e2e_status"
+  ],
+  "hard_rules": [
+    "The orchestrator is dry-run only.",
+    "The orchestrator must not execute mutation, repair, registry write, git push, deploy, or Cloudflare mutation.",
+    "The orchestrator follows policy/report outputs, not hardcoded resource names.",
+    "Unknown or future branches safe-stop into review/triage.",
+    "Ready means ready for a later controlled context, not real apply now."
+  ]
+}
