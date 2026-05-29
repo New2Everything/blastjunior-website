@@ -1,0 +1,27 @@
+{
+  "policy_id": "blxst-controlled-apply-context-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "real_apply_default": false,
+  "purpose": "Define the only controlled context under which a future registry apply executor may write registry/routing/policy files.",
+  "controlled_apply_context_requirements_non_exhaustive": [
+    "source_e2e_report_ready_for_later_controlled_context",
+    "explicit_apply_gate_ready",
+    "rollback_rehearsal_ready",
+    "system_integrity_ok",
+    "worktree_clean",
+    "authorized_context_present",
+    "apply_scope_declared",
+    "target_files_declared",
+    "rollback_strategy_declared",
+    "real_apply_enabled_explicitly_true"
+  ],
+  "hard_rules": [
+    "Real apply is disabled by default.",
+    "No script may infer permission from a ready dry-run report alone.",
+    "A controlled apply context must be explicit and machine-readable.",
+    "The executor skeleton must refuse to write unless all context gates pass.",
+    "This phase installs gate and skeleton only; it must not write registry files or deploy."
+  ]
+}

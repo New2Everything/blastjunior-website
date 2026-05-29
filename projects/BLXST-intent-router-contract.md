@@ -325,6 +325,24 @@ The orchestrator follows report outputs and policy decisions. It must not hardco
 A ready result means readiness for a later controlled context, not real apply now.
 
 
+
+## Controlled Apply Context Gate and Disabled Executor Step
+
+After Autonomous E2E Dry-run Orchestrator returns readiness for a later controlled context, Learning V2 may run controlled apply context gate and disabled executor skeleton.
+
+Scripts:
+
+`python3 scripts/learning-v2-controlled-apply-context-gate.py`
+
+`python3 scripts/learning-v2-registry-controlled-apply-executor.py`
+
+`python3 scripts/learning-v2-controlled-apply-readiness-smoke.py`
+
+The context gate validates explicit controlled apply context. The executor skeleton is disabled in this phase and must refuse real apply. These scripts must not write registry files or mutate website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+A passing readiness smoke means the future apply path is guarded, not that real apply is allowed now.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:
