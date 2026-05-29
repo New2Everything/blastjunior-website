@@ -251,6 +251,20 @@ Examples include registry update proposal, review gate report, authorization req
 The handler must not write registry, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
 
 
+
+## Registry Update Proposal Dry-run Step
+
+When the next-action handler selects `update_resource_registry`, Learning V2 may create a registry update proposal dry-run.
+
+Proposal script:
+
+`python3 scripts/learning-v2-registry-update-proposal-dry-run.py`
+
+The proposal may identify candidate registry, routing-rule, or gate-policy updates, but it must not write registry files or mutate Cloudflare, D1, R2, KV, Workers, git, or deployment state.
+
+Registry update apply requires a separate later rehearsal.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

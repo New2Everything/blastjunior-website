@@ -1,0 +1,34 @@
+{
+  "policy_id": "blxst-registry-update-proposal-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "purpose": "Create dry-run proposals for Cloudflare Resource Registry / routing-rule updates without writing registry or production resources.",
+  "proposal_targets_non_exhaustive": {
+    "resource_registry": "projects/BLXST-cloudflare-resource-registry.json",
+    "resource_registry_markdown": "projects/BLXST-cloudflare-resource-registry.md",
+    "intent_router_contract": "projects/BLXST-intent-router-contract.md",
+    "gate_policy_registry": "projects/BLXST-gate-policy-registry.json",
+    "future_routing_rules": "future routing-rule registry if introduced"
+  },
+  "required_fields_before_apply_non_exhaustive": [
+    "authorized_intent_context",
+    "source_evidence_or_user_submission_ref",
+    "resource_type",
+    "resource_name_or_candidate_name",
+    "resource_owner_or_scope",
+    "cloudflare_binding_if_any",
+    "operation_intent",
+    "risk_level",
+    "provenance_requirement",
+    "rollback_or_recovery_note",
+    "review_status"
+  ],
+  "hard_rules": [
+    "This proposal stage must not write registry files.",
+    "This proposal stage must not mutate Cloudflare, D1, R2, KV, Workers, git, or deployment state.",
+    "Unknown resources require proposal and review before registry update.",
+    "Examples and required fields are non-exhaustive.",
+    "Future resource types must safe-stop into review instead of being ignored."
+  ]
+}
