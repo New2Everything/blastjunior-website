@@ -1,0 +1,117 @@
+{
+  "registry_id": "blxst-gate-policy-registry-v0",
+  "generated_at": "2026-05-29T02:18:37.335764+00:00",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "purpose": "Recommend gate families from resource classification output without freezing BLXST into hardcoded resource-to-gate mappings.",
+  "source_of_truth": [
+    "projects/BLXST-cloudflare-resource-registry.json",
+    "projects/BLXST-intent-router-contract.md",
+    "projects/BLXST-gate-policy-registry.json"
+  ],
+  "decision_dimensions": [
+    "authorized_intent_context",
+    "resource_type",
+    "operation_intent",
+    "risk_level",
+    "provenance_requirement",
+    "mutation_level",
+    "unknown_or_new_resource"
+  ],
+  "gate_families": {
+    "authorized_context_gate": "Verify task origin, mode, scope, and authorization context.",
+    "resource_classifier_gate": "Run resource classification before mutation.",
+    "provenance_gate": "Require source_type, evidence/user submission reference, review_status, and non-fabrication checks for real-world content.",
+    "registry_update_gate": "Require registry or routing-rule update before handling unknown/new resources.",
+    "review_required_gate": "Require human or higher-level system review when confidence, scope, provenance, or resource boundary is unclear.",
+    "source_change_gate": "For Pages/static/source changes; must remain separate from deploy.",
+    "data_mutation_gate": "For D1/KV/structured data writes; must validate schema, provenance, and rollback/audit path.",
+    "media_mutation_gate": "For R2/media writes; must validate media origin, metadata, and review status.",
+    "worker_api_gate": "For Worker/API/auth/CORS/route changes; high-risk gate.",
+    "controlled_deploy_gate": "For production publish; push is not deploy; use controlled Pages deploy only.",
+    "outcome_record_gate": "Record results and evidence after any applied change."
+  },
+  "seed_hints_non_exhaustive": [
+    {
+      "when": {
+        "resource_type": "pages_or_static_source"
+      },
+      "recommend_gate_families": [
+        "authorized_context_gate",
+        "resource_classifier_gate",
+        "source_change_gate",
+        "outcome_record_gate"
+      ],
+      "note": "Seed hint only. Use registry/routing rules as source of truth."
+    },
+    {
+      "when": {
+        "resource_type": "d1_database"
+      },
+      "recommend_gate_families": [
+        "authorized_context_gate",
+        "resource_classifier_gate",
+        "provenance_gate",
+        "data_mutation_gate",
+        "outcome_record_gate"
+      ],
+      "note": "Seed hint only. Exact DB/table policy must come from registry/routing rules."
+    },
+    {
+      "when": {
+        "resource_type": "r2_bucket"
+      },
+      "recommend_gate_families": [
+        "authorized_context_gate",
+        "resource_classifier_gate",
+        "provenance_gate",
+        "media_mutation_gate",
+        "outcome_record_gate"
+      ],
+      "note": "Seed hint only. Exact bucket/path policy must come from registry/routing rules."
+    },
+    {
+      "when": {
+        "resource_type": "worker_api"
+      },
+      "recommend_gate_families": [
+        "authorized_context_gate",
+        "resource_classifier_gate",
+        "worker_api_gate",
+        "outcome_record_gate"
+      ],
+      "note": "Seed hint only. Worker/API changes are high risk by default."
+    },
+    {
+      "when": {
+        "resource_type": "cloudflare_pages_deploy"
+      },
+      "recommend_gate_families": [
+        "authorized_context_gate",
+        "resource_classifier_gate",
+        "controlled_deploy_gate",
+        "outcome_record_gate"
+      ],
+      "note": "Seed hint only. Production deploy requires explicit controlled deploy phase."
+    },
+    {
+      "when": {
+        "resource_type": "unknown_resource_boundary"
+      },
+      "recommend_gate_families": [
+        "authorized_context_gate",
+        "resource_classifier_gate",
+        "registry_update_gate",
+        "review_required_gate"
+      ],
+      "note": "Unknown/new resources must not be ignored or falsely classified."
+    }
+  ],
+  "hard_rules": [
+    "Do not treat seed hints as a complete resource list.",
+    "Do not hardcode all future D1/R2/KV/Worker/Page structures into classifier code.",
+    "Unknown resources must produce registry_update_required or review_required.",
+    "Real-world content requires provenance checks before publication.",
+    "Deploy remains separate from push."
+  ]
+}

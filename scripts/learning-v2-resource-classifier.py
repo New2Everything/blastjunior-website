@@ -6,6 +6,7 @@ from pathlib import Path
 
 WORKSPACE = Path("/root/.openclaw/workspace")
 REGISTRY = WORKSPACE / "projects" / "BLXST-cloudflare-resource-registry.json"
+GATE_POLICY = WORKSPACE / "projects" / "BLXST-gate-policy-registry.json"
 REPORT_DIR = WORKSPACE / "learning-v2" / "reports"
 SNAPSHOT_DIR = WORKSPACE / "learning-v2" / "snapshots"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -22,12 +23,18 @@ def stamp():
 def load_registry():
     return json.loads(REGISTRY.read_text(encoding="utf-8"))
 
+def load_gate_policy():
+    if not GATE_POLICY.exists():
+        return {}
+    return json.loads(GATE_POLICY.read_text(encoding="utf-8"))
+
 def has_any(text, words):
     low = text.lower()
     return any(w.lower() in low for w in words)
 
 def classify(text, origin):
     registry = load_registry()
+    gate_policy = load_gate_policy()
     low = text.lower()
 
     resources = []
@@ -122,6 +129,14 @@ def classify(text, origin):
         "authorized_context": authorized_context,
         "classified_resources": resources,
         "recommended_gates": sorted(set(gates)),
+        "gate_policy_registry": {
+            "registry_id": gate_policy.get("registry_id"),
+            "policy_driven": gate_policy.get("policy_driven"),
+            "examples_are_non_exhaustive": gate_policy.get("examples_are_non_exhaustive"),
+            "source": str(GATE_POLICY),
+            "gate_families_known": sorted((gate_policy.get("gate_families") or {}).keys()),
+            "seed_hints_are_complete_truth": False
+        },
         "warnings": warnings,
         "registry_driven_policy": {
             "registry_is_source_of_truth": True,

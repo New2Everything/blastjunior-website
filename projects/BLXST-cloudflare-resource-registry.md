@@ -53,6 +53,14 @@ When BLXST / Learning V2 adds new Cloudflare resources, database tables, media b
 Unknown resources should be marked review-required rather than ignored.
 
 
+
+## Gate Policy Link
+
+Resource classification output must be interpreted through `projects/BLXST-gate-policy-registry.json`.
+
+The gate policy registry is policy-driven, not a frozen resource map. Unknown/new resources require registry update or review.
+
+
 ## Routing Principle
 
 `/blxst` tasks and authorized Learning V2 system tasks must first identify which resource boundary they touch: Pages, Worker, D1, R2, KV, or a combined path.

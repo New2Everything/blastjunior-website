@@ -161,6 +161,18 @@ Required behavior:
 This prevents the classifier from breaking when the system self-evolves.
 
 
+
+## Gate Policy Registry Step
+
+After resource classification, Learning V2 must consult the Gate Policy Registry before any mutation.
+
+Gate policy must be registry-driven and extensible. It must not freeze current D1, R2, KV, Worker, Pages, or content structures into a hardcoded list.
+
+The policy registry may provide non-exhaustive seed hints, but exact behavior must come from registry/routing rules, authorized context, provenance requirements, risk, operation intent, and current mode.
+
+Unknown/new resources must route to `registry_update_required` and `review_required`.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:
