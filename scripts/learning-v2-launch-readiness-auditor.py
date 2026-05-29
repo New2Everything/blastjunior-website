@@ -5,6 +5,7 @@ from pathlib import Path
 
 WORKSPACE = Path("/root/.openclaw/workspace")
 POLICY = WORKSPACE / "projects" / "BLXST-launch-readiness-policy.json"
+ORIGIN_POLICY = WORKSPACE / "projects" / "BLXST-runtime-origin-policy.json"
 ENTRYPOINT = WORKSPACE / "scripts" / "learning-v2-runtime-entrypoint-dry-run.py"
 CONTROLLED_SMOKE = WORKSPACE / "scripts" / "learning-v2-controlled-apply-readiness-smoke.py"
 REPORT_DIR = WORKSPACE / "learning-v2" / "reports"
@@ -53,6 +54,7 @@ def main():
 
     for p in [ENTRYPOINT, CONTROLLED_SMOKE]:
         add("exists:" + p.name, p.exists(), str(p))
+    add("runtime_origin_policy_exists", ORIGIN_POLICY.exists(), str(ORIGIN_POLICY))
 
     rc1, report1, out1, err1 = run([
         "python3", str(ENTRYPOINT),

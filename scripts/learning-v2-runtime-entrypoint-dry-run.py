@@ -5,20 +5,12 @@ from pathlib import Path
 
 WORKSPACE = Path("/root/.openclaw/workspace")
 ORCHESTRATOR = WORKSPACE / "scripts" / "learning-v2-autonomous-e2e-dry-run-orchestrator.py"
+ORIGIN_POLICY = WORKSPACE / "projects" / "BLXST-runtime-origin-policy.json"
 REPORT_DIR = WORKSPACE / "learning-v2" / "reports"
 SNAPSHOT_DIR = WORKSPACE / "learning-v2" / "snapshots"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
-AUTHORIZED_ORIGINS = {
-    "user_direct_with_/blxst",
-    "user_confirmed_blxst_after_prompt",
-    "scheduled_learning_task",
-    "autonomous_learning_cycle",
-    "controlled_deploy_phase",
-    "controlled_registry_apply_phase",
-    "maintenance_observer"
-}
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
@@ -28,6 +20,13 @@ def stamp():
 
 def load_json(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+def load_origin_policy():
+    return json.loads(ORIGIN_POLICY.read_text(encoding="utf-8"))
+
+def authorized_origins_from_policy():
+    policy = load_origin_policy()
+    return policy, set((policy.get("authorized_origins") or {}).keys())
 
 def run_orchestrator(origin, text):
     p = subprocess.run(
@@ -52,9 +51,11 @@ def main():
     args = ap.parse_args()
 
     warnings = []
-    if args.origin not in AUTHORIZED_ORIGINS:
+    origin_policy, authorized_origins = authorized_origins_from_policy()
+    origin_spec = (origin_policy.get("authorized_origins") or {}).get(args.origin) or {}
+    if args.origin not in authorized_origins:
         warnings.append("origin_not_in_authorized_runtime_origins")
-    if args.origin == "user_direct_with_/blxst" and "/blxst" not in args.text:
+    if origin_spec.get("requires_prefix") == "/blxst" and not args.text.strip().startswith("/blxst"):
         warnings.append("user_direct_origin_without_blxst_prefix")
 
     report, stdout, stderr, rc = run_orchestrator(args.origin, args.text)
@@ -78,7 +79,8 @@ def main():
             "origin": args.origin,
             "text": args.text
         },
-        "authorized_origin_known": args.origin in AUTHORIZED_ORIGINS,
+        "authorized_origin_known": args.origin in authorized_origins,
+        "origin_policy": {"path": str(ORIGIN_POLICY), "policy_driven": origin_policy.get("policy_driven")},
         "runtime_status": runtime_status,
         "ready_for_later_controlled_context": ready,
         "source_orchestrator_report": str(report) if report else None,

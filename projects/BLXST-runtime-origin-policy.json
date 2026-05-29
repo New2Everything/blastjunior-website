@@ -1,0 +1,55 @@
+{
+  "policy_id": "blxst-runtime-origin-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "purpose": "Define authorized Learning V2 runtime origins without hardcoding them into scripts.",
+  "authorized_origins": {
+    "user_direct_with_/blxst": {
+      "type": "user_direct",
+      "requires_prefix": "/blxst",
+      "allowed_runtime_mode": "dry_run"
+    },
+    "user_confirmed_blxst_after_prompt": {
+      "type": "user_confirmed",
+      "requires_prefix": false,
+      "allowed_runtime_mode": "dry_run"
+    },
+    "scheduled_learning_task": {
+      "type": "scheduled",
+      "requires_prefix": false,
+      "allowed_runtime_mode": "dry_run"
+    },
+    "autonomous_learning_cycle": {
+      "type": "autonomous",
+      "requires_prefix": false,
+      "allowed_runtime_mode": "dry_run"
+    },
+    "controlled_deploy_phase": {
+      "type": "controlled_deploy",
+      "requires_prefix": false,
+      "allowed_runtime_mode": "dry_run"
+    },
+    "controlled_registry_apply_phase": {
+      "type": "controlled_registry_apply",
+      "requires_prefix": false,
+      "allowed_runtime_mode": "dry_run"
+    },
+    "maintenance_observer": {
+      "type": "observer",
+      "requires_prefix": false,
+      "allowed_runtime_mode": "dry_run"
+    }
+  },
+  "unknown_origin_policy": {
+    "status": "safe_stop_authorization_required",
+    "next_action": "request_authorized_context",
+    "mutation_allowed": false
+  },
+  "hard_rules": [
+    "Runtime origins must be read from this policy, not hardcoded into scripts.",
+    "Unknown origins must safe-stop before mutation.",
+    "User-direct BLXST tasks should use /blxst.",
+    "Scheduled/autonomous/controlled phases do not require /blxst but must carry an authorized origin.",
+    "This policy does not enable production mutation or production deploy."
+  ]
+}

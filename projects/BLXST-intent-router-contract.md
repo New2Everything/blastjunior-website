@@ -359,6 +359,20 @@ These scripts provide a single dry-run runtime path and readiness summary. They 
 Runtime dry-run readiness does not mean production mutation or production deploy readiness.
 
 
+
+## Runtime Origin Policy and OpenClaw Bridge Step
+
+Learning V2 runtime origins must be read from `projects/BLXST-runtime-origin-policy.json`, not hardcoded in scripts.
+
+OpenClaw may call the bridge dry-run:
+
+`python3 scripts/learning-v2-openclaw-blxst-bridge-dry-run.py --text "/blxst ..."`
+
+The bridge infers `/blxst` user-direct tasks and forwards them to the runtime entrypoint. Unknown origins safe-stop before mutation.
+
+This bridge is dry-run only and must not mutate registry files, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:
