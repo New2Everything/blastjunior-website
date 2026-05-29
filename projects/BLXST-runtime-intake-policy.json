@@ -1,0 +1,75 @@
+{
+  "policy_id": "blxst-runtime-intake-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "production_mutation_default": false,
+  "purpose": "Create provenance intake envelopes for user/OpenClaw BLXST content before any registry, D1, R2, source, Worker, or deploy mutation.",
+  "source_types_non_exhaustive": {
+    "user_submitted": {
+      "trusted_for_existence": true,
+      "requires_review_before_publish": true
+    },
+    "ai_extracted_from_user_submission": {
+      "trusted_for_structure_only": true,
+      "requires_review_before_publish": true
+    },
+    "external_verified": {
+      "trusted_with_evidence": true,
+      "requires_evidence_ref": true,
+      "requires_review_before_publish": true
+    },
+    "ai_generated_marked": {
+      "allowed_only_if_marked": true,
+      "requires_review_before_publish": true
+    },
+    "unknown": {
+      "requires_review_before_publish": true,
+      "safe_stop": true
+    }
+  },
+  "content_families_non_exhaustive": {
+    "match_record": {
+      "seed_hints_non_exhaustive": ["比赛记录", "比分", "积分", "战报", "HPL", "赛果"],
+      "recommended_next_family": "structured_data_or_event_page_dry_run"
+    },
+    "media_asset": {
+      "seed_hints_non_exhaustive": ["照片", "图片", "相册", "视频", "海报", "素材"],
+      "recommended_next_family": "media_asset_staging_dry_run"
+    },
+    "homepage_copy": {
+      "seed_hints_non_exhaustive": ["宣传语", "首页", "slogan", "文案", "标语"],
+      "recommended_next_family": "source_copy_change_proposal_dry_run"
+    },
+    "event_page_request": {
+      "seed_hints_non_exhaustive": ["赛事独立页面", "活动页面", "专题页", "event page"],
+      "recommended_next_family": "event_page_proposal_dry_run"
+    },
+    "resource_structure_request": {
+      "seed_hints_non_exhaustive": ["新增表", "数据表", "字段", "schema", "资源库", "D1", "R2", "KV"],
+      "recommended_next_family": "registry_update_proposal_dry_run"
+    },
+    "unknown_content": {
+      "seed_hints_non_exhaustive": [],
+      "recommended_next_family": "review_gate_dry_run"
+    }
+  },
+  "required_envelope_fields_non_exhaustive": [
+    "origin",
+    "source_type",
+    "submission_ref",
+    "content_hash",
+    "content_family_candidates",
+    "provenance_note",
+    "review_status",
+    "mutation_allowed",
+    "recommended_next_family"
+  ],
+  "hard_rules": [
+    "Intake is envelope-only and must not write production resources.",
+    "Do not publish user-submitted content without review/provenance gate.",
+    "Content family hints are non-exhaustive and must not become hardcoded truth.",
+    "Unknown content must safe-stop into review.",
+    "Production mutation and deploy remain disabled."
+  ]
+}

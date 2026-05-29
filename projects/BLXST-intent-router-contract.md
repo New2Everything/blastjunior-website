@@ -373,6 +373,20 @@ The bridge infers `/blxst` user-direct tasks and forwards them to the runtime en
 This bridge is dry-run only and must not mutate registry files, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
 
 
+
+## Runtime Intake Envelope and Provenance Staging Step
+
+Before user/OpenClaw BLXST content is written anywhere, Learning V2 may create a runtime intake envelope:
+
+`python3 scripts/learning-v2-runtime-intake-envelope-dry-run.py --origin <authorized_context> --text "<content>"`
+
+The intake envelope records source type, content hash, content family candidates, provenance note, review status, and recommended next family.
+
+It must not mutate registry files, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+User-submitted content is evidence of submission, not automatic publication approval.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:
