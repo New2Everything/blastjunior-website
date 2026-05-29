@@ -1,0 +1,48 @@
+{
+  "policy_id": "blxst-content-review-apply-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "not_real_apply": true,
+  "production_mutation_default": false,
+  "purpose": "Review content proposals and rehearse apply plans without mutating D1, R2, source, registry, Cloudflare, git, or deployment state.",
+  "proposal_review_rules_non_exhaustive": {
+    "event_data_and_page_proposal": {
+      "review_result": "content_review_ready_for_apply_rehearsal",
+      "apply_rehearsal_family": "event_data_and_page_apply_rehearsal",
+      "requires_human_or_authorized_review_before_real_apply": true
+    },
+    "event_page_proposal": {
+      "review_result": "content_review_ready_for_apply_rehearsal",
+      "apply_rehearsal_family": "event_page_apply_rehearsal",
+      "requires_human_or_authorized_review_before_real_apply": true
+    },
+    "media_asset_staging_proposal": {
+      "review_result": "content_review_ready_for_apply_rehearsal",
+      "apply_rehearsal_family": "media_asset_staging_apply_rehearsal",
+      "requires_human_or_authorized_review_before_real_apply": true
+    },
+    "source_copy_change_proposal": {
+      "review_result": "content_review_ready_for_apply_rehearsal",
+      "apply_rehearsal_family": "source_copy_change_apply_rehearsal",
+      "requires_human_or_authorized_review_before_real_apply": true
+    },
+    "registry_update_handoff_proposal": {
+      "review_result": "content_review_handoff_to_registry_chain",
+      "apply_rehearsal_family": "registry_update_proposal_dry_run",
+      "requires_human_or_authorized_review_before_real_apply": true
+    },
+    "review_gate_proposal": {
+      "review_result": "content_review_safe_stop_clarification_required",
+      "apply_rehearsal_family": "none",
+      "requires_human_or_authorized_review_before_real_apply": true
+    }
+  },
+  "hard_rules": [
+    "Review gate may declare readiness for apply rehearsal only, not real apply.",
+    "Apply rehearsal must draft a plan only and must not mutate production resources.",
+    "User-submitted facts remain provenance-bound and review-required before publish.",
+    "Unknown proposal types must safe-stop into clarification/review.",
+    "Production mutation and deploy remain disabled."
+  ]
+}

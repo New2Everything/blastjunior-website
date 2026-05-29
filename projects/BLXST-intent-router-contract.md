@@ -415,6 +415,22 @@ It must not mutate registry files, website source, D1, R2, KV, Workers, Cloudfla
 Content proposals remain review-required before any apply or publish step.
 
 
+
+## Content Proposal Review Gate and Apply Rehearsal Step
+
+After Content Proposal Factory, Learning V2 may run content proposal review gate and content apply rehearsal dry-run:
+
+`python3 scripts/learning-v2-content-proposal-review-gate.py --origin <authorized_context> --text "<content>"`
+
+`python3 scripts/learning-v2-content-apply-rehearsal-dry-run.py --origin <authorized_context> --text "<content>"`
+
+Review gate may allow apply rehearsal only. Apply rehearsal drafts a plan only.
+
+These scripts must not mutate registry files, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+A ready rehearsal does not allow real apply or production deploy.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

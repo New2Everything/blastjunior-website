@@ -11,6 +11,7 @@ CONTROLLED_SMOKE = WORKSPACE / "scripts" / "learning-v2-controlled-apply-readine
 INTAKE_SMOKE = WORKSPACE / "scripts" / "learning-v2-runtime-intake-smoke.py"
 ROUTER_SMOKE = WORKSPACE / "scripts" / "learning-v2-runtime-intake-router-smoke.py"
 PROPOSAL_SMOKE = WORKSPACE / "scripts" / "learning-v2-content-proposal-factory-smoke.py"
+CONTENT_REVIEW_APPLY_SMOKE = WORKSPACE / "scripts" / "learning-v2-content-review-apply-smoke.py"
 REPORT_DIR = WORKSPACE / "learning-v2" / "reports"
 SNAPSHOT_DIR = WORKSPACE / "learning-v2" / "snapshots"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -61,6 +62,7 @@ def main():
     add("exists:" + INTAKE_SMOKE.name, INTAKE_SMOKE.exists(), str(INTAKE_SMOKE))
     add("exists:" + ROUTER_SMOKE.name, ROUTER_SMOKE.exists(), str(ROUTER_SMOKE))
     add("exists:" + PROPOSAL_SMOKE.name, PROPOSAL_SMOKE.exists(), str(PROPOSAL_SMOKE))
+    add("exists:" + CONTENT_REVIEW_APPLY_SMOKE.name, CONTENT_REVIEW_APPLY_SMOKE.exists(), str(CONTENT_REVIEW_APPLY_SMOKE))
 
     rc1, report1, out1, err1 = run([
         "python3", str(ENTRYPOINT),
@@ -88,6 +90,9 @@ def main():
 
     rc6, report6, out6, err6 = run(["python3", str(PROPOSAL_SMOKE)])
     add("content_proposal_factory_smoke", rc6 == 0 and bool(report6), report6 or "missing_report")
+
+    rc7, report7, out7, err7 = run(["python3", str(CONTENT_REVIEW_APPLY_SMOKE)])
+    add("content_review_apply_smoke", rc7 == 0 and bool(report7), report7 or "missing_report")
 
     runtime_dry_run_ready = not failures
     controlled_apply_guard_ready = rc3 == 0 and bool(report3)
