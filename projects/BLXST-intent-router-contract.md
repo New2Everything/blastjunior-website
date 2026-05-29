@@ -235,6 +235,22 @@ The dispatcher is recommendation-only, not auto-repair. It must not mutate websi
 Unknown next-action families must route to `triage_unknown_state` and `do_not_mutate`.
 
 
+
+## Next-Action Dry-run Handler Step
+
+After Autonomous Next-Action Dispatcher, Learning V2 may run the next-action dry-run handler.
+
+Handler:
+
+`python3 scripts/learning-v2-next-action-dry-run-handler.py`
+
+The handler turns selected_next_action into a proposal or report only. It is not auto-repair.
+
+Examples include registry update proposal, review gate report, authorization request, failure triage report, unknown-state triage report, or rerun recommendation.
+
+The handler must not write registry, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

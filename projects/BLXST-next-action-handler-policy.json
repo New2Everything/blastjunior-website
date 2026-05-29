@@ -1,0 +1,56 @@
+{
+  "policy_id": "blxst-next-action-handler-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "purpose": "Turn dispatcher selected_next_action into a dry-run proposal/report without executing mutation.",
+  "handler_families_non_exhaustive": {
+    "update_resource_registry": {
+      "handler_result": "registry_update_proposal_created",
+      "allowed_effect": "proposal_only",
+      "forbidden_effects": ["write_registry", "write_cloudflare", "git_commit", "git_push", "deploy"]
+    },
+    "run_review_gate": {
+      "handler_result": "review_gate_report_created",
+      "allowed_effect": "review_report_only",
+      "forbidden_effects": ["approve_mutation", "write_source", "write_data", "deploy"]
+    },
+    "request_authorized_context": {
+      "handler_result": "authorization_request_created",
+      "allowed_effect": "auth_request_only",
+      "forbidden_effects": ["assume_authorization", "write_source", "write_data", "deploy"]
+    },
+    "fix_failed_step": {
+      "handler_result": "failure_triage_report_created",
+      "allowed_effect": "triage_report_only",
+      "forbidden_effects": ["auto_patch", "git_commit", "git_push", "deploy"]
+    },
+    "triage_unknown_state": {
+      "handler_result": "unknown_state_triage_report_created",
+      "allowed_effect": "triage_report_only",
+      "forbidden_effects": ["continue_execution", "auto_patch", "deploy"]
+    },
+    "rerun_classifier": {
+      "handler_result": "rerun_classifier_recommendation_created",
+      "allowed_effect": "recommendation_only",
+      "forbidden_effects": ["execute_rerun_as_mutation", "write_source", "deploy"]
+    },
+    "rerun_gate_plan": {
+      "handler_result": "rerun_gate_plan_recommendation_created",
+      "allowed_effect": "recommendation_only",
+      "forbidden_effects": ["execute_mutation_gate", "write_source", "deploy"]
+    },
+    "do_not_mutate": {
+      "handler_result": "safety_stop_report_created",
+      "allowed_effect": "safety_stop_only",
+      "forbidden_effects": ["all_mutations"]
+    }
+  },
+  "hard_rules": [
+    "Handler is dry-run only and not auto-repair.",
+    "Registry update handler creates a proposal, not a registry write.",
+    "Review gate handler creates a review report, not approval.",
+    "Unknown handler family defaults to unknown_state_triage_report_created and do_not_mutate.",
+    "Real registry writes, D1/R2/KV/Worker writes, source writes, deploy, rollback, and production recovery require later rehearsals."
+  ]
+}
