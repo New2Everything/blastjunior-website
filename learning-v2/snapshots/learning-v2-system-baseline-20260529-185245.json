@@ -1,0 +1,2452 @@
+{
+  "generated_at": "2026-05-29T10:52:45.183817+00:00",
+  "baseline": "learning-v2-system-baseline",
+  "result": "ok",
+  "errors": [],
+  "mode": "system_build_only",
+  "summary": {
+    "learning_v2_script_count": 295,
+    "baseline_file_count": 301,
+    "dirty_total_count": 0,
+    "dirty_class_counts": {},
+    "business_source_dirty_count": 0,
+    "business_freeze_stable": true,
+    "ok_for_system_build": true,
+    "ok_for_commit": false,
+    "ok_for_deploy": false,
+    "commit_plan_audit_result": "ok",
+    "business_paths_selected_count": 0,
+    "local_git_guard_audit_result": "ok",
+    "force_add_selected_count": 295,
+    "normal_add_selected_count": 11
+  },
+  "files": [
+    {
+      "path": "scripts/learning-v2-accept-planning-readiness-bridge.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13771,
+      "sha256": "5f6ccbbc61469be6a4a7f829f515ac2e40083132bf93829e76a37605d35e294a"
+    },
+    {
+      "path": "scripts/learning-v2-accept-transition-contract-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11110,
+      "sha256": "f14f6b8c3f38eab1a447dd6203fd52ca63009e5bd05ac2f883b6eadf93fad041"
+    },
+    {
+      "path": "scripts/learning-v2-accept-transition-simulator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11635,
+      "sha256": "46ae96c0ee6e24491a2992394ae6ee311ef209d5fed5d7484ea505eb5c412c44"
+    },
+    {
+      "path": "scripts/learning-v2-accessibility-family-design.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8541,
+      "sha256": "1cb85b29fac9be91744d0ba3b6c94b0cd8f2d37a5dc65d8e005ee0d49a9f1d62"
+    },
+    {
+      "path": "scripts/learning-v2-accessibility-nav-button-family-design.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9649,
+      "sha256": "614a7093ed62301ebcadb06f1c7da9913cbbc61750337f9d606f8c0d04db5b3a"
+    },
+    {
+      "path": "scripts/learning-v2-accessibility-nav-button-probe-resolver.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8610,
+      "sha256": "406e42fe07b315064c912e411203f89d988c5274c353a18ef23b4660cd521e77"
+    },
+    {
+      "path": "scripts/learning-v2-accessibility-nav-button-proposal-finalizer.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7510,
+      "sha256": "909b504656015b72f671933d8072507d2a490df87cf4162f963fa8229da59020"
+    },
+    {
+      "path": "scripts/learning-v2-accessibility-nav-button-review-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9851,
+      "sha256": "db9c70588f7e878af8c0a019d4cc9a2334c993f484583a6c34cb2603828e5456"
+    },
+    {
+      "path": "scripts/learning-v2-accessibility-nav-button-semantics-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8153,
+      "sha256": "88e9b72f17cda9b667da5027c010172a5aba9d268a4461a2cb62ec3a02199a05"
+    },
+    {
+      "path": "scripts/learning-v2-accessibility-nav-probe-resolver.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8119,
+      "sha256": "ebc75bbadcd09ec264f6bea467b1744901e366d356abf51f78fc6a51267635c6"
+    },
+    {
+      "path": "scripts/learning-v2-accessibility-nav-proposal-finalizer.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7222,
+      "sha256": "f00f87ce068f714ef00f053db15fc6d1af5e80925b7080b379ffbeb633a13b97"
+    },
+    {
+      "path": "scripts/learning-v2-accessibility-nav-review-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10068,
+      "sha256": "164c6b722c84a87130941604654dedc68a8eb7a13017180c34a7e2b7385bee07"
+    },
+    {
+      "path": "scripts/learning-v2-accessibility-nav-semantics-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7850,
+      "sha256": "561b2e4a83a894f8b2a183bdda9c040e294e2a1ea8fc3f9f232495571330b8ea"
+    },
+    {
+      "path": "scripts/learning-v2-active-cycle-pause.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 4602,
+      "sha256": "8d7cff795a46796ac9b947f0cd216334c8b0eafb315facf7955ead7b6780e91c"
+    },
+    {
+      "path": "scripts/learning-v2-add-directive.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 822,
+      "sha256": "00069ce3017e8e0a07366d9aa281d40e7c45f58a80bc78bd8f25706323cef66d"
+    },
+    {
+      "path": "scripts/learning-v2-agent-status.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13327,
+      "sha256": "0a6ed7c4d64864347b79d55a341fefa7c2fe96a2872ec025739231d03af0f2d2"
+    },
+    {
+      "path": "scripts/learning-v2-apply-guardrails.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8083,
+      "sha256": "5f1232ebea767bc3b4d69342897bfd04d970d3e50d67c7bad0b78746f33e9225"
+    },
+    {
+      "path": "scripts/learning-v2-auto-apply-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7946,
+      "sha256": "265c5bd8e01e52a8a379f541fe51a04568d1ebf91becd0c6ad581ecb99cfa890"
+    },
+    {
+      "path": "scripts/learning-v2-autonomous-chain-smoke.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 3645,
+      "sha256": "8752ceb124d0abb7f2053a56d96b09323b47bb13c591fe50dcdd8166f17f8347"
+    },
+    {
+      "path": "scripts/learning-v2-autonomous-change-policy-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8129,
+      "sha256": "61a35e1158d2be4415824ef8051082db839ffb2e791a7410ee9e3f552cf4fbe7"
+    },
+    {
+      "path": "scripts/learning-v2-autonomous-e2e-dry-run-orchestrator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8948,
+      "sha256": "163fe1c68e4f544880cb3720404fa9a4f96f3d2ccadc45d42ea47a9ffb1ee887"
+    },
+    {
+      "path": "scripts/learning-v2-autonomous-next-action-dispatcher.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6963,
+      "sha256": "f3d9b4efaffc06b1ee1b4c60c03fcd327ffc663c62040a955951119e5a61e16a"
+    },
+    {
+      "path": "scripts/learning-v2-autonomous-path-rehearsal.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5592,
+      "sha256": "0f0f72c0e14f1bb52dcdd97af4d8548283f56d9418a07e7212012ad8868ae0e9"
+    },
+    {
+      "path": "scripts/learning-v2-autonomous-review-policy.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8289,
+      "sha256": "3b2713c07a2beb6d78a723e7701ec1d0c9196885991f71cf252a117b57820e78"
+    },
+    {
+      "path": "scripts/learning-v2-autonomous-target-discovery.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10738,
+      "sha256": "6ac1479b4c98a1d4d033594c3b92b0825656285ef8a5adc1d68a5abf1282d39c"
+    },
+    {
+      "path": "scripts/learning-v2-browser-visual-capture-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9647,
+      "sha256": "de884d6996365aec4eb24209b319477d69fa05b7142bce453426462c049d0765"
+    },
+    {
+      "path": "scripts/learning-v2-browser-visual-capture.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11866,
+      "sha256": "69996df5471aca79bf0f07aa1f47207031009736b440c188bbca1907dd29d3a0"
+    },
+    {
+      "path": "scripts/learning-v2-business-only-commit-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9261,
+      "sha256": "4e7966f6f994b318b663d58928aa9ac94dc7b03f72387f102aba91264ab0205b"
+    },
+    {
+      "path": "scripts/learning-v2-business-release-readiness-guard.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7352,
+      "sha256": "2eacce2a3ffdb578c0cd5119993296065dbb1ffc097baa7d11785598bbc58e4c"
+    },
+    {
+      "path": "scripts/learning-v2-business-staging-guard.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8846,
+      "sha256": "a9b6c921aeb9583506753e86ba6a3221dd4741c94a815c922fe9682b1253a0cc"
+    },
+    {
+      "path": "scripts/learning-v2-change-ledger.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12039,
+      "sha256": "b7c9687af7c65bb26b4786829e1a7717e42a9e7e56f53037c1cdb54b3f124267"
+    },
+    {
+      "path": "scripts/learning-v2-cloudflare-option-b-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5184,
+      "sha256": "511f089d6e3021eb20d73d83dd1d1c9445b0b20f40dac0981b390538b58fed92"
+    },
+    {
+      "path": "scripts/learning-v2-cloudflare-pages-deployment-observer.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5024,
+      "sha256": "9224c1b5d99144043e9b310748adf2c87ed03eee65a974122f24541e4e5936c1"
+    },
+    {
+      "path": "scripts/learning-v2-commit-plan-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6801,
+      "sha256": "d7702f2470e6aa0c615cc75c63a296e6ac450f964e97cee63093416b64e9d2ec"
+    },
+    {
+      "path": "scripts/learning-v2-commit-planner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12950,
+      "sha256": "5459ed56c205febc3133507887c583fd4b2aa0f11ace95963cb771450d12a26b"
+    },
+    {
+      "path": "scripts/learning-v2-community-engagement-path-controlled-source-change-plan.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11671,
+      "sha256": "d0d7e59a13836c10f02fd991f9f88463370f044634030ed850dcfcc7aa63b3df"
+    },
+    {
+      "path": "scripts/learning-v2-community-engagement-path-probe-design.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10515,
+      "sha256": "0acdbe58d6f08a5ce85286b6679f7a5c5b16be23ecf7a62e8ada505598a0fe5e"
+    },
+    {
+      "path": "scripts/learning-v2-community-engagement-path-probe-resolver.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 14566,
+      "sha256": "cec512e5d9d55a8c97d6d20357a4ae8e7752177705bed05194f5f9b226fea172"
+    },
+    {
+      "path": "scripts/learning-v2-community-engagement-path-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12349,
+      "sha256": "137ca11d996e22f5e047a652fd08e32cec3135ab60454145dd5bbcdb70cc3bce"
+    },
+    {
+      "path": "scripts/learning-v2-community-engagement-path-proposal-planner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 14925,
+      "sha256": "b0a57ffa468525becefd0b7cf6db3e99cb0e592f772fe0c23768eb24b4669248"
+    },
+    {
+      "path": "scripts/learning-v2-community-experience-for-sports-communities-surface-teams-eve-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8506,
+      "sha256": "a1c0ca27a37d708011c7b779b5846eccc0a8a8e64a1574fbd549dad5379e5320"
+    },
+    {
+      "path": "scripts/learning-v2-community-experience-keep-visual-design-energetic-but-structu-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8118,
+      "sha256": "2447a8f3ccc946e6528299ab4d72d521514b3638b15b20e36a3dac10717155a5"
+    },
+    {
+      "path": "scripts/learning-v2-community-experience-make-the-first-successful-action-obvious-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8040,
+      "sha256": "e1c4714bf99889574d69172137ba7549186ac255c09ff21a40327a1a2a963056"
+    },
+    {
+      "path": "scripts/learning-v2-community-experience-reduce-early-cognitive-load-by-sequencin-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7734,
+      "sha256": "daec77d884c211f067751f2d6fc74d05b66d3d355631fa28cc478c81e6b7d75a"
+    },
+    {
+      "path": "scripts/learning-v2-community-experience-show-participation-pathways-clearly-so-c-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8130,
+      "sha256": "0f0d7a011754f581cd7827fd27a25bd048f8a538301c1f4f5079972ed239e829"
+    },
+    {
+      "path": "scripts/learning-v2-community-experience-use-concrete-examples-or-case-studies-to-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8471,
+      "sha256": "96db919e33133cf9e8ccde4d644391465a6a2b8ef2144348ba3ecda496ae4e0e"
+    },
+    {
+      "path": "scripts/learning-v2-community-experience-use-onboarding-to-connect-user-motivatio-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7740,
+      "sha256": "e3444214445e3df79535137957f93423b3b19a8b13a0d9ccd44d43a4a5099b7c"
+    },
+    {
+      "path": "scripts/learning-v2-community-onboarding-controlled-source-change-plan.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 17186,
+      "sha256": "048c5281f8dedd89d49c1eb2b6bf3e45d84d21964fd1e3f6da70e07201609cdf"
+    },
+    {
+      "path": "scripts/learning-v2-community-onboarding-experience-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10236,
+      "sha256": "be909dba3eae34c3b4752d3004a6143fd9efa9009f535db931b644548041fe82"
+    },
+    {
+      "path": "scripts/learning-v2-community-onboarding-manual-review-parker.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8922,
+      "sha256": "988e21c0f141d7dadbb867286ca154b131f65f890eeae08716a31420c44cfa42"
+    },
+    {
+      "path": "scripts/learning-v2-community-onboarding-probe-design.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8438,
+      "sha256": "4cfd6185215b8b4f43a75d5d8b761f911038c7a732ba0bf38ac49366bd61d9cb"
+    },
+    {
+      "path": "scripts/learning-v2-community-onboarding-probe-resolver.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11929,
+      "sha256": "10759c51bdcb5c6751dbf0143490e840932f1a29772b8d89342664467e0da814"
+    },
+    {
+      "path": "scripts/learning-v2-community-onboarding-proposal-planner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13243,
+      "sha256": "0e009104f9ac2a755fa86b71b8dedb876cb33d4d73055ae3891134bcb952ce1d"
+    },
+    {
+      "path": "scripts/learning-v2-compact-handoff.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7351,
+      "sha256": "800a0e04699860b2ab2fbb638771e08277f8f411d45885c5a90b73b464a07cf7"
+    },
+    {
+      "path": "scripts/learning-v2-compact-push-readiness.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6489,
+      "sha256": "6cea3807a21a0878162f9afead6b2c36d5c838e49efec9bf8236ca7d9ef87761"
+    },
+    {
+      "path": "scripts/learning-v2-compact-status.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6423,
+      "sha256": "6de68780ba7a31f9fc9959068f8073f088a915b9252c469590bc6a93a60844cf"
+    },
+    {
+      "path": "scripts/learning-v2-consolidated-source-change-review-packet.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10011,
+      "sha256": "cab4851262af32901db98efa3f9e7fe59556ce3f6351d496d31fbb841005d4b1"
+    },
+    {
+      "path": "scripts/learning-v2-content_hierarchy-homepage_primary_cta-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9465,
+      "sha256": "bd8f08df8a2eb716f62c0aa866b3147f3475caf0277c26716fd5dd7bd34b8572"
+    },
+    {
+      "path": "scripts/learning-v2-control.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7091,
+      "sha256": "2352f1af3e51e03342fdc66292de033e1cbb0f3a599908443a41660568af8329"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-apply-context-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6953,
+      "sha256": "595c5ae086af6c2c72ec9f9569abe6990fdea4e50d41ac3a5007926da270c420"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-apply-readiness-smoke.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 4391,
+      "sha256": "80c393881df8af6eec04bd95577e19ec48f6055a4f23cf038f7895bfde4f5c88"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-duplication-guard.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12823,
+      "sha256": "dd15feef1ef63dabb0a0584653c2d60a7ad110c2e527de3f958edc3dea5b6d39"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-generic-apply.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 19455,
+      "sha256": "4c7b5164a6d222dc6d72984419a95e68fe242af3a8ce58c1516cf373da59555c"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-generic-create-file-apply.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 21060,
+      "sha256": "556faaf3f97427ab95328a845d11fbb0c0dbb0d6b3fdc1b1e39df30bd84a7141"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-generic-create-file-dry-run-runner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 16328,
+      "sha256": "95378c0922f0fbeb7340cba13358570f6d4ef7dad5549c4228859bf886c0dbae"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-generic-create-file-isolated-validator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 16835,
+      "sha256": "c00346baf57911bd6b76ca64d225e2e0af9d437ef5a5631cf31b697b2b128acc"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-generic-create-file-ledger-acceptance.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 21287,
+      "sha256": "01cf9e4a0df6a861521fbb011e066d7daa1a2ab3e7bce388ac4abbdb88d047b6"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-generic-create-file-policy-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13885,
+      "sha256": "a2e84d77beaafee8150284406cd3f28fe9f7c533d63d58db39f2f4056577de81"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-generic-create-file-readiness.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13437,
+      "sha256": "568d9ffbe2d97d538291602b53cec1b68766ee0d64f4f0bdd3ddcc76b7337d5a"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-generic-dry-run-runner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 14025,
+      "sha256": "a33dea07cc396d6a86c1f786d5a2d582b35fcbd1e8b51915eb3e34b9f3f9fe5c"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-generic-isolated-validator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 14783,
+      "sha256": "400b9961f3ef24659c58b00b109adc407ae2b2ea07188e7e1da610fc845ae80b"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-generic-ledger-acceptance.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 19126,
+      "sha256": "1c7f54b140b0bb8e41c0ffd106e1f71e2fd7853e5db64f016a4b1ceab5e83f89"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-generic-policy-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13404,
+      "sha256": "cca71a6ac08aa9ade13f4585fb1c08c835f00eb8e519770982f225233bfc1b75"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-generic-readiness.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13050,
+      "sha256": "f140e3c3e7bc1f9ed390a1efd7f3ccc70c22eb91f5706593b84c51d3b3aeb2a1"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-lifecycle-metadata-validator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 15038,
+      "sha256": "6b7f83344dbb6c377326845c941979e00b2407baf4c80c9991f115fba198f820"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-new-file-template-validator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 19300,
+      "sha256": "5d0a1fde877e3476f8ab0a8b0c4670e72a3f1a89df7e18eed3b0bdd8f54bc126"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-registry.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 23884,
+      "sha256": "cc9b6dc92a9f4615d8c444cb0c15a12f36a1634c544e11d429474bbde68d8f9a"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-change-template-checker.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 16400,
+      "sha256": "6b94baa4b9bf39b29628407cd0845042c5359259ef349fc2191e10c082e26415"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-implementation-planner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7413,
+      "sha256": "5c2ab93cab82d7f1c4b600ddf651071a11af76ac026614d1c6dd673f04679aad"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-pages-deploy.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11917,
+      "sha256": "c2ad2e04e4d995ad8fcbccc7223a0cbb130599547dffe9eb3011524447c3c045"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-actual-source-write-gate-opener-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 15511,
+      "sha256": "6d70cb71701f1f144b42d02e024ffca6c6da5e258c216fe92f1481a6c8268e62"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-actual-source-write-gate-opener.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 15729,
+      "sha256": "b4d315f7bc0c3f8bad19d0cea6c1958b5fb327161278d420e8f90a29a068ef50"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-actual-source-write-gate-request-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 16583,
+      "sha256": "33c87ccdd51fabb841afbce4a1d9af7f93b6c32b72f4564a9cbf8659f7c5d959"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-actual-source-write-gate-request.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 15589,
+      "sha256": "bc4993cad39730b9a2a6c675c0dda8ce11e31675c99ba6698f87f99328be4b06"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-actual-write-executor-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 16354,
+      "sha256": "13ee3be4115edb473c589d9a3a036e295bf8e8c9c0bbb173b2c9d8598f16f633"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-actual-write-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 15943,
+      "sha256": "a0ca0e34b157aa02046fc907ac76e854296572536d4696104d46ed2024a47163"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-apply-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9675,
+      "sha256": "8d7ad5293eed9a5d31448689e7405d6ad6f3a3c7e4a259e03ceb043936071525"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-apply.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9729,
+      "sha256": "002c98486fe9e90c71564007588cfbbcdea85a97f8e179a5e5b8db61c76371a5"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-cloudflare-pages-status-check.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12594,
+      "sha256": "cf9738c8b90d48c42d608a59164d6df6a9a751595c73d828a1d236a87f2a58dc"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-git-commit-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12736,
+      "sha256": "069bd44cd081e411f3d8bd9a2382f72d14489612ad7d319495f78bd58a17dc78"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-git-diff-audit.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13192,
+      "sha256": "41e5a14208cb5080e2d138db319120a055bd2c328ce2b816381e11754697fd35"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-git-push-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13775,
+      "sha256": "70b89f264ea661d27912e2ae50af97e5a30d02b56e602d313b254869603d08f4"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-lifecycle-completion.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 14362,
+      "sha256": "8fd1337c11508b1d0569bc8ad7a5cb2d33beceb7b4e56c3a3712bf53cb9fa796"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-post-write-validation.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 15485,
+      "sha256": "e5d9c4c99615c4d3f336df0ed8d74169173895554e78969e2fad2ba11723c0be"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-real-write-apply-executor-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 14136,
+      "sha256": "a88d5725bbd13e81a21d0a49c0b9e2699138d6133b3aea0aa53f97684a5b3304"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-real-write-apply-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 15010,
+      "sha256": "b28359a8e58640c0bb049a6cb5959f07578506b3e71e67b4c644b0afbef1fb20"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-real-write-apply-request-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 14376,
+      "sha256": "c5a908324a311cc651d20bfc17f110191485d3354794039d084b854506a1d68e"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-real-write-apply-request.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13902,
+      "sha256": "2c5b0ee5d3d6e6186f00b4495c8b97a462aa0ef046d03d68d76f25db51592461"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-real-write-executor-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12759,
+      "sha256": "abeae1f0442d1a62fab160c4f1f1d25e726dd85c1682bf7df8ff4074b9340af0"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-real-write-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12433,
+      "sha256": "87bf48532b06d864ed8cc95d2cd845dd33f682f85cca98601573be89092f676a"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-real-write-request-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11460,
+      "sha256": "5dbf4604caedd1a361796b0767c4e5df07814f22d33940103805f4d65c9eb5a5"
+    },
+    {
+      "path": "scripts/learning-v2-controlled-source-change-real-write-request.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10715,
+      "sha256": "4aada14eb3ea47b236c7c1d9803f63aa8fc5c08844818f4f25ad54a3232aaaa9"
+    },
+    {
+      "path": "scripts/learning-v2-conversion-design-for-sports-communities-surface-teams-eve-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7792,
+      "sha256": "38e33eb107a023cfae4ba55cc96339dff264313d108978b95a10d053554858ae"
+    },
+    {
+      "path": "scripts/learning-v2-conversion-design-keep-visual-design-energetic-but-structu-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7973,
+      "sha256": "a23e66ce8b512aeacd4122a0912ccbeece056e1fea281023ae45b9ce56af9d89"
+    },
+    {
+      "path": "scripts/learning-v2-conversion-design-show-participation-pathways-clearly-so-c-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7787,
+      "sha256": "e1a0f4474d10d5ed278ad0b8ff8fa5244de32cb5f95da0c512e95909c96081b1"
+    },
+    {
+      "path": "scripts/learning-v2-conversion-design-use-concrete-examples-or-case-studies-to-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7785,
+      "sha256": "f936a7e8d9268bd14000d9199ba2568bc58e312c1451c619df18b2d48b0de54e"
+    },
+    {
+      "path": "scripts/learning-v2-create-file-from-template-lifecycle-extension-plan.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 16080,
+      "sha256": "d724a8e212d3c5066c16f413089177acab05864c8052554811694b8a4e6a2904"
+    },
+    {
+      "path": "scripts/learning-v2-create-file-metadata-draft-readiness.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 16888,
+      "sha256": "8e3f086cb10eecba3a6f4313f4b96c867ca01b46f39693059beb436f6345a327"
+    },
+    {
+      "path": "scripts/learning-v2-dead-duplicate-entry-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9600,
+      "sha256": "23a846f298b128b0ef9cc29ac1bf38a9f1d7ac80752d01f587c12ab9ed8bf732"
+    },
+    {
+      "path": "scripts/learning-v2-dead-duplicate-family-design.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7762,
+      "sha256": "70bbe7b452f0103ff99af795ca389175cfe11f28020efc9cfbe792c00e142497"
+    },
+    {
+      "path": "scripts/learning-v2-dead-duplicate-probe-resolver.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7825,
+      "sha256": "4823ce58c09d098c1c28f24664171c2f72a0a466ba028ab6fd80cdc5f86b72a2"
+    },
+    {
+      "path": "scripts/learning-v2-dead-duplicate-proposal-finalizer.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7119,
+      "sha256": "675bb4c0ef18cf86fad510b4b301a535f09937d539d29d9f28574bd4ae2aa9ad"
+    },
+    {
+      "path": "scripts/learning-v2-dead-duplicate-review-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10641,
+      "sha256": "439179b934075b650039d50705e9bd7d9ae993e36512eb62e98a60255445222a"
+    },
+    {
+      "path": "scripts/learning-v2-deploy-observer.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8910,
+      "sha256": "c9bae84cd0933bd9a53cdefc94d3060869d4006d7d97b789e454c0605ad6ca7b"
+    },
+    {
+      "path": "scripts/learning-v2-deployment-route-contract-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10726,
+      "sha256": "145acbfa668e718bd8946f7e3fdd6138ca03ea476c36746f535eb13d8436de47"
+    },
+    {
+      "path": "scripts/learning-v2-deployment-route-contract.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10089,
+      "sha256": "a50e431f09f9086636988723ff910b2b6da57c8b08c5694f80bfdace15f798bd"
+    },
+    {
+      "path": "scripts/learning-v2-design-loop-contract-checker.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10676,
+      "sha256": "2c83d1599c91f3ae2ed2b206c8495a7ca633c676c23aa772c25eeed218f68883"
+    },
+    {
+      "path": "scripts/learning-v2-design-opportunity-discoverer.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 21900,
+      "sha256": "19e6c4fee736d618978a68ce753bdeb7e107623228af12368ba2f9f22e63fd00"
+    },
+    {
+      "path": "scripts/learning-v2-design-review-implementation-readiness.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8270,
+      "sha256": "e4e3b076dc3aef985b0f7f675323dfd93e0468a5bde0f15dc5babe691e27acca"
+    },
+    {
+      "path": "scripts/learning-v2-dirty-freeze.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5017,
+      "sha256": "85438fe12fb32ba56ef5eab987f85515309be91f0b719c8e31711f65d737062a"
+    },
+    {
+      "path": "scripts/learning-v2-discover-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5259,
+      "sha256": "41a65d58812b9472d4f1a75c77b85fed8c9e457459c60ad50490224dea949a03"
+    },
+    {
+      "path": "scripts/learning-v2-dispatch-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6602,
+      "sha256": "7a104c214589cb84750eddb097425c70f8289c933783b302217523ca1f0560be"
+    },
+    {
+      "path": "scripts/learning-v2-dispatch.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 32529,
+      "sha256": "19daab280ecdf9d9197f3ef4acfa94153b6c61410360cf01597beb14ebf85db4"
+    },
+    {
+      "path": "scripts/learning-v2-doctor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6762,
+      "sha256": "c18f83aded7fb583aac1edacb6b2a6c9833bb0d2bb1ba5e692c3f9cf84a8e283"
+    },
+    {
+      "path": "scripts/learning-v2-engagement-news-return-path-autonomous-policy-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13545,
+      "sha256": "f7094cc7657ddd3dbeb66db588b9d07a5219fa4e5aa385d571756a787dce0ee0"
+    },
+    {
+      "path": "scripts/learning-v2-engagement-news-return-path-controlled-ledger-acceptance.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 18913,
+      "sha256": "f4cc9842de838a279cdf4a3e65cbef89e6fe52ec800a90c11d57470d6c4b533b"
+    },
+    {
+      "path": "scripts/learning-v2-engagement-news-return-path-gate-readiness.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10664,
+      "sha256": "f05c11883dfc69adfeffe93c56e75e78265ea6dfd29e4ec1449c7b16ec0da4b1"
+    },
+    {
+      "path": "scripts/learning-v2-engagement-news-return-path-isolated-post-apply-validator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11946,
+      "sha256": "cccc5b090b7f94af1da7c13f3796103c0bc362d2fa9dda2a3f27820cca2fa916"
+    },
+    {
+      "path": "scripts/learning-v2-engagement-news-return-path-source-change-apply.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13943,
+      "sha256": "ed75f6c1e1dc91642b9cd0324346c4888fc2bdb3cc5f09def6807192e1235173"
+    },
+    {
+      "path": "scripts/learning-v2-engagement-news-return-path-source-change-dry-run.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11319,
+      "sha256": "98529d6bf8551ff5f85868d600d3176612eab34dd94e882d8c7ca497c4f61d83"
+    },
+    {
+      "path": "scripts/learning-v2-event-experience-for-sports-communities-surface-teams-eve-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8155,
+      "sha256": "dfc5151f0c9ad7e90434c0f28bbe9d061d4bdac029b5f92ea262f446aee55326"
+    },
+    {
+      "path": "scripts/learning-v2-event-experience-keep-visual-design-energetic-but-structu-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8134,
+      "sha256": "97383af98a72a06158f753d76c3f66d56e192dac8aa90f494f3a44050f50cafc"
+    },
+    {
+      "path": "scripts/learning-v2-event-experience-make-the-first-successful-action-obvious-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7919,
+      "sha256": "3b9e4933849c4f670f932893d4e4cc9c60dafbac77439fe678eb80dbe229b588"
+    },
+    {
+      "path": "scripts/learning-v2-event-experience-show-participation-pathways-clearly-so-c-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7965,
+      "sha256": "575a83b5761be352b7dbe13d5abac3fea765b8518ea3e91d2006f69ebd833844"
+    },
+    {
+      "path": "scripts/learning-v2-event-experience-use-concrete-examples-or-case-studies-to-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7778,
+      "sha256": "bd5974c4ee5f4021adb43ab3f8f9a83279474a6e491ab4941b23c38a6e87aed8"
+    },
+    {
+      "path": "scripts/learning-v2-failure-context-resolver.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8347,
+      "sha256": "90a8881a9f0574d3bcfa77a938a16d87804de675ed85f7e8f26c2060d88d4f77"
+    },
+    {
+      "path": "scripts/learning-v2-fast-status.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 16141,
+      "sha256": "fc8fbf2e05fcbf762d21cbc379876502760b36aa99c9eaeace8d8fea6d587b46"
+    },
+    {
+      "path": "scripts/learning-v2-fifth-loop-engagement-probe-resolver.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11134,
+      "sha256": "fbea2775fd4e8af2347ddb367710ae9f5fdd6453cbdd65d4522ae52bfef7522f"
+    },
+    {
+      "path": "scripts/learning-v2-fifth-loop-target-planning-guard.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10210,
+      "sha256": "0c758b5a4f8b2b6c2c27656a57015cd3dff06c09d51359ee2e4a4fd2d4da88f2"
+    },
+    {
+      "path": "scripts/learning-v2-file-level-patch-preview.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13737,
+      "sha256": "c97854098792c5a49d8d2cb47c6e3ee00c1a104a6fe752659273f427bca55d32"
+    },
+    {
+      "path": "scripts/learning-v2-final-source-change-gate-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 14179,
+      "sha256": "91b5cae685d0287720c0c1d4eabb2e080de414ecc84064c37f8446e306c5becf"
+    },
+    {
+      "path": "scripts/learning-v2-fourth-loop-accounting-repair.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12164,
+      "sha256": "38089d2a767a783cdbdba012cea53aef8859739cde4d15cc76aa52c55937c791"
+    },
+    {
+      "path": "scripts/learning-v2-fourth-loop-closure-accounting-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12360,
+      "sha256": "61945317469752db583ea76f95e82df40d59643be93bd625b0a6398b0bb74ecd"
+    },
+    {
+      "path": "scripts/learning-v2-fourth-loop-planning-brief.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 16533,
+      "sha256": "54c7f32a1bbea5664aa904d25313305c1fb2ee0ca011fa92b92e33370bfd61fc"
+    },
+    {
+      "path": "scripts/learning-v2-gallery-next-action-controlled-ledger-acceptance.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 18359,
+      "sha256": "331fe5e709b8fa4c2513003de0f06e98c09f52d0736aba26698c4959e71d0dbd"
+    },
+    {
+      "path": "scripts/learning-v2-gallery-next-action-gate-readiness.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8258,
+      "sha256": "8a7a515dc1a65f048866135f2eed8b164f454b3fe990e0696d7fe88de0d3ec0a"
+    },
+    {
+      "path": "scripts/learning-v2-gallery-next-action-isolated-post-apply-validator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10563,
+      "sha256": "cbdf082946a6e05e02cfecb2f9e0ba4dc203ba6145169e62f6a739477a7907a4"
+    },
+    {
+      "path": "scripts/learning-v2-gallery-next-action-source-change-apply.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10644,
+      "sha256": "91357fe8ade889c3db83c360ec2170664a02c0c9b5de894c24954a6050867631"
+    },
+    {
+      "path": "scripts/learning-v2-gallery-next-action-source-change-dry-run.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9449,
+      "sha256": "800af430a52b6c2ef167ff307da10b8e192db9b4fb4dc70ef2a4dae810617a1b"
+    },
+    {
+      "path": "scripts/learning-v2-gate-plan-dry-run.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7228,
+      "sha256": "db963e55a73c2d43dadeab56f5b555c00a549a3739f8c384ca82018b39ec87d5"
+    },
+    {
+      "path": "scripts/learning-v2-handoff.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10323,
+      "sha256": "c5ad01e5987a83707606d587cccf83c83f937bf824f2530e8341030bbcbea556"
+    },
+    {
+      "path": "scripts/learning-v2-homepage-audit.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 2628,
+      "sha256": "9d1e31b8f39f24b4a9284d577ce073818efbe6d8f45a29d90d1eb19ab0ea7f3e"
+    },
+    {
+      "path": "scripts/learning-v2-homepage-onboarding-controlled-ledger-acceptance.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12562,
+      "sha256": "610a5d5ef62d83294f54bd975f5fdc643a5eb31c6f8c8dffaffb2bc8344cf206"
+    },
+    {
+      "path": "scripts/learning-v2-homepage-onboarding-isolated-post-apply-validator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10740,
+      "sha256": "40637b3df6880957165f118626af263220d0e4072cba8ec15c95604d4b2a71e5"
+    },
+    {
+      "path": "scripts/learning-v2-homepage-onboarding-post-apply-validator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11691,
+      "sha256": "ea8890e6d83e24de706be8cc0b03eb01251d2ba0d31e8e94941ee460458201ce"
+    },
+    {
+      "path": "scripts/learning-v2-homepage-onboarding-source-change-apply.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10562,
+      "sha256": "d9f7123b2eef8743ae810020f41caf51ee6121f85444e826d811c7bfdde0f383"
+    },
+    {
+      "path": "scripts/learning-v2-homepage-onboarding-source-change-dry-run.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9146,
+      "sha256": "d10f354288d1546560978576cb514b0b98652610962a383a64552bf5a5b0187c"
+    },
+    {
+      "path": "scripts/learning-v2-homepage-onboarding-source-change-gate-readiness.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6549,
+      "sha256": "3af904497a27967b6a4830d1f11e1034eaa27f6fac1962c8c543d9e8c47d59fc"
+    },
+    {
+      "path": "scripts/learning-v2-human-design-review-packet.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9856,
+      "sha256": "21df3cb9660a58c7ed0a1b07ff5158d91bfcdfb7745952254b80c53136fce7b8"
+    },
+    {
+      "path": "scripts/learning-v2-human-review-decision-applier.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11027,
+      "sha256": "bc07136edaaa2c61fa339383da0486b8ef6514e67ca028cd6220ddd0abdf916f"
+    },
+    {
+      "path": "scripts/learning-v2-implementation-readiness-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8083,
+      "sha256": "072e652c14779da0cd2187b71cd7dd6693a69e4a1bd24d8259a4ef0e81ed2398"
+    },
+    {
+      "path": "scripts/learning-v2-install-local-git-guards.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6506,
+      "sha256": "0011ddd1b7ff650e7ebe5639e3417bb37211b883b6c285b041fdb72f109a6ad1"
+    },
+    {
+      "path": "scripts/learning-v2-launch-readiness-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6555,
+      "sha256": "9a8037320db4cab5b23accbcfec03690e48e816297469b6701a07d707d50098f"
+    },
+    {
+      "path": "scripts/learning-v2-lifecycle-router.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9625,
+      "sha256": "be40bcc0a74ad7a0b39d8eff776c02e441a333ca70f63b226836a1d65bd5b974"
+    },
+    {
+      "path": "scripts/learning-v2-lifecycle-sequence-verifier.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11085,
+      "sha256": "644c49917847463d21d59416fb027a8439d03c889f3cc5f01e1ba6b9afa5ddbd"
+    },
+    {
+      "path": "scripts/learning-v2-local-exclude-manager.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 3877,
+      "sha256": "3a67d9f93a6fcab20ad87bef5499a13492cd4d37fabec1f898b689b9993886b8"
+    },
+    {
+      "path": "scripts/learning-v2-local-git-guard-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 4223,
+      "sha256": "ef65efbd0f992a32c2d39b760861f3bdbbc0b80a65331d4e4a3b33e3a387602f"
+    },
+    {
+      "path": "scripts/learning-v2-local-write-rollback-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8850,
+      "sha256": "c9891aeb8eeb481003e50aa8a19c8dcf288750e95f85328654109a656cfd61b6"
+    },
+    {
+      "path": "scripts/learning-v2-manual-review-consolidation.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9469,
+      "sha256": "0114768c47ea9f6ae3091be9a5729ad37f55e5f55d4ce88fa5a35ac633bb2b63"
+    },
+    {
+      "path": "scripts/learning-v2-mobile_first-nav_density-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8312,
+      "sha256": "3d5aac97adcec8f9f786a2baea2d84f9a02dfca96c7697cf773f5805a5e2beaa"
+    },
+    {
+      "path": "scripts/learning-v2-mode-policy-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11738,
+      "sha256": "d4be6e4fff299d2c2780535f287e16240a5040d3003111f023607a5cdd62ea06"
+    },
+    {
+      "path": "scripts/learning-v2-mode-switcher.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11362,
+      "sha256": "49d26f637d4caf676d0915eda15e5c512edda49565701e66aef97f0fc6ab1352"
+    },
+    {
+      "path": "scripts/learning-v2-mode-transition-checker.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11736,
+      "sha256": "096fa291147b1ff771eef21e77b7fe9ce9c7bfdd933ac233732cf2b22aa9c1b7"
+    },
+    {
+      "path": "scripts/learning-v2-mode.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 2789,
+      "sha256": "84c153eaba8f636424df3ca49872a348052773657188b2d452abb94c22c70946"
+    },
+    {
+      "path": "scripts/learning-v2-nav-discover-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8259,
+      "sha256": "f97696b8de249b55c92c075efbb2056151b829a09cf6b809a9231d9482f5f111"
+    },
+    {
+      "path": "scripts/learning-v2-nav-proposal-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5217,
+      "sha256": "549b7efa6f3d055ed0a5811a4e1dea04550a2775eab80c9fdbfb2518bf75c855"
+    },
+    {
+      "path": "scripts/learning-v2-new-file-creation-lifecycle-readiness-guard.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 14457,
+      "sha256": "3afcc271078da46e93bd812315e78c2fd89fecd72ab8a1b4150fd21759ba8560"
+    },
+    {
+      "path": "scripts/learning-v2-next-action-dry-run-handler.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7289,
+      "sha256": "f843fe287f1aaeb411cdc7cdeef4a31b476508656ac2914ad67d1c5630686664"
+    },
+    {
+      "path": "scripts/learning-v2-next-action.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6655,
+      "sha256": "d777f1f9ef3eb6ad815204a80706346fe570cd89e58d9e36a01a7fe841d9a4d5"
+    },
+    {
+      "path": "scripts/learning-v2-next-cycle-controller.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 121359,
+      "sha256": "def7d9ba0d2a3716ad4ab66d2b0ab215a0afe5f325517077151881cb654cd1f5"
+    },
+    {
+      "path": "scripts/learning-v2-next-loop-readiness-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 15973,
+      "sha256": "ad1b0898ef6a43b5a78d24575b0849e37025b17a3198ada4e766d2b01212b7ac"
+    },
+    {
+      "path": "scripts/learning-v2-next-target-family-selector.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11815,
+      "sha256": "9060c11c8c0ac26e0a0baf3aa3fdc0098aa4f56fb692c65d378346e487b58115"
+    },
+    {
+      "path": "scripts/learning-v2-next-target-selector-with-duplication-guard.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12230,
+      "sha256": "30dbc01ff763d4cb25354ddeee1b279a969c1f84831c987dab7608a753f479fb"
+    },
+    {
+      "path": "scripts/learning-v2-openclaw-blxst-bridge-dry-run.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 4369,
+      "sha256": "90e046e722d5a628b26a91443f190c43d310a5775713c15a71925f29b96c4b46"
+    },
+    {
+      "path": "scripts/learning-v2-opportunity-business-acceptance.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12780,
+      "sha256": "15a90d5ea81bff139417b27baf8e83088e371b311ef3af100102f176f2a7ad8b"
+    },
+    {
+      "path": "scripts/learning-v2-opportunity-business-only-commit-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9632,
+      "sha256": "9b17311e1566c9b7583a40b5407d01a27bed27d27bd52f4d979c94d7e45220a5"
+    },
+    {
+      "path": "scripts/learning-v2-opportunity-controlled-apply.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5206,
+      "sha256": "74ecf020b7f766616f3b670b8a19cb395df19d997604d16963182e56198461f2"
+    },
+    {
+      "path": "scripts/learning-v2-opportunity-controlled-change-plan.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11047,
+      "sha256": "b18105f161960381c26b99726e9f3e28a0202d1838839abea3e722a728acb9aa"
+    },
+    {
+      "path": "scripts/learning-v2-opportunity-evidence-hypothesis-builder.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11813,
+      "sha256": "a81a377886978b87d7d9c467aa5631313e4d4b2b1d4abc1c8d22fa2693e3ccfd"
+    },
+    {
+      "path": "scripts/learning-v2-opportunity-outcome-recorder.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13314,
+      "sha256": "a8f9be71dc179a1f5edcca0471d4b094b81df5dd5de589195af87c0161455cfe"
+    },
+    {
+      "path": "scripts/learning-v2-opportunity-post-apply-validator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7746,
+      "sha256": "34e76d8efb0e50e83363f84b8573b2f38325e1d574e82db45b2de7d94f20e181"
+    },
+    {
+      "path": "scripts/learning-v2-opportunity-proposal-builder.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 14978,
+      "sha256": "40403fa80fe9e94456c9d3b524a996248a6b5127c03b889ceaa0cc7e921f0c3d"
+    },
+    {
+      "path": "scripts/learning-v2-opportunity-validation-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10441,
+      "sha256": "48de4069142cc168c5535b7a44ae78ad7723e6cadf7d48582c5dcd3a799b487b"
+    },
+    {
+      "path": "scripts/learning-v2-outcome-recorder.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7255,
+      "sha256": "540952d706f469ad365e6dfd2a8c5e0228959e4a1d9fcc0d1b1b954500dda6c7"
+    },
+    {
+      "path": "scripts/learning-v2-package-planner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7553,
+      "sha256": "2df4c43d2aaa541773bf72f8dde22b6dc39f517e94d96dc55a44ac8f11cca0c3"
+    },
+    {
+      "path": "scripts/learning-v2-patch-preview-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8186,
+      "sha256": "353fe059bb83a4f28c59bee2690badd4347141c392b108641ee02acec371a21d"
+    },
+    {
+      "path": "scripts/learning-v2-pause-active-cycle.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 2867,
+      "sha256": "cb41d0a3e1d5e7de24fa4dccdadb913f5f57e6dc36fb1f556e4bfb65a7fbf4ec"
+    },
+    {
+      "path": "scripts/learning-v2-policy-lock-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9738,
+      "sha256": "4e7b5b89d95dbf03e9c38b89a879e8e5242dd958344e423dcbc56a110b11a5fa"
+    },
+    {
+      "path": "scripts/learning-v2-post-apply-validator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11086,
+      "sha256": "9a4061fe6ee0b8ea65474851e00536870f47026db4365ee007882618a4efd9cc"
+    },
+    {
+      "path": "scripts/learning-v2-pre-change-evidence-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10971,
+      "sha256": "c8dbcfcabca012eaa760c033abb38877df927a68fcd0007cdac65ec81fc08832"
+    },
+    {
+      "path": "scripts/learning-v2-pre-change-evidence-snapshot.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10877,
+      "sha256": "c95e9a45d88bc175b3cdb716ef8fac35055aa6940c8da3d6e417c71afaf5f40f"
+    },
+    {
+      "path": "scripts/learning-v2-production-route-iron-law-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 4368,
+      "sha256": "b8c48291c01897a3769060626565ccd3604e9b10d71023cce4d8fdae250183ed"
+    },
+    {
+      "path": "scripts/learning-v2-proposal-planning.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9736,
+      "sha256": "5d7f233f6226c742cce95537ab46c6313019db6484a5a073ae53be2634c004e9"
+    },
+    {
+      "path": "scripts/learning-v2-proposal-review-packet.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9725,
+      "sha256": "8222fe395c3e5bf9a5268287b42e2448e1a450adaac4cf17e4249d841cb0f1e3"
+    },
+    {
+      "path": "scripts/learning-v2-public-about-create-file-metadata-draft.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 18509,
+      "sha256": "010db9af8c8470d83de0cbaf5ecc1690eb7d860d2cceffb47137aaac54a66e27"
+    },
+    {
+      "path": "scripts/learning-v2-public-about-create-file-metadata-stage-promotion.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12609,
+      "sha256": "38db2a040ad3c74f0bb5863bb60994efa215eb014b0d06c9d0276f18a8d88c19"
+    },
+    {
+      "path": "scripts/learning-v2-push-approval-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9409,
+      "sha256": "d818580d696e0af14a1b25b214afcb5cd428b9eddde14998d591c469939330f3"
+    },
+    {
+      "path": "scripts/learning-v2-push-deploy-safety-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11513,
+      "sha256": "896f936783d2d32038b6afddbfd0df2aec08426f68303a966ef58b6e6fdc8bce"
+    },
+    {
+      "path": "scripts/learning-v2-registry-chain-readiness-matrix.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5435,
+      "sha256": "8546044c6673ed88b03aa9ac9348dff416ffbe6e84dbc3609d180b5c16a97cc0"
+    },
+    {
+      "path": "scripts/learning-v2-registry-controlled-apply-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 3753,
+      "sha256": "14b6b9c0df1920b95619bb6cd126925d5ca4ec67521a963b4e3b14cdfc6753be"
+    },
+    {
+      "path": "scripts/learning-v2-registry-update-apply-rehearsal.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6561,
+      "sha256": "5e9b9115a03a6942672119f4471361324d47bfa07cfb6ab02d2ae4c1fca289dd"
+    },
+    {
+      "path": "scripts/learning-v2-registry-update-explicit-apply-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6008,
+      "sha256": "5dc02723f25f69a1a12f95ad42f88610da492aaf42394b38633baca652ec9547"
+    },
+    {
+      "path": "scripts/learning-v2-registry-update-proposal-dry-run.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6853,
+      "sha256": "ae70dc718135f4392558cc912f3bafecb02f33f428d740917c6e8d4f46a8a77a"
+    },
+    {
+      "path": "scripts/learning-v2-registry-update-proposal-review-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6452,
+      "sha256": "b99995da1913c3ccb0dab46b82f2fc84622c36e8f8d9b38eea51866ef77bce88"
+    },
+    {
+      "path": "scripts/learning-v2-registry-update-rollback-rehearsal.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5023,
+      "sha256": "6f26c7e01cb66097b2ebfe62667a77e3180085419288e8e31004800f5335103c"
+    },
+    {
+      "path": "scripts/learning-v2-release-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13737,
+      "sha256": "846d8f6c207f61f28d30e3f5118bbd8022b3f01df7f81ce6983d57ad04dcedd3"
+    },
+    {
+      "path": "scripts/learning-v2-release-planner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8281,
+      "sha256": "73060ded53a171da5dcaef5645ced30829caddad92fd4f1308f052c16b2c1ff8"
+    },
+    {
+      "path": "scripts/learning-v2-report-dependency-cycle-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8323,
+      "sha256": "6a7cb55d320640e374f5455ae659fbac8faa71ccdd50170e3c6ac336d2b11dca"
+    },
+    {
+      "path": "scripts/learning-v2-required-gate-evidence-modules-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10341,
+      "sha256": "62f84058c892820f2855b39a7ad6b9616c2cd61960ccd6ff844468093df69102"
+    },
+    {
+      "path": "scripts/learning-v2-required-gate-evidence-modules.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13316,
+      "sha256": "ee507aa4619bc354807160930613604465a2ea4f2ff2424ce4b1b76cb499db5f"
+    },
+    {
+      "path": "scripts/learning-v2-research-candidate-activation-design.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9155,
+      "sha256": "5fd9b0a42ed0982d219ecbbc6e4e3f8f2539cc3b919f62d7b052cf175db5265f"
+    },
+    {
+      "path": "scripts/learning-v2-research-candidate-enrichment-packet-generator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13452,
+      "sha256": "7eff0defc0572751fe0fbc945ce1cb55f5d8c8dbc7faaf11c44962d553d24745"
+    },
+    {
+      "path": "scripts/learning-v2-research-candidate-enrichment-v1.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 16189,
+      "sha256": "e26b6e454ebc0ad0c9e79c1c959745538153dabd9b78b8e33474d4db95b885ce"
+    },
+    {
+      "path": "scripts/learning-v2-research-candidate-novelty-guard.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9818,
+      "sha256": "883dcfcd71d95a80ba313c7882e9229bc666431956c5a444bf3e017b18decd11"
+    },
+    {
+      "path": "scripts/learning-v2-research-candidate-relevance-triage.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9134,
+      "sha256": "397fd920417e4dad3b966c1bddc332d9642ce4b51f282e00cab6de64ae69d56c"
+    },
+    {
+      "path": "scripts/learning-v2-research-derived-manual-review-finalizer.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9224,
+      "sha256": "31b3fe982acca84ba7f5694f58467a948441c4b76f7c371efb06c5350ec9486e"
+    },
+    {
+      "path": "scripts/learning-v2-research-derived-probe-resolver.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9070,
+      "sha256": "0ddb65daa88c20b2b0c3ecd09723ee30167c65ad55f1c14046935bb909b7de03"
+    },
+    {
+      "path": "scripts/learning-v2-research-derived-probe-scaffold-generator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 14073,
+      "sha256": "efc309211691fce6dfaddb3edc8ec2772bedb4648ac99849328e60e9bdff06af"
+    },
+    {
+      "path": "scripts/learning-v2-research-derived-selected-candidate-activator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9016,
+      "sha256": "ff624d02c8fd50eabe8d6019321b80520cb221a68d0794d25e6cdab6aaa08330"
+    },
+    {
+      "path": "scripts/learning-v2-research-enriched-candidate-intake.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12825,
+      "sha256": "5ce42fa85402947664c63514702a642ce6c9fb658627dc1d5343325c0a62e6f8"
+    },
+    {
+      "path": "scripts/learning-v2-research-enriched-candidate-revalidator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12671,
+      "sha256": "d00a3d68c8e4880b41b09ecd27e561e643b2e96da67c753a8a5e32a9331954ef"
+    },
+    {
+      "path": "scripts/learning-v2-research-evidence-reinforcement-archive.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9949,
+      "sha256": "af30e30e306195658cfc1f646f0452a370978e580b86472f3941b29dd61f70fd"
+    },
+    {
+      "path": "scripts/learning-v2-research-incremental-real-pattern-extractor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10323,
+      "sha256": "56e5869ea4453daa4efa9570d7636279c06d5862b033e0dbd09ca6802e3d238b"
+    },
+    {
+      "path": "scripts/learning-v2-research-incremental-real-source-digester.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8974,
+      "sha256": "31704e0a2499b2eaf80753d972b91fd3909e7977c34b5f25929e434511437e23"
+    },
+    {
+      "path": "scripts/learning-v2-research-ingestor-design.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10580,
+      "sha256": "f8f1cb4af3da556f5ca37de0d9ff2016fa6078dbd260c2f02de7fc7ba5a8e91e"
+    },
+    {
+      "path": "scripts/learning-v2-research-loop-status.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8141,
+      "sha256": "13ad5c21f71c6f0af1430d3526d22daf600ba3efb071a5570d6d8b3a2c190e2e"
+    },
+    {
+      "path": "scripts/learning-v2-research-manual-collection-packet-generator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12969,
+      "sha256": "e7d8c451a674e7800025b1d14a9c3214b6931ea7a2b8200a8c1cc8f0217162c3"
+    },
+    {
+      "path": "scripts/learning-v2-research-manual-source-ingestor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11318,
+      "sha256": "3dfcea0588e7b36c907160f9cee209f99f5e27d3fe775f8d2ae3facbe35f8179"
+    },
+    {
+      "path": "scripts/learning-v2-research-pattern-extractor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10168,
+      "sha256": "cece160a1c7a8907550e5bc32df805643d591b082f9a273054e3c0127844fcfb"
+    },
+    {
+      "path": "scripts/learning-v2-research-query-planner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12324,
+      "sha256": "131c1920cdf6591b8c270aff2e0554632a74fb9d4377c1a806786aaf085556ac"
+    },
+    {
+      "path": "scripts/learning-v2-research-real-coverage-planner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10757,
+      "sha256": "472bcd765b33165863bff119e1e3ee19b76653ce1157c4370bb5938369fb99bf"
+    },
+    {
+      "path": "scripts/learning-v2-research-real-digest-pattern-gap-planner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7155,
+      "sha256": "700a4468df3368aeabdfc1b28b05e81613b564fdd973d777060549418c60034d"
+    },
+    {
+      "path": "scripts/learning-v2-research-real-pipeline-readiness.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10316,
+      "sha256": "775b7ebe23710488cd40ee8cf7c51d72931a2c4ea8c5d8099d33ab1a0c2b0d4c"
+    },
+    {
+      "path": "scripts/learning-v2-research-real-source-collection-batch-planner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11631,
+      "sha256": "1bfb8744f8844bd262126342955edc79b5c27161d1ac3f70b4728d2ecbb78511"
+    },
+    {
+      "path": "scripts/learning-v2-research-real-source-digest-gap-planner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6056,
+      "sha256": "08a15bb450eb043cd98437647b6d482c90e6d6309eae0fb6e8fc2fdf4f814503"
+    },
+    {
+      "path": "scripts/learning-v2-research-real-source-intake.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12299,
+      "sha256": "d70eb000494e795e23c00b958938545e7755347ecc9afd9480de673b86f4517a"
+    },
+    {
+      "path": "scripts/learning-v2-research-real-target-family-candidate-builder.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11128,
+      "sha256": "9b823c0909fab4fe2aa9b61ef421587eca43a2ef5248e4770dc6647a31a720e3"
+    },
+    {
+      "path": "scripts/learning-v2-research-source-collection-executor-design.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8843,
+      "sha256": "fc9a32fcc0d00c532c2a54f1e431d742f800e0e1a52ac09c124b0b97c64b78d2"
+    },
+    {
+      "path": "scripts/learning-v2-research-source-digester.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8487,
+      "sha256": "3a952f49f3c18e878d1d18b420978e68c686dd6453235234c006732d7ba5706a"
+    },
+    {
+      "path": "scripts/learning-v2-research-source-planner.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 15519,
+      "sha256": "ab8fca9f514efc0ce7bb29066f472090fced5b430a49dd3f536a0b86880f2f68"
+    },
+    {
+      "path": "scripts/learning-v2-research-target-family-candidate-builder.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10086,
+      "sha256": "c6d83fdafc75a1a7f0e65effd45f1115235cb7be0d31e31d799e6f337ef15c23"
+    },
+    {
+      "path": "scripts/learning-v2-research-test-artifact-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5862,
+      "sha256": "7db3cf330446b81060c7f37f27dbe23be834ddc4a1095f150eee42e853f762e2"
+    },
+    {
+      "path": "scripts/learning-v2-research-test-mode-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 3097,
+      "sha256": "b081d0ce44dd82d7246090bb2976becadc5cd58c9684bb9c5dacaf5b7a244205"
+    },
+    {
+      "path": "scripts/learning-v2-research-web-candidate-discovery-design.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9993,
+      "sha256": "f1b386802d43a44ae3542bdf264e9cfb4b8748c25a4e34a8a7bf6be220c6e588"
+    },
+    {
+      "path": "scripts/learning-v2-research-web-candidate-discovery-v1.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 17169,
+      "sha256": "dc1e50b396563a3308ffaabbc8eaa7aa46a0e90c2b8150f4a4c35cc5a00a2533"
+    },
+    {
+      "path": "scripts/learning-v2-research-web-candidate-discovery.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9521,
+      "sha256": "0e102486dbe15489a3a80b8b2fdac5374b3ba7ee86c15a0e46fccd676b2667bb"
+    },
+    {
+      "path": "scripts/learning-v2-research-web-discovery-queue-builder.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10515,
+      "sha256": "5c4abb9a31245bfa8da6733876f71a0e5947bd8ad92e0fc14f3c47a193f9c8b1"
+    },
+    {
+      "path": "scripts/learning-v2-research-web-source-candidate-intake.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11954,
+      "sha256": "b8b2fe0120af25fdc47e6e1cc6f5f968bd964437a7ee401a9cdabfb2d3e5e987"
+    },
+    {
+      "path": "scripts/learning-v2-research-web-source-candidate-validator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12620,
+      "sha256": "0bbcadfc6e71f02b18db0b71f9badb145866b2258e9d2a7ce68820f2b9c0a5d8"
+    },
+    {
+      "path": "scripts/learning-v2-resource-classifier.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8927,
+      "sha256": "4d02c7665b54f710f42830cae3238f23e4abf5e50e1281dd67326b8337f77c41"
+    },
+    {
+      "path": "scripts/learning-v2-review-inbox-report.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 1997,
+      "sha256": "6f66c57b40e6064a5c9cab78fd8735867068b51149171b7ff262ea380240eb70"
+    },
+    {
+      "path": "scripts/learning-v2-review-inbox.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 1482,
+      "sha256": "dd0f2b96a251a4a2e26137cbc2cf5df5560ad8b7102c42905c5a4332a14fed0f"
+    },
+    {
+      "path": "scripts/learning-v2-review-outcome-aggregator.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7351,
+      "sha256": "611e03abc6142742f35b42d43d0c60cbca87ae4686f9718ff3e66f6a3d99e30b"
+    },
+    {
+      "path": "scripts/learning-v2-review-outcome-recorder.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6896,
+      "sha256": "b7033d941372a804b38b63b8bf3c9ceb1a5152b62801093a72a4bbb075370e96"
+    },
+    {
+      "path": "scripts/learning-v2-runtime-entrypoint-dry-run.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5035,
+      "sha256": "d2960d942bf4d00e0924c2dd1861c56c67b69f645aa89bfb1a9a3d278ea0a42f"
+    },
+    {
+      "path": "scripts/learning-v2-runtime-intake-envelope-dry-run.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6166,
+      "sha256": "c0020d774fcbeb1b02d0dd401181d599b0956a8d69a6412c9208f3084bbb897e"
+    },
+    {
+      "path": "scripts/learning-v2-runtime-intake-smoke.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 4291,
+      "sha256": "25491472bddbba22d2a12a05047af1c26f36075fc1713dedaff5f1480f33288a"
+    },
+    {
+      "path": "scripts/learning-v2-simplicity-audit.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5115,
+      "sha256": "7f221ad3d2a9473063e85e5e855238a394e4786881f2c7ad528808cc755f5fc4"
+    },
+    {
+      "path": "scripts/learning-v2-source-change-gate-open-policy.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10021,
+      "sha256": "958f65a47040d08cc88b8e9c98574a70e10f0ef229461fa07ce6e63356de026b"
+    },
+    {
+      "path": "scripts/learning-v2-source-change-gate-open-request-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8781,
+      "sha256": "845f55ecdc18a8070f35a31a152ffb8f518175de043d90e80d06cc6101d9a1d0"
+    },
+    {
+      "path": "scripts/learning-v2-source-change-gate-open-request.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9162,
+      "sha256": "bd95df4caa6f647b14894d6e74ac474f1d237cbd26c713c6a96a07e279468f29"
+    },
+    {
+      "path": "scripts/learning-v2-source-change-gate-opener-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9123,
+      "sha256": "785400421acb0a46a22d64e9ea4eac37f039804ed1160344e4305fad836a43d3"
+    },
+    {
+      "path": "scripts/learning-v2-source-change-gate-opener.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8512,
+      "sha256": "aa5acef23cb3b65462b9aade557f6bf58f1a357492fe1ffe7b397cffbfd4ae3d"
+    },
+    {
+      "path": "scripts/learning-v2-source-change-gate-readiness.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 9080,
+      "sha256": "9b51122a644e852389121ce3c5fa4676e7931124e54e2ae5c990bad2dd50e852"
+    },
+    {
+      "path": "scripts/learning-v2-source-change-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7409,
+      "sha256": "14b80c6a607913530d934219909791717f9098fe6da1a1db6a4d30b92b1e7be2"
+    },
+    {
+      "path": "scripts/learning-v2-source-change-guard-chain-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10669,
+      "sha256": "e76f8ef1e645b8b55efd3f4a3688af3dba47e6391bc572ac4c1df6504bd5f46a"
+    },
+    {
+      "path": "scripts/learning-v2-source-change-plan-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8701,
+      "sha256": "1893f1e265f792c8a457f7b0da41befd96a5093ad2fac7f10785ae8cd60edeef"
+    },
+    {
+      "path": "scripts/learning-v2-source-change-plan-dry-run.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 13430,
+      "sha256": "5b3e0dcf659cb97e466b4ff3ef67ab505523bfd14c260f79443c1e6bd0e3ddf9"
+    },
+    {
+      "path": "scripts/learning-v2-source-change-review-packet-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8102,
+      "sha256": "8af03056d2183d002bf30b2549e17646768b552a0741aba026d47df8ff6c179f"
+    },
+    {
+      "path": "scripts/learning-v2-source-change-review-packet.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 6709,
+      "sha256": "6fb3d4743c087f2ab4eafb796a13fdd4f88105c40bcab1b2cd060b944ab7ef39"
+    },
+    {
+      "path": "scripts/learning-v2-staging-guard.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7775,
+      "sha256": "750a5c04fc10dce6717676f94eb528e1bc730262b56c97b680e9ad89b4241890"
+    },
+    {
+      "path": "scripts/learning-v2-system-baseline.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10644,
+      "sha256": "5a13d21965317fb0ff069462809b404e9d92cb86941071c200c4e07bb1455955"
+    },
+    {
+      "path": "scripts/learning-v2-system-drift-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10037,
+      "sha256": "bf8ff3985b2119d54ac1a0b006ac6fb91ffe9bbad5a7e3387813a131a1b20c33"
+    },
+    {
+      "path": "scripts/learning-v2-system-integrity.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7632,
+      "sha256": "6b263ab863561054989c4c0bfc0f188dec5a7f5420e9db03aa2c734cd61fa370"
+    },
+    {
+      "path": "scripts/learning-v2-system-manifest.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7794,
+      "sha256": "799d0131aaa682cb37ff4fb7e725018cf0eefa1aeb03d7352cec1bb7b041544b"
+    },
+    {
+      "path": "scripts/learning-v2-system-only-commit-gate.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 10657,
+      "sha256": "086c73606d85ca331162ee735332ecb7de8c7ed3aa65754417d6a72c992e8e9a"
+    },
+    {
+      "path": "scripts/learning-v2-system-preflight.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 8293,
+      "sha256": "9f41c74e00634ac4b460eae21ccc0d22ea78d9999820b9612f502f1b2e6f8f41"
+    },
+    {
+      "path": "scripts/learning-v2-tamper-guard.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 12124,
+      "sha256": "e168af782e4b0a46f87a5853efe3d50c356ed9341dede6134c8142a33551065f"
+    },
+    {
+      "path": "scripts/learning-v2-target-family-registry-auditor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5543,
+      "sha256": "b5359e03c670f54a2a7dde7417e958b26c9e45dbcd903c6594f4ec581a185052"
+    },
+    {
+      "path": "scripts/learning-v2-topic-selector-probe.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5412,
+      "sha256": "398eeb21a5d8baa732900f80e6e28921eae04e8d1a981300f79c473e25d3d5ef"
+    },
+    {
+      "path": "scripts/learning-v2-topic-selector.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 17125,
+      "sha256": "cadba26d9e2c6bdaa333a1f17e71fa16349f29834b65efd76c4585d85d350d19"
+    },
+    {
+      "path": "scripts/learning-v2-track-complete-finalizer.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 5659,
+      "sha256": "cc8e7595ba111985ecc0f9e2eab7049f7955176bb0df35de39bed64b69ebbb81"
+    },
+    {
+      "path": "scripts/learning-v2-validate-blocked-resolver.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 7205,
+      "sha256": "8733901e29662adea19a964cee1bf053d6e670f399c34bbda4a5e9899bebeb2f"
+    },
+    {
+      "path": "scripts/learning-v2-validate-executor.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 14203,
+      "sha256": "33d599d6245a7634e09fb81c129addea60ab4bd866d2c0eb06ffa9063a663e28"
+    },
+    {
+      "path": "scripts/learning-v2-visual-evidence-capture-validation.py",
+      "role": "learning_v2_script",
+      "exists": true,
+      "is_file": true,
+      "size": 11549,
+      "sha256": "a980109f5f44b24906ffdc31c3dc56471103b7575a12fec13165234050957ee7"
+    },
+    {
+      "path": "learning-v2/RUNBOOK.md",
+      "role": "runbook",
+      "exists": true,
+      "is_file": true,
+      "size": 13420,
+      "sha256": "d44fda5814ea4cac59e81f648a9441b2f00c5db823a8e2c2b668798bac1ed4d7"
+    },
+    {
+      "path": "learning-v2/CONSTITUTION.md",
+      "role": "constitution",
+      "exists": true,
+      "is_file": true,
+      "size": 645,
+      "sha256": "75656d089eca54ec29120f9e49376d302355aaedd988a882321e0dc13663057d"
+    },
+    {
+      "path": "learning-v2/target-family-registry.json",
+      "role": "target_family_registry",
+      "exists": true,
+      "is_file": true,
+      "size": 1801,
+      "sha256": "df4512f4ed29c0018bd8661c98cc0a6ca621433a060c0b7ffa7e3329e1bbc6f9"
+    },
+    {
+      "path": "learning-v2/mode-policy.json",
+      "role": "mode_policy",
+      "exists": true,
+      "is_file": true,
+      "size": 4432,
+      "sha256": "0e8bd66923990f35a97461e75261019dfaf7570e65ac58fe7ab4610f408ba642"
+    },
+    {
+      "path": ".git/hooks/pre-commit",
+      "role": "local_git_guard",
+      "exists": true,
+      "is_file": true,
+      "size": 5253,
+      "sha256": "37d93f4f1d2e03a9d46f3535447a10356a437e89784cba5785ef5238783a68b3"
+    },
+    {
+      "path": ".git/hooks/pre-push",
+      "role": "local_git_guard",
+      "exists": true,
+      "is_file": true,
+      "size": 625,
+      "sha256": "e048a53f96320ee44f5b50cdcbd812ad15dbbe0f8ffc1068d209faf9e41a98ab"
+    }
+  ],
+  "latest_reports": {
+    "system_preflight": "/root/.openclaw/workspace/learning-v2/reports/system-preflight-20260529-185245.json",
+    "release_gate": "/root/.openclaw/workspace/learning-v2/reports/release-gate-20260529-185245.json",
+    "commit_plan_json": "/root/.openclaw/workspace/learning-v2/snapshots/learning-v2-commit-plan-20260529-185238.json",
+    "commit_plan_md": "/root/.openclaw/workspace/learning-v2/snapshots/learning-v2-commit-plan-20260529-185238.md",
+    "commit_plan_audit": "/root/.openclaw/workspace/learning-v2/snapshots/learning-v2-commit-plan-audit-20260529-185238.json",
+    "local_git_guard_audit": "/root/.openclaw/workspace/learning-v2/reports/local-git-guard-audit-20260529-185238.json",
+    "dirty_freeze": "/root/.openclaw/workspace/learning-v2/freezes/dirty-freeze-opportunity-outcome-complete-20260510-065415.json",
+    "system_manifest": null,
+    "package_plan": null
+  },
+  "policy": {
+    "no_website_source_changes": true,
+    "no_git_add": true,
+    "no_git_commit": true,
+    "no_git_push": true,
+    "no_deploy": true,
+    "baseline_is_observational_only": true
+  }
+}
