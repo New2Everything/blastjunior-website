@@ -9,6 +9,7 @@ ORIGIN_POLICY = WORKSPACE / "projects" / "BLXST-runtime-origin-policy.json"
 ENTRYPOINT = WORKSPACE / "scripts" / "learning-v2-runtime-entrypoint-dry-run.py"
 CONTROLLED_SMOKE = WORKSPACE / "scripts" / "learning-v2-controlled-apply-readiness-smoke.py"
 INTAKE_SMOKE = WORKSPACE / "scripts" / "learning-v2-runtime-intake-smoke.py"
+ROUTER_SMOKE = WORKSPACE / "scripts" / "learning-v2-runtime-intake-router-smoke.py"
 REPORT_DIR = WORKSPACE / "learning-v2" / "reports"
 SNAPSHOT_DIR = WORKSPACE / "learning-v2" / "snapshots"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -57,6 +58,7 @@ def main():
         add("exists:" + p.name, p.exists(), str(p))
     add("runtime_origin_policy_exists", ORIGIN_POLICY.exists(), str(ORIGIN_POLICY))
     add("exists:" + INTAKE_SMOKE.name, INTAKE_SMOKE.exists(), str(INTAKE_SMOKE))
+    add("exists:" + ROUTER_SMOKE.name, ROUTER_SMOKE.exists(), str(ROUTER_SMOKE))
 
     rc1, report1, out1, err1 = run([
         "python3", str(ENTRYPOINT),
@@ -78,6 +80,9 @@ def main():
 
     rc4, report4, out4, err4 = run(["python3", str(INTAKE_SMOKE)])
     add("runtime_intake_smoke", rc4 == 0 and bool(report4), report4 or "missing_report")
+
+    rc5, report5, out5, err5 = run(["python3", str(ROUTER_SMOKE)])
+    add("runtime_intake_router_smoke", rc5 == 0 and bool(report5), report5 or "missing_report")
 
     runtime_dry_run_ready = not failures
     controlled_apply_guard_ready = rc3 == 0 and bool(report3)

@@ -387,6 +387,20 @@ It must not mutate registry files, website source, D1, R2, KV, Workers, Cloudfla
 User-submitted content is evidence of submission, not automatic publication approval.
 
 
+
+## Runtime Intake Router Step
+
+After Runtime Intake Envelope, Learning V2 may route the intake envelope to the next dry-run proposal family:
+
+`python3 scripts/learning-v2-runtime-intake-router-dry-run.py --origin <authorized_context> --text "<content>"`
+
+The router maps policy-driven content family candidates to proposal routes such as structured data/event page proposal, media staging proposal, source copy proposal, registry update proposal, or review gate.
+
+It must not mutate registry files, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+Routes are non-exhaustive and policy-driven.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

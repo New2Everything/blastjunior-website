@@ -1,0 +1,62 @@
+{
+  "policy_id": "blxst-runtime-intake-router-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "production_mutation_default": false,
+  "purpose": "Route runtime intake envelopes to the next dry-run proposal family without mutating production resources.",
+  "route_priority_non_exhaustive": [
+    "resource_structure_request",
+    "media_asset",
+    "homepage_copy",
+    "match_record",
+    "event_page_request",
+    "unknown_content"
+  ],
+  "routes_non_exhaustive": {
+    "match_record": {
+      "selected_route": "structured_data_or_event_page_proposal_dry_run",
+      "allowed_effect": "proposal_only",
+      "requires_review_before_apply": true
+    },
+    "event_page_request": {
+      "selected_route": "event_page_proposal_dry_run",
+      "allowed_effect": "proposal_only",
+      "requires_review_before_apply": true
+    },
+    "media_asset": {
+      "selected_route": "media_asset_staging_proposal_dry_run",
+      "allowed_effect": "proposal_only",
+      "requires_review_before_apply": true
+    },
+    "homepage_copy": {
+      "selected_route": "source_copy_change_proposal_dry_run",
+      "allowed_effect": "proposal_only",
+      "requires_review_before_apply": true
+    },
+    "resource_structure_request": {
+      "selected_route": "registry_update_proposal_dry_run",
+      "allowed_effect": "proposal_only",
+      "requires_review_before_apply": true
+    },
+    "unknown_content": {
+      "selected_route": "review_gate_dry_run",
+      "allowed_effect": "review_only",
+      "requires_review_before_apply": true
+    }
+  },
+  "hard_rules": [
+    "Routing is proposal-only and must not mutate production resources.",
+    "Route families are non-exhaustive and policy-driven.",
+    "Unknown content must route to review gate.",
+    "User-submitted content remains review_required until a later review gate.",
+    "Production mutation and production deploy remain disabled."
+  ],
+  "priority_notes_non_exhaustive": [
+    "When user text contains a concrete asset/copy operation plus generic event context (for example photos placed into an HPL match page), route by the concrete operation before generic match_record. This is policy guidance, not script hardcoding.",
+    "Explicit resource/schema requests route before content operations.",
+    "Concrete media or homepage-copy operations route before generic match/event context.",
+    "Score/result/standing-oriented match records route before generic event-page requests.",
+    "Priority is policy guidance, not script hardcoding; future content families should be added through policy."
+  ]
+}
