@@ -293,6 +293,24 @@ This rehearsal drafts an apply manifest, validation plan, and rollback/recovery 
 A successful apply rehearsal allows only a later explicit apply gate, not real apply.
 
 
+
+## Registry Explicit Apply Gate and Rollback Rehearsal Step
+
+After Registry Update Apply Rehearsal, Learning V2 may run explicit apply gate dry-run and rollback rehearsal.
+
+Scripts:
+
+`python3 scripts/learning-v2-registry-update-explicit-apply-gate.py`
+
+`python3 scripts/learning-v2-registry-update-rollback-rehearsal.py`
+
+`python3 scripts/learning-v2-registry-chain-readiness-matrix.py`
+
+These scripts may declare readiness for a later controlled apply context, but must not write registry files or mutate website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+A ready matrix does not allow real apply now.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

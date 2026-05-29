@@ -1,0 +1,31 @@
+{
+  "policy_id": "blxst-registry-explicit-apply-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "not_real_apply": true,
+  "purpose": "Define the final dry-run gate before any real registry update, plus rollback/recovery rehearsal requirements.",
+  "explicit_apply_gate_requirements_non_exhaustive": [
+    "apply_rehearsal_status_ready",
+    "draft_apply_manifest_present",
+    "validation_plan_present",
+    "rollback_or_recovery_note_present",
+    "system_integrity_ok_before_apply",
+    "no_uncommitted_changes",
+    "real_apply_still_disabled"
+  ],
+  "rollback_rehearsal_requirements_non_exhaustive": [
+    "identify_files_or_rules_that_would_change",
+    "draft_restore_strategy",
+    "draft_validation_after_rollback",
+    "do_not_execute_rollback_now",
+    "do_not_write_registry_now"
+  ],
+  "hard_rules": [
+    "Explicit apply gate is dry-run only in this phase.",
+    "This phase must not write registry files.",
+    "This phase must not mutate website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.",
+    "Ready means ready for a later explicit real-apply phase, not real apply now.",
+    "Real apply requires separate human-approved or authorized controlled apply context."
+  ]
+}
