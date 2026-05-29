@@ -1,0 +1,29 @@
+{
+  "policy_id": "blxst-content-controlled-apply-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "real_apply_default": false,
+  "purpose": "Define the controlled context and disabled executor skeleton for future content writes to D1, R2, website source, or related resources.",
+  "controlled_content_apply_context_requirements_non_exhaustive": [
+    "source_content_apply_rehearsal_ready",
+    "system_integrity_ok",
+    "worktree_clean",
+    "authorized_context_present",
+    "apply_scope_declared",
+    "target_family_declared",
+    "rollback_or_recovery_note_present",
+    "provenance_ref_present",
+    "real_apply_enabled_explicitly_true_in_future_phase"
+  ],
+  "allowed_apply_scopes_non_exhaustive": [
+    "content_d1_r2_source"
+  ],
+  "hard_rules": [
+    "Real content apply is disabled by default.",
+    "No script may infer permission from a ready content rehearsal alone.",
+    "A controlled content apply context must be explicit and machine-readable.",
+    "The executor skeleton must refuse to write unless a later real-apply phase explicitly enables it.",
+    "This phase installs gate and skeleton only; it must not write D1, R2, source, registry, Cloudflare, git, or deploy."
+  ]
+}

@@ -431,6 +431,24 @@ These scripts must not mutate registry files, website source, D1, R2, KV, Worker
 A ready rehearsal does not allow real apply or production deploy.
 
 
+
+## Content Controlled Apply Context Gate and Disabled Executor Step
+
+After Content Apply Rehearsal, Learning V2 may run content controlled apply context gate and disabled executor skeleton:
+
+`python3 scripts/learning-v2-content-controlled-apply-context-gate.py`
+
+`python3 scripts/learning-v2-content-controlled-apply-executor.py`
+
+`python3 scripts/learning-v2-content-controlled-apply-readiness-smoke.py`
+
+The context gate validates explicit controlled content apply context. The executor skeleton is disabled in this phase and must refuse real apply.
+
+These scripts must not mutate registry files, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+A passing readiness smoke means the future content apply path is guarded, not that real apply is allowed now.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:
