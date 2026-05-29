@@ -189,6 +189,20 @@ The gate plan must remain policy-driven and registry-driven. Seed hints are not 
 Unknown/new resources must result in `registry_update_required` or `review_required` before later stages.
 
 
+
+## Autonomous Path Rehearsal Step
+
+Before claiming Learning V2 can run without human repair, the system must pass autonomous path rehearsal.
+
+Rehearsal script:
+
+`python3 scripts/learning-v2-autonomous-path-rehearsal.py`
+
+This rehearsal verifies that representative authorized, unknown-resource, ordinary, and controlled-deploy-phase tasks can reach a machine-readable gate plan or safe-stop state without mutating website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+Passing this rehearsal proves the autonomous planning path, not production mutation. Real D1/R2/Worker writes, autonomous source writes, controlled deploy, rollback, and production recovery require separate later rehearsals.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:
