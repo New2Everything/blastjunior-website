@@ -203,6 +203,22 @@ This rehearsal verifies that representative authorized, unknown-resource, ordina
 Passing this rehearsal proves the autonomous planning path, not production mutation. Real D1/R2/Worker writes, autonomous source writes, controlled deploy, rollback, and production recovery require separate later rehearsals.
 
 
+
+## Failure Context Resolver Step
+
+When any stage is blocked, review-required, no-auth, unknown-resource, or ambiguous, Learning V2 must produce a machine-readable failure context before asking for repair.
+
+Resolver:
+
+`python3 scripts/learning-v2-failure-context-resolver.py --latest gate_plan`
+
+The resolver must output resolved status, safe-stop status, whether continuation is allowed, next action families, and mutation safety flags.
+
+The resolver is diagnostic-only, not an auto-repair tool. It must not mutate website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+Status families are policy families and non-exhaustive. Unknown or future failure states must default to `safe_stop_failure_triage_required`, `triage_unknown_state`, and `do_not_mutate`.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

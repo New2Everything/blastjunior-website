@@ -1,0 +1,40 @@
+{
+  "contract_id": "blxst-failure-context-contract-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "purpose": "Normalize blocked, review-required, no-auth, unknown-resource, and unexpected states into machine-readable safe-stop and next-action guidance without human log interpretation.",
+  "core_law": [
+    "The resolver is diagnostic-only, not an auto-repair tool.",
+    "A blocked state must explain why it stopped.",
+    "A review-required state must identify what kind of review or registry/policy update is needed.",
+    "A no-auth state must stop before mutation.",
+    "Unknown resources must request registry/routing-rule update instead of being ignored.",
+    "Unknown or future failure states must default to safe_stop_failure_triage_required.",
+    "Failure handling must not mutate website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state."
+  ],
+  "status_families_non_exhaustive": {
+    "continue_allowed_next_dry_run": "Previous step is clean enough to proceed to the next dry-run stage only.",
+    "safe_stop_review_required": "Stop safely and request review before mutation.",
+    "safe_stop_registry_update_required": "Stop safely and update registry/routing rules before retry.",
+    "safe_stop_authorization_required": "Stop safely because authorized intent context is missing.",
+    "safe_stop_failure_triage_required": "Stop safely because hard failures, unsafe flags, or unknown/future failure states exist."
+  },
+  "next_action_families_non_exhaustive": {
+    "rerun_classifier": "Run resource classifier again after input, registry, or rules change.",
+    "rerun_gate_plan": "Run gate plan dry-run again after classifier or policy update.",
+    "update_resource_registry": "Update Cloudflare Resource Registry or routing rules.",
+    "run_review_gate": "Send task to review-required gate.",
+    "request_authorized_context": "Ask for /blxst or verify scheduled/autonomous/controlled-deploy context.",
+    "fix_failed_step": "Fix the reported failing step and rerun rehearsal.",
+    "triage_unknown_state": "Triage a future or unrecognized status before continuing.",
+    "do_not_mutate": "Do not write source/data/media/worker/deploy while unresolved."
+  },
+  "hard_rules": [
+    "Do not treat status families as exhaustive hardcoded truth.",
+    "Do not continue from unknown status by default.",
+    "Prefer safe stop over false confidence.",
+    "Resolver must not claim production readiness from planning-only success.",
+    "Real mutation, deploy, rollback, and recovery require separate rehearsals."
+  ]
+}
