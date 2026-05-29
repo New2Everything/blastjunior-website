@@ -279,6 +279,20 @@ The review gate may decide whether a registry update proposal is structurally re
 A ready review result allows only a future apply rehearsal, not production apply.
 
 
+
+## Registry Update Apply Rehearsal Step
+
+After Registry Update Proposal Review Gate returns `apply_rehearsal_allowed=true`, Learning V2 may run registry update apply rehearsal.
+
+Apply rehearsal:
+
+`python3 scripts/learning-v2-registry-update-apply-rehearsal.py`
+
+This rehearsal drafts an apply manifest, validation plan, and rollback/recovery note, but must not write registry files or mutate website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+A successful apply rehearsal allows only a later explicit apply gate, not real apply.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

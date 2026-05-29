@@ -1,0 +1,23 @@
+{
+  "policy_id": "blxst-registry-update-apply-rehearsal-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "not_real_apply": true,
+  "purpose": "Rehearse registry/routing/gate-policy update application after proposal review, without writing files or production resources.",
+  "apply_rehearsal_steps_non_exhaustive": [
+    "verify_review_gate_allowed_apply_rehearsal",
+    "verify_required_fields_are_named",
+    "draft_patch_manifest",
+    "draft_validation_plan",
+    "draft_rollback_or_recovery_note",
+    "block_real_apply"
+  ],
+  "hard_rules": [
+    "Apply rehearsal must not write registry files.",
+    "Apply rehearsal must not mutate website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.",
+    "Apply rehearsal only proves that a reviewed proposal can be transformed into an apply plan.",
+    "Real apply requires separate explicit apply gate and rollback rehearsal.",
+    "Unknown future proposal shapes must safe-stop into review or triage."
+  ]
+}
