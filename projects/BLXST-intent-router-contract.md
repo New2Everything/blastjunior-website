@@ -219,6 +219,22 @@ The resolver is diagnostic-only, not an auto-repair tool. It must not mutate web
 Status families are policy families and non-exhaustive. Unknown or future failure states must default to `safe_stop_failure_triage_required`, `triage_unknown_state`, and `do_not_mutate`.
 
 
+
+## Autonomous Next-Action Dispatcher Step
+
+After Failure Context Resolver, Learning V2 may run the autonomous next-action dispatcher.
+
+Dispatcher:
+
+`python3 scripts/learning-v2-autonomous-next-action-dispatcher.py`
+
+The dispatcher reads resolver output and `projects/BLXST-next-action-dispatcher-policy.json`, then recommends the next safe dry-run, review, registry update, authorization request, or triage action.
+
+The dispatcher is recommendation-only, not auto-repair. It must not mutate website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+Unknown next-action families must route to `triage_unknown_state` and `do_not_mutate`.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

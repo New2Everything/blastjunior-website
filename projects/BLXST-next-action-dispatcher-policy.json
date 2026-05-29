@@ -1,0 +1,66 @@
+{
+  "policy_id": "blxst-next-action-dispatcher-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "purpose": "Select the next safe dry-run or review action from Failure Context Resolver output without mutating source, data, media, workers, Cloudflare, git, or deployment state.",
+  "priority_order_non_exhaustive": [
+    "request_authorized_context",
+    "triage_unknown_state",
+    "fix_failed_step",
+    "update_resource_registry",
+    "run_review_gate",
+    "rerun_classifier",
+    "rerun_gate_plan",
+    "do_not_mutate"
+  ],
+  "next_action_families_non_exhaustive": {
+    "rerun_classifier": {
+      "action_type": "dry_run",
+      "recommended_command": "python3 scripts/learning-v2-resource-classifier.py --origin <authorized_context> --text <task_text>",
+      "meaning": "Re-run resource classification after input, registry, or routing-rule changes."
+    },
+    "rerun_gate_plan": {
+      "action_type": "dry_run",
+      "recommended_command": "python3 scripts/learning-v2-gate-plan-dry-run.py --origin <authorized_context> --text <task_text>",
+      "meaning": "Re-run gate planning after classifier or policy update."
+    },
+    "update_resource_registry": {
+      "action_type": "dry_run_or_review",
+      "recommended_command": "registry/routing-rule update dry-run required before mutation",
+      "meaning": "Update Cloudflare Resource Registry or routing rules before retry."
+    },
+    "run_review_gate": {
+      "action_type": "review",
+      "recommended_command": "review-required gate dry-run",
+      "meaning": "Send task to review-required gate before any mutation."
+    },
+    "request_authorized_context": {
+      "action_type": "authorization_request",
+      "recommended_command": "request /blxst or verify scheduled/autonomous/controlled-deploy context",
+      "meaning": "Stop until an authorized intent context exists."
+    },
+    "fix_failed_step": {
+      "action_type": "triage",
+      "recommended_command": "inspect failed report and rerun failing dry-run step",
+      "meaning": "Fix the reported failing step before continuing."
+    },
+    "triage_unknown_state": {
+      "action_type": "triage",
+      "recommended_command": "triage unknown or future state before continuing",
+      "meaning": "Unknown/future states must not continue automatically."
+    },
+    "do_not_mutate": {
+      "action_type": "safety_stop",
+      "recommended_command": "do not mutate source/data/media/worker/deploy",
+      "meaning": "Safety stop while unresolved."
+    }
+  },
+  "hard_rules": [
+    "Dispatcher is recommendation-only, not auto-repair.",
+    "Dispatcher must not execute mutation actions.",
+    "Unknown next_action_family must default to triage_unknown_state and do_not_mutate.",
+    "Priority order is policy guidance, not exhaustive hardcoded truth.",
+    "Real mutation, deploy, rollback, and production recovery require separate rehearsals."
+  ]
+}
