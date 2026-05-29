@@ -1,0 +1,32 @@
+{
+  "policy_id": "blxst-launch-readiness-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "production_mutation_default": false,
+  "purpose": "Summarize Learning V2 readiness for OpenClaw runtime use and identify remaining blockers before production mutation/deploy.",
+  "readiness_dimensions_non_exhaustive": [
+    "system_integrity",
+    "git_clean",
+    "runtime_entrypoint_exists",
+    "autonomous_e2e_orchestrator_ok",
+    "controlled_apply_readiness_smoke_ok",
+    "ordinary_task_safe_stop",
+    "unknown_resource_path_ready",
+    "production_mutation_still_disabled",
+    "deploy_still_disabled"
+  ],
+  "readiness_levels_non_exhaustive": {
+    "runtime_dry_run_ready": "OpenClaw can call Learning V2 dry-run entrypoint safely.",
+    "controlled_apply_guard_ready": "Future registry apply path is guarded but real apply remains disabled.",
+    "production_mutation_not_ready": "Real registry/D1/R2/Worker/source writes are not enabled.",
+    "production_deploy_not_ready": "Production deploy is not enabled by this readiness level."
+  },
+  "hard_rules": [
+    "Launch readiness auditor must not mutate anything.",
+    "Runtime entrypoint dry-run must not mutate anything.",
+    "Dry-run readiness is not production mutation readiness.",
+    "Production mutation/deploy requires separate controlled apply/deploy phases.",
+    "Unknown future paths must safe-stop into triage or review."
+  ]
+}

@@ -343,6 +343,22 @@ The context gate validates explicit controlled apply context. The executor skele
 A passing readiness smoke means the future apply path is guarded, not that real apply is allowed now.
 
 
+
+## Runtime Entrypoint and Launch Readiness Auditor Step
+
+OpenClaw may call Learning V2 through the runtime dry-run entrypoint:
+
+`python3 scripts/learning-v2-runtime-entrypoint-dry-run.py --origin <authorized_context> --text "<task text>"`
+
+Learning V2 may summarize launch readiness through:
+
+`python3 scripts/learning-v2-launch-readiness-auditor.py`
+
+These scripts provide a single dry-run runtime path and readiness summary. They must not mutate registry files, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+Runtime dry-run readiness does not mean production mutation or production deploy readiness.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:
