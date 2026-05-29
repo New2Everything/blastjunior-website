@@ -173,6 +173,22 @@ The policy registry may provide non-exhaustive seed hints, but exact behavior mu
 Unknown/new resources must route to `registry_update_required` and `review_required`.
 
 
+
+## Gate Plan Dry Run Step
+
+After resource classification and gate policy lookup, Learning V2 should produce a gate plan dry-run before any mutation.
+
+Gate plan dry-run:
+
+`python3 scripts/learning-v2-gate-plan-dry-run.py --origin <authorized_context> --text "<task text>"`
+
+The gate plan reads classifier output and the Gate Policy Registry, then recommends gate families without mutating website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+The gate plan must remain policy-driven and registry-driven. Seed hints are not complete truth.
+
+Unknown/new resources must result in `registry_update_required` or `review_required` before later stages.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:
