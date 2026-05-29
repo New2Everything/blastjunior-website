@@ -265,6 +265,20 @@ The proposal may identify candidate registry, routing-rule, or gate-policy updat
 Registry update apply requires a separate later rehearsal.
 
 
+
+## Registry Update Proposal Review Gate Step
+
+After Registry Update Proposal Dry-run, Learning V2 may run the registry update proposal review gate.
+
+Review gate:
+
+`python3 scripts/learning-v2-registry-update-proposal-review-gate.py`
+
+The review gate may decide whether a registry update proposal is structurally ready for a later apply rehearsal, but it must not approve real mutation or write registry files.
+
+A ready review result allows only a future apply rehearsal, not production apply.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

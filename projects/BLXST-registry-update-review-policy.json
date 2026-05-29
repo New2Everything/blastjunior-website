@@ -1,0 +1,34 @@
+{
+  "policy_id": "blxst-registry-update-review-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "not_auto_approve": true,
+  "purpose": "Review registry update proposals before any apply rehearsal, without writing registry or production resources.",
+  "review_dimensions_non_exhaustive": [
+    "proposal_status",
+    "required_fields_present",
+    "source_evidence_or_user_submission_ref",
+    "authorized_intent_context",
+    "resource_type",
+    "operation_intent",
+    "risk_level",
+    "provenance_requirement",
+    "rollback_or_recovery_note",
+    "review_status",
+    "mutation_safety_flags"
+  ],
+  "review_results_non_exhaustive": {
+    "proposal_review_ready": "Proposal is structurally ready for later apply rehearsal, but not approved for mutation.",
+    "proposal_review_blocked": "Proposal is missing required context or has blockers.",
+    "proposal_review_not_applicable": "Input is not a registry update proposal.",
+    "proposal_review_triage_required": "Unknown/future proposal shape requires triage."
+  },
+  "hard_rules": [
+    "Review gate must not apply registry updates.",
+    "Review gate must not approve production mutation.",
+    "Review gate must not mutate website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.",
+    "Unknown proposal shapes must safe-stop into triage.",
+    "A ready review result only allows a later apply rehearsal, not real apply."
+  ]
+}
