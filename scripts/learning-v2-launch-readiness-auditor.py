@@ -14,6 +14,7 @@ PROPOSAL_SMOKE = WORKSPACE / "scripts" / "learning-v2-content-proposal-factory-s
 CONTENT_REVIEW_APPLY_SMOKE = WORKSPACE / "scripts" / "learning-v2-content-review-apply-smoke.py"
 CONTENT_CONTROLLED_APPLY_SMOKE = WORKSPACE / "scripts" / "learning-v2-content-controlled-apply-readiness-smoke.py"
 CONTENT_RUNTIME_E2E_SMOKE = WORKSPACE / "scripts" / "learning-v2-content-runtime-e2e-smoke.py"
+UNIFIED_RUNTIME_E2E_SMOKE = WORKSPACE / "scripts" / "learning-v2-unified-runtime-e2e-smoke.py"
 REPORT_DIR = WORKSPACE / "learning-v2" / "reports"
 SNAPSHOT_DIR = WORKSPACE / "learning-v2" / "snapshots"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -67,6 +68,7 @@ def main():
     add("exists:" + CONTENT_REVIEW_APPLY_SMOKE.name, CONTENT_REVIEW_APPLY_SMOKE.exists(), str(CONTENT_REVIEW_APPLY_SMOKE))
     add("exists:" + CONTENT_CONTROLLED_APPLY_SMOKE.name, CONTENT_CONTROLLED_APPLY_SMOKE.exists(), str(CONTENT_CONTROLLED_APPLY_SMOKE))
     add("exists:" + CONTENT_RUNTIME_E2E_SMOKE.name, CONTENT_RUNTIME_E2E_SMOKE.exists(), str(CONTENT_RUNTIME_E2E_SMOKE))
+    add("exists:" + UNIFIED_RUNTIME_E2E_SMOKE.name, UNIFIED_RUNTIME_E2E_SMOKE.exists(), str(UNIFIED_RUNTIME_E2E_SMOKE))
 
     rc1, report1, out1, err1 = run([
         "python3", str(ENTRYPOINT),
@@ -103,6 +105,9 @@ def main():
 
     rc9, report9, out9, err9 = run(["python3", str(CONTENT_RUNTIME_E2E_SMOKE)])
     add("content_runtime_e2e_smoke", rc9 == 0 and bool(report9), report9 or "missing_report")
+
+    rc10, report10, out10, err10 = run(["python3", str(UNIFIED_RUNTIME_E2E_SMOKE)])
+    add("unified_runtime_e2e_smoke", rc10 == 0 and bool(report10), report10 or "missing_report")
 
     runtime_dry_run_ready = not failures
     controlled_apply_guard_ready = rc3 == 0 and bool(report3)

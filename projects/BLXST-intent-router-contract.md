@@ -463,6 +463,20 @@ It must not mutate registry files, website source, D1, R2, KV, Workers, Cloudfla
 A guarded E2E result means the future controlled content apply path is protected, not that real apply or production deploy is allowed now.
 
 
+
+## Unified Runtime E2E Orchestrator Step
+
+Learning V2 may run the unified runtime E2E dry-run orchestrator:
+
+`python3 scripts/learning-v2-unified-runtime-e2e-dry-run-orchestrator.py --origin <authorized_context> --text "<content>"`
+
+The unified orchestrator uses runtime intake routing to dispatch to either content runtime E2E, registry/resource runtime E2E, or safe-stop review.
+
+It must not mutate registry files, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+A ready unified result means the future controlled apply path is guarded, not that real apply or production deploy is allowed now.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

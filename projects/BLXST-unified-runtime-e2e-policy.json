@@ -1,0 +1,48 @@
+{
+  "policy_id": "blxst-unified-runtime-e2e-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "not_real_apply": true,
+  "production_mutation_default": false,
+  "purpose": "Route a BLXST runtime task into the correct dry-run E2E chain: content runtime, registry/resource runtime, or safe-stop review.",
+  "branch_rules_non_exhaustive": {
+    "registry_update_proposal_dry_run": {
+      "branch": "registry_runtime_e2e",
+      "script": "scripts/learning-v2-autonomous-e2e-dry-run-orchestrator.py",
+      "allowed_effect": "dry_run_only"
+    },
+    "structured_data_or_event_page_proposal_dry_run": {
+      "branch": "content_runtime_e2e",
+      "script": "scripts/learning-v2-content-runtime-e2e-dry-run-orchestrator.py",
+      "allowed_effect": "dry_run_only"
+    },
+    "event_page_proposal_dry_run": {
+      "branch": "content_runtime_e2e",
+      "script": "scripts/learning-v2-content-runtime-e2e-dry-run-orchestrator.py",
+      "allowed_effect": "dry_run_only"
+    },
+    "media_asset_staging_proposal_dry_run": {
+      "branch": "content_runtime_e2e",
+      "script": "scripts/learning-v2-content-runtime-e2e-dry-run-orchestrator.py",
+      "allowed_effect": "dry_run_only"
+    },
+    "source_copy_change_proposal_dry_run": {
+      "branch": "content_runtime_e2e",
+      "script": "scripts/learning-v2-content-runtime-e2e-dry-run-orchestrator.py",
+      "allowed_effect": "dry_run_only"
+    },
+    "review_gate_dry_run": {
+      "branch": "safe_stop_review",
+      "script": null,
+      "allowed_effect": "review_only"
+    }
+  },
+  "hard_rules": [
+    "Unified runtime E2E is dry-run only.",
+    "Branch selection must come from policy and router output, not hardcoded resource names.",
+    "It must not write D1, R2, KV, Workers, website source, registry, Cloudflare, git, or deployment state.",
+    "Unknown branches must safe-stop into review.",
+    "Production mutation and production deploy remain disabled."
+  ]
+}
