@@ -449,6 +449,20 @@ These scripts must not mutate registry files, website source, D1, R2, KV, Worker
 A passing readiness smoke means the future content apply path is guarded, not that real apply is allowed now.
 
 
+
+## Content Runtime E2E Orchestrator Step
+
+Learning V2 may run the content runtime E2E dry-run orchestrator:
+
+`python3 scripts/learning-v2-content-runtime-e2e-dry-run-orchestrator.py --origin <authorized_context> --text "<content>"`
+
+The orchestrator connects content apply rehearsal, content controlled apply context gate, and disabled executor when applicable.
+
+It must not mutate registry files, website source, D1, R2, KV, Workers, Cloudflare, git, or deployment state.
+
+A guarded E2E result means the future controlled content apply path is protected, not that real apply or production deploy is allowed now.
+
+
 ## Cloudflare Resource Boundaries
 
 The router must identify whether a task touches:

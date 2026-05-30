@@ -1,0 +1,27 @@
+{
+  "policy_id": "blxst-content-runtime-e2e-policy-v0",
+  "policy_driven": true,
+  "examples_are_non_exhaustive": true,
+  "not_auto_repair": true,
+  "not_real_apply": true,
+  "production_mutation_default": false,
+  "purpose": "Run the complete content runtime dry-run chain from BLXST text to guarded controlled apply context and disabled executor, without mutating production resources.",
+  "chain_steps_non_exhaustive": [
+    "content_apply_rehearsal",
+    "content_controlled_apply_context_gate_if_ready",
+    "content_disabled_executor_if_context_ready",
+    "final_content_runtime_e2e_report"
+  ],
+  "final_statuses_non_exhaustive": {
+    "content_runtime_e2e_guarded_for_later_controlled_apply": "Ready content path reached controlled context and disabled executor refused real apply as expected.",
+    "content_runtime_e2e_safe_stop_before_apply": "Content path safely stopped before apply context.",
+    "content_runtime_e2e_blocked": "A dry-run step failed or safety flag failed."
+  },
+  "hard_rules": [
+    "Runtime E2E is dry-run only.",
+    "It must not write D1, R2, KV, Workers, website source, registry, Cloudflare, git, or deployment state.",
+    "A ready E2E result means future controlled apply path is guarded, not that real apply is allowed now.",
+    "Unknown or blocked content paths must safe-stop.",
+    "Production mutation and production deploy remain disabled."
+  ]
+}
